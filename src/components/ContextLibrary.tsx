@@ -8,6 +8,7 @@ import { SearchBar } from './SearchBar';
 import { CollapsibleTagSection } from './CollapsibleTagSection';
 import { ContextBlocksGrid } from './ContextBlocksGrid';
 import { SavedPromptList } from './SavedPromptList';
+import { mockProjects } from '../data/mockData';
 
 export function ContextLibrary() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -26,14 +27,7 @@ export function ContextLibrary() {
     setIsProfileModalOpen(false);
   };
 
-  // Mock projects data (same as in ProjectSidebar)
-  const mockProjects = [
-    { id: 'notes', name: 'Notes', icon: '📝', type: 'datasets' },
-    { id: 'project1', name: 'Prompt Project 1', icon: '📁', type: 'prompts', promptCount: 12 },
-    { id: 'project2', name: 'Dataset Project 1', icon: '📊', type: 'datasets' },
-    { id: 'project3', name: 'Prompt Project 2', icon: '📁', type: 'prompts', promptCount: 8 },
-  ];
-
+  
   // Find the current project to determine its type
   const currentProject = mockProjects.find(p => p.id === selectedProject);
   const isPromptProject = currentProject?.type === 'prompts';

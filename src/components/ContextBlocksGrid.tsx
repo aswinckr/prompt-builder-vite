@@ -1,58 +1,7 @@
 import React, { useMemo, useCallback, useRef } from 'react';
 import { ContextBlock } from './ContextBlock';
 import { SelectionActionBar } from './SelectionActionBar';
-
-// Mock context blocks data
-const mockContextBlocks = [
-  {
-    id: 1,
-    title: 'Getting Started with React',
-    content: 'React is a JavaScript library for building user interfaces. It allows you to create reusable UI components.',
-    tags: ['tutorial', 'javascript', 'react', 'beginner'],
-    project: 'notes',
-    lastUpdated: new Date('2024-01-15'),
-  },
-  {
-    id: 2,
-    title: 'CSS Grid Layout Guide',
-    content: 'CSS Grid Layout is a two-dimensional layout system for the web. It lets you layout content in rows and columns.',
-    tags: ['documentation', 'css', 'advanced'],
-    project: 'notes',
-    lastUpdated: new Date('2024-01-14'),
-  },
-  {
-    id: 3,
-    title: 'TypeScript Basics',
-    content: 'TypeScript is a typed superset of JavaScript that compiles to plain JavaScript. It adds optional static typing.',
-    tags: ['tutorial', 'typescript', 'javascript', 'beginner'],
-    project: 'notes',
-    lastUpdated: new Date('2024-01-13'),
-  },
-  {
-    id: 4,
-    title: 'Advanced React Patterns',
-    content: 'Learn advanced React patterns including render props, higher-order components, and custom hooks.',
-    tags: ['advanced', 'react', 'javascript'],
-    project: 'notes',
-    lastUpdated: new Date('2024-01-12'),
-  },
-  {
-    id: 5,
-    title: 'JavaScript Array Methods',
-    content: 'Comprehensive guide to JavaScript array methods: map, filter, reduce, and more with examples.',
-    tags: ['documentation', 'javascript', 'reference'],
-    project: 'notes',
-    lastUpdated: new Date('2024-01-11'),
-  },
-  {
-    id: 6,
-    title: 'Tailwind CSS Utility Classes',
-    content: 'Tailwind CSS is a utility-first CSS framework. Learn how to use utility classes to build custom designs.',
-    tags: ['documentation', 'css', 'tutorial'],
-    project: 'notes',
-    lastUpdated: new Date('2024-01-10'),
-  },
-];
+import { mockContextBlocks } from '../data/mockData';
 
 interface ContextBlocksGridProps {
   selectedProject: string;

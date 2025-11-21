@@ -1,13 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { Plus } from 'lucide-react';
-
-// Mock project data
-const mockProjects = [
-  { id: 'notes', name: 'Notes', icon: '📝', type: 'datasets' },
-  { id: 'project1', name: 'Prompt Project 1', icon: '📁', type: 'prompts', promptCount: 12 },
-  { id: 'project2', name: 'Dataset Project 1', icon: '📊', type: 'datasets' },
-  { id: 'project3', name: 'Prompt Project 2', icon: '📁', type: 'prompts', promptCount: 8 },
-];
+import { mockProjects } from '../data/mockData';
 
 interface ProjectSidebarProps {
   selectedProject: string;

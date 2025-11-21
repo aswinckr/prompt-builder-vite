@@ -1,0 +1,239 @@
+import React, { useRef, useState } from 'react';
+import { useDrag, useDrop } from 'react-dnd';
+import type { Identifier, XYCoord } from 'react-dnd';
+import { X, GripVertical, Hash, ChevronDown, ChevronRight } from 'lucide-react';
+import { ContextBlock as ContextBlockType } from '../types/ContextBlock';
+import { useLibraryActions } from '../contexts/LibraryContext';
+
+interface PromptBuilderBlockProps {
+  block: ContextBlockType;
+  index: number;
+  moveBlock: (dragIndex: number, hoverIndex: number) => void;
+}
+
+// Define the drag item type
+const ItemTypes = {
+  BLOCK: 'block',
+} as const;
+
+interface DragItem {
+  index: number;
+  id: string;
+  type: string;
+}
+
+export function PromptBuilderBlock({
+  block,
+  index,
+  moveBlock
+}: PromptBuilderBlockProps) {
+  const { removeBlockFromBuilder } = useLibraryActions();
+  const ref = useRef<HTMLDivElement>(null);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Set up drag functionality
+  const [{ isDragging }, drag] = useDrag({
+    type: ItemTypes.BLOCK,
+    item: () => {
+      return { id: block.id.toString(), index };
+    },
+    collect: (monitor: any) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  // Set up drop functionality
+  const [{ handlerId }, drop] = useDrop<
+    DragItem,
+    void,
+    { handlerId: Identifier | null }
+  >({
+    accept: ItemTypes.BLOCK,
+    collect(monitor) {
+      return {
+        handlerId: monitor.getHandlerId(),
+      };
+    },
+    hover(item: DragItem, monitor) {
+      if (!ref.current) {
+        return;
+      }
+      const dragIndex = item.index;
+      const hoverIndex = index;
+
+      // Don't replace items with themselves
+      if (dragIndex === hoverIndex) {
+        return;
+      }
+
+      // Determine rectangle on screen
+      const hoverBoundingRect = ref.current?.getBoundingClientRect();
+
+      // Get vertical middle
+      const hoverMiddleY =
+        (hoverBoundingRect.bottom - hoverBoundingRect.top) / 2;
+
+      // Determine mouse position
+      const clientOffset = monitor.getClientOffset();
+
+      // Get pixels to the top
+      const hoverClientY = (clientOffset as XYCoord).y - hoverBoundingRect.top;
+
+      // Only perform the move when the mouse has crossed half of the items height
+      // When dragging downwards, only move when the cursor is below 50%
+      // When dragging upwards, only move when the cursor is above 50%
+
+      // Dragging downwards
+      if (dragIndex < hoverIndex && hoverClientY < hoverMiddleY) {
+        return;
+      }
+
+      // Dragging upwards
+      if (dragIndex > hoverIndex && hoverClientY > hoverMiddleY) {
+        return;
+      }
+
+      // Time to actually perform the action
+      moveBlock(dragIndex, hoverIndex);
+
+      // Note: we're mutating the monitor item here!
+      // Generally it's better to avoid mutations,
+      // but it's good here for the sake of performance
+      // to avoid expensive index searches.
+      item.index = hoverIndex;
+    },
+  });
+
+  const opacity = isDragging ? 0.5 : 1;
+  drag(drop(ref));
+
+  const handleRemove = () => {
+    removeBlockFromBuilder(block.id);
+  };
+
+  const handleToggleExpand = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsExpanded(!isExpanded);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      handleToggleExpand(e as any);
+    }
+  };
+
+  return (
+    <div
+      ref={ref}
+      style={{ opacity }}
+      data-handler-id={handlerId}
+      className="mb-4"
+    >
+      <div
+        className={`relative bg-neutral-800/70 backdrop-blur-sm border border-neutral-700/50 rounded-2xl transition-all duration-300 hover:border-neutral-600/50 hover:bg-neutral-800/90 hover:shadow-lg hover:shadow-black/20 ${
+          isDragging ? 'cursor-grabbing scale-105 rotate-1 shadow-xl' : 'cursor-grab'
+        } ${isExpanded ? 'ring-2 ring-blue-500/30 shadow-lg shadow-black/10' : ''}`}
+        data-block-id={block.id}
+      >
+        {/* Gradient overlay for depth */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 rounded-2xl pointer-events-none" />
+
+        {/* Drag Handle */}
+        <div className="absolute left-4 top-4 text-neutral-500 hover:text-neutral-400 cursor-grab active:cursor-grabbing transition-colors duration-200 p-1.5 rounded-lg hover:bg-neutral-700/50">
+          <GripVertical className="w-4 h-4" data-testid="grip-vertical" />
+        </div>
+
+        {/* Remove Button */}
+        <button
+          onClick={handleRemove}
+          className="absolute top-3 right-3 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 p-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+          aria-label={`Remove ${block.title} from prompt`}
+        >
+          <X className="w-4 h-4" />
+        </button>
+
+        {/* Expand/Collapse Button */}
+        <button
+          onClick={handleToggleExpand}
+          onKeyDown={handleKeyDown}
+          className="absolute left-4 bottom-4 text-neutral-500 hover:text-blue-400 hover:bg-blue-500/10 p-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${block.title}`}
+          aria-expanded={isExpanded}
+        >
+          {isExpanded ? (
+            <ChevronDown className="w-4 h-4 transition-transform duration-300" />
+          ) : (
+            <ChevronRight className="w-4 h-4 transition-transform duration-300" />
+          )}
+        </button>
+
+        {/* Context Block Content */}
+        <div className="flex items-start gap-4 pl-14 pr-12 pt-6">
+          <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-xl flex items-center justify-center">
+            <Hash className="w-4 h-4 text-blue-400" />
+          </div>
+
+          <div className="flex-1 min-w-0">
+            {/* Title and Badge */}
+            <div className="flex items-center gap-3 mb-3">
+              <div className="px-3 py-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-lg">
+                <span className="text-xs font-medium text-blue-300">
+                  Context Block
+                </span>
+              </div>
+              <h3 className="text-sm font-semibold text-neutral-100 truncate">
+                {block.title}
+              </h3>
+            </div>
+
+            {/* Content Preview - Always visible but truncated when collapsed */}
+            <div className="text-sm text-neutral-300 leading-relaxed mb-4">
+              {isExpanded ? (
+                <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-neutral-600 scrollbar-track-neutral-800/50">
+                  <div className="whitespace-pre-wrap">
+                    {block.content}
+                  </div>
+                </div>
+              ) : (
+                <div className="line-clamp-2">
+                  {block.content}
+                </div>
+              )}
+            </div>
+
+            {/* Tags - Always visible */}
+            {block.tags.length > 0 && (
+              <div className="flex flex-wrap gap-2 mb-4">
+                {block.tags.map(tag => (
+                  <span
+                    key={tag}
+                    className="text-xs px-2.5 py-1 bg-neutral-700/50 border border-neutral-600/50 rounded-full text-neutral-300 backdrop-blur-sm"
+                  >
+                    #{tag}
+                  </span>
+                ))}
+              </div>
+            )}
+
+            {/* Expand/Collapse Hint */}
+            <div className="text-xs text-neutral-500">
+              {isExpanded ? (
+                <span className="flex items-center gap-1">
+                  <ChevronDown className="w-3 h-3" />
+                  Click chevron to collapse
+                </span>
+              ) : (
+                <span className="flex items-center gap-1">
+                  <ChevronRight className="w-3 h-3" />
+                  Click chevron to expand full content
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
