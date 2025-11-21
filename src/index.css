@@ -1,3 +1,28 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Custom utilities for line clamping */
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* Custom color for hover states */
+.hover\:bg-neutral-750:hover {
+  background-color: rgb(55 65 81);
+}
+
+/* Ring offsets for dark theme */
+.focus\:ring-offset-neutral-800:focus {
+  --tw-ring-offset-color: rgb(38 38 38);
+}
