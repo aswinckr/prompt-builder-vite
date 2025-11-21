@@ -1,4 +1,4 @@
 export const ROUTES = {
   PROMPT: '/prompt',
-  LIBRARY: '/'
+  KNOWLEDGE: '/knowledge'
 };

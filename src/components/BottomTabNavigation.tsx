@@ -8,7 +8,7 @@ export function BottomTabNavigation() {
   const tabListRef = useRef<HTMLDivElement>(null);
 
   // Determine active tab based on current route
-  const isLibraryActive = location.pathname === ROUTES.LIBRARY;
+  const isKnowledgeActive = location.pathname === ROUTES.KNOWLEDGE;
   const isBuilderActive = location.pathname === ROUTES.PROMPT;
 
   const handleKeyDown = (event: React.KeyboardEvent, href: string) => {
@@ -65,17 +65,17 @@ export function BottomTabNavigation() {
         </NavLink>
 
         <NavLink
-          to={ROUTES.LIBRARY}
+          to={ROUTES.KNOWLEDGE}
           role="tab"
-          aria-selected={isLibraryActive}
+          aria-selected={isKnowledgeActive}
           aria-controls="context-library-panel"
-          onKeyDown={(e) => handleKeyDown(e, ROUTES.LIBRARY)}
+          onKeyDown={(e) => handleKeyDown(e, ROUTES.KNOWLEDGE)}
           className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 no-underline ${
-            isLibraryActive
+            isKnowledgeActive
               ? 'bg-neutral-900 text-white shadow-sm'
               : 'bg-white text-neutral-900 hover:bg-neutral-50'
           }`}
-          tabIndex={isLibraryActive ? 0 : -1}
+          tabIndex={isKnowledgeActive ? 0 : -1}
         >
           <Library className="w-4 h-4" />
           <span>Knowledge</span>
