@@ -1,8 +1,9 @@
 import React, { useState, useMemo } from 'react';
 import { Search, Calendar, Hash, Play, Edit, Trash2, FileText } from 'lucide-react';
 
-// Mock saved prompts data
+// Mock saved prompts data - different content for each project
 const mockSavedPrompts = [
+  // Project 1 - React/TypeScript focused prompts
   {
     id: 1,
     title: 'React Component Template',
@@ -27,17 +28,6 @@ const mockSavedPrompts = [
   },
   {
     id: 3,
-    title: 'CSS Grid Layout',
-    description: 'CSS Grid layout for responsive design patterns',
-    content: '.grid-container { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); }',
-    projectId: 'project1',
-    createdAt: new Date('2024-01-13'),
-    updatedAt: new Date('2024-01-13'),
-    folder: null,
-    tags: ['css', 'grid', 'responsive']
-  },
-  {
-    id: 4,
     title: 'Form Validation Hook',
     description: 'Custom React hook for form validation with TypeScript',
     content: 'const useFormValidation = (initialValues, validationSchema) => { ... };',
@@ -47,20 +37,48 @@ const mockSavedPrompts = [
     folder: null,
     tags: ['react', 'hooks', 'validation', 'typescript']
   },
+
+  // Project 3 - Node.js/Backend focused prompts
+  {
+    id: 4,
+    title: 'Express Route Handler',
+    description: 'REST API route handler with middleware and error handling',
+    content: 'app.get("/api/users", authenticate, async (req, res) => { ... });',
+    projectId: 'project3',
+    createdAt: new Date('2024-01-16'),
+    updatedAt: new Date('2024-01-17'),
+    folder: null,
+    tags: ['nodejs', 'express', 'api', 'backend']
+  },
   {
     id: 5,
-    title: 'Debounce Function',
-    description: 'Utility function for debouncing function calls',
-    content: 'const debounce = (func, delay) => { let timeoutId; return (...args) => { ... }; };',
-    projectId: 'project1',
-    createdAt: new Date('2024-01-11'),
-    updatedAt: new Date('2024-01-11'),
+    title: 'Database Connection Pool',
+    description: 'PostgreSQL connection pool with proper error handling',
+    content: 'const pool = new Pool({ connectionString: process.env.DATABASE_URL });',
+    projectId: 'project3',
+    createdAt: new Date('2024-01-15'),
+    updatedAt: new Date('2024-01-16'),
     folder: null,
-    tags: ['javascript', 'utility', 'performance']
+    tags: ['database', 'postgresql', 'nodejs', 'pool']
+  },
+  {
+    id: 6,
+    title: 'JWT Authentication Middleware',
+    description: 'Express middleware for JWT token verification',
+    content: 'const verifyToken = (req, res, next) => { const token = req.headers.authorization?.split(" ")[1]; ... };',
+    projectId: 'project3',
+    createdAt: new Date('2024-01-14'),
+    updatedAt: new Date('2024-01-15'),
+    folder: null,
+    tags: ['authentication', 'jwt', 'middleware', 'security']
   }
 ];
 
-export function SavedPromptList() {
+interface SavedPromptListProps {
+  selectedProject: string;
+}
+
+export function SavedPromptList({ selectedProject }: SavedPromptListProps) {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDate, setSelectedDate] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'updated' | 'created' | 'title'>('updated');
@@ -68,6 +86,16 @@ export function SavedPromptList() {
   // Filter and sort prompts
   const filteredPrompts = useMemo(() => {
     let filtered = [...mockSavedPrompts];
+
+    console.log('SavedPromptList - selectedProject:', selectedProject);
+    console.log('SavedPromptList - all prompts:', filtered.length);
+
+    // Filter by selected project
+    const filteredByProject = filtered.filter(prompt => prompt.projectId === selectedProject);
+    console.log('SavedPromptList - filtered prompts count:', filteredByProject.length);
+    console.log('SavedPromptList - filtered prompts:', filteredByProject.map(p => ({ id: p.id, title: p.title, projectId: p.projectId })));
+
+    filtered = filteredByProject;
 
     // Filter by search query
     if (searchQuery) {
@@ -115,7 +143,7 @@ export function SavedPromptList() {
     });
 
     return filtered;
-  }, [searchQuery, selectedDate, sortBy]);
+  }, [selectedProject, searchQuery, selectedDate, sortBy]);
 
   const handleLoadPrompt = (promptId: number) => {
     console.log('Loading prompt:', promptId);

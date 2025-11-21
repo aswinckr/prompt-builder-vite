@@ -54,10 +54,13 @@ const mockContextBlocks = [
   },
 ];
 
-export function ContextBlocksGrid() {
+interface ContextBlocksGridProps {
+  selectedProject: string;
+}
+
+export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
   const [selectedBlocks, setSelectedBlocks] = React.useState<number[]>([]);
   const [searchQuery] = React.useState('');
-  const [selectedProject] = React.useState('notes');
   const gridRef = useRef<HTMLDivElement>(null);
 
   // Filter blocks based on project and search query

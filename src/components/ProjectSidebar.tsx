@@ -9,8 +9,12 @@ const mockProjects = [
   { id: 'project3', name: 'Prompt Project 2', icon: '📁', type: 'prompts', promptCount: 8 },
 ];
 
-export function ProjectSidebar() {
-  const [selectedProject, setSelectedProject] = useState('notes');
+interface ProjectSidebarProps {
+  selectedProject: string;
+  setSelectedProject: (id: string) => void;
+}
+
+export function ProjectSidebar({ selectedProject, setSelectedProject }: ProjectSidebarProps) {
   const [projects, setProjects] = useState(mockProjects);
 
   // Organize projects by type
@@ -61,8 +65,10 @@ export function ProjectSidebar() {
 
         if (activeElement.hasAttribute('data-project-name')) {
           const projectId = activeElement.getAttribute('data-project-name');
+          console.log('ProjectSidebar - clicked project ID:', projectId);
           if (projectId) {
             setSelectedProject(projectId);
+            console.log('ProjectSidebar - set selectedProject to:', projectId);
           }
         } else if (activeElement.hasAttribute('data-add-button')) {
           const projectType = activeElement.getAttribute('data-add-button') as 'prompts' | 'datasets';

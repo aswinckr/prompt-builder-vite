@@ -26,8 +26,20 @@ export function ContextLibrary() {
     setIsProfileModalOpen(false);
   };
 
-  // Determine if this is a prompt project (for demo purposes)
-  const isPromptProject = selectedProject === 'prompts';
+  // Mock projects data (same as in ProjectSidebar)
+  const mockProjects = [
+    { id: 'notes', name: 'Notes', icon: '📝', type: 'datasets' },
+    { id: 'project1', name: 'Prompt Project 1', icon: '📁', type: 'prompts', promptCount: 12 },
+    { id: 'project2', name: 'Dataset Project 1', icon: '📊', type: 'datasets' },
+    { id: 'project3', name: 'Prompt Project 2', icon: '📁', type: 'prompts', promptCount: 8 },
+  ];
+
+  // Find the current project to determine its type
+  const currentProject = mockProjects.find(p => p.id === selectedProject);
+  const isPromptProject = currentProject?.type === 'prompts';
+
+  // Debug logging
+  console.log('Selected Project:', selectedProject, 'Type:', currentProject?.type, 'Is Prompt Project:', isPromptProject);
 
   return (
     <div className="h-full flex overflow-hidden">
@@ -61,7 +73,10 @@ export function ContextLibrary() {
         {/* Project Navigation - Only rendered when sidebar is expanded, no scrolling */}
         {contextLibrarySidebarExpanded && (
           <div className="flex-1 overflow-hidden">
-            <ProjectSidebar />
+            <ProjectSidebar
+              selectedProject={selectedProject}
+              setSelectedProject={setSelectedProject}
+            />
           </div>
         )}
 
@@ -77,19 +92,19 @@ export function ContextLibrary() {
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Fixed Header Section */}
         <div className="flex-shrink-0">
-          {/* Search Bar */}
-          <SearchBar />
+          {/* Search Bar - Only for context blocks */}
+          {!isPromptProject && <SearchBar />}
 
-          {/* Collapsible Tag Filter Section */}
-          <CollapsibleTagSection />
+          {/* Collapsible Tag Filter Section - Only for context blocks */}
+          {!isPromptProject && <CollapsibleTagSection />}
         </div>
 
         {/* Scrollable Content - Conditional rendering based on project type */}
         <div className="flex-1 overflow-hidden">
           {isPromptProject ? (
-            <SavedPromptList />
+            <SavedPromptList selectedProject={selectedProject} />
           ) : (
-            <ContextBlocksGrid />
+            <ContextBlocksGrid selectedProject={selectedProject} />
           )}
         </div>
       </div>
