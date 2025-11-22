@@ -1,6 +1,23 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { ContextBlock } from '../types/ContextBlock';
 
+interface StreamingMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: Date;
+}
+
+interface StreamingState {
+  isStreamingPanelOpen: boolean;
+  selectedModel: string;
+  streamingContent: string;
+  streamingStatus: 'idle' | 'connecting' | 'streaming' | 'error' | 'stopped';
+  conversationHistory: StreamingMessage[];
+  errorMessage?: string;
+  currentAbortController?: AbortController;
+}
+
 interface PromptBuilderState {
   customText: string;
   blockOrder: number[];
@@ -8,6 +25,7 @@ interface PromptBuilderState {
 
 interface LibraryState {
   promptBuilder: PromptBuilderState;
+  streaming: StreamingState;
 }
 
 type LibraryAction =
@@ -16,12 +34,29 @@ type LibraryAction =
   | { type: 'REMOVE_BLOCK_FROM_BUILDER'; payload: number }
   | { type: 'REORDER_BLOCKS_IN_BUILDER'; payload: number[] }
   | { type: 'CLEAR_PROMPT_BUILDER' }
-  | { type: 'SET_EXECUTION_PANEL'; payload: boolean };
+  | { type: 'SET_EXECUTION_PANEL'; payload: boolean }
+  // Streaming actions
+  | { type: 'SET_STREAMING_PANEL_OPEN'; payload: boolean }
+  | { type: 'SET_SELECTED_MODEL'; payload: string }
+  | { type: 'UPDATE_STREAMING_CONTENT'; payload: string }
+  | { type: 'SET_STREAMING_STATUS'; payload: StreamingState['streamingStatus'] }
+  | { type: 'ADD_CONVERSATION_MESSAGE'; payload: StreamingMessage }
+  | { type: 'CLEAR_CONVERSATION_HISTORY' }
+  | { type: 'SET_STREAMING_ERROR'; payload: string }
+  | { type: 'SET_ABORT_CONTROLLER'; payload: AbortController | undefined }
+  | { type: 'STOP_STREAMING' };
 
 const initialState: LibraryState = {
   promptBuilder: {
     customText: '',
     blockOrder: []
+  },
+  streaming: {
+    isStreamingPanelOpen: false,
+    selectedModel: 'gemini-3-pro',
+    streamingContent: '',
+    streamingStatus: 'idle',
+    conversationHistory: []
   }
 };
 
@@ -68,7 +103,93 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
         }
       };
     case 'SET_EXECUTION_PANEL':
-      return state; // Implementation simplified for this version
+      return {
+        ...state,
+        streaming: {
+          ...state.streaming,
+          isStreamingPanelOpen: action.payload
+        }
+      };
+    case 'SET_STREAMING_PANEL_OPEN':
+      return {
+        ...state,
+        streaming: {
+          ...state.streaming,
+          isStreamingPanelOpen: action.payload
+        }
+      };
+    case 'SET_SELECTED_MODEL':
+      return {
+        ...state,
+        streaming: {
+          ...state.streaming,
+          selectedModel: action.payload
+        }
+      };
+    case 'UPDATE_STREAMING_CONTENT':
+      return {
+        ...state,
+        streaming: {
+          ...state.streaming,
+          streamingContent: action.payload
+        }
+      };
+    case 'SET_STREAMING_STATUS':
+      return {
+        ...state,
+        streaming: {
+          ...state.streaming,
+          streamingStatus: action.payload,
+          errorMessage: action.payload === 'error' ? state.streaming.errorMessage : undefined
+        }
+      };
+    case 'ADD_CONVERSATION_MESSAGE':
+      return {
+        ...state,
+        streaming: {
+          ...state.streaming,
+          conversationHistory: [...state.streaming.conversationHistory, action.payload]
+        }
+      };
+    case 'CLEAR_CONVERSATION_HISTORY':
+      return {
+        ...state,
+        streaming: {
+          ...state.streaming,
+          conversationHistory: [],
+          streamingContent: ''
+        }
+      };
+    case 'SET_STREAMING_ERROR':
+      return {
+        ...state,
+        streaming: {
+          ...state.streaming,
+          streamingStatus: 'error',
+          errorMessage: action.payload
+        }
+      };
+    case 'SET_ABORT_CONTROLLER':
+      return {
+        ...state,
+        streaming: {
+          ...state.streaming,
+          currentAbortController: action.payload
+        }
+      };
+    case 'STOP_STREAMING':
+      const abortController = state.streaming.currentAbortController;
+      if (abortController) {
+        abortController.abort();
+      }
+      return {
+        ...state,
+        streaming: {
+          ...state.streaming,
+          streamingStatus: 'stopped',
+          currentAbortController: undefined
+        }
+      };
     default:
       return state;
   }
@@ -112,6 +233,19 @@ export function useLibraryActions() {
     reorderBlocksInBuilder: (order: number[]) => dispatch({ type: 'REORDER_BLOCKS_IN_BUILDER', payload: order }),
     clearPromptBuilder: () => dispatch({ type: 'CLEAR_PROMPT_BUILDER' }),
     setExecutionPanel: (open: boolean) => dispatch({ type: 'SET_EXECUTION_PANEL', payload: open }),
+
+    // Streaming actions
+    setStreamingPanelOpen: (open: boolean) => dispatch({ type: 'SET_STREAMING_PANEL_OPEN', payload: open }),
+    setSelectedModel: (model: string) => dispatch({ type: 'SET_SELECTED_MODEL', payload: model }),
+    updateStreamingContent: (content: string) => dispatch({ type: 'UPDATE_STREAMING_CONTENT', payload: content }),
+    setStreamingStatus: (status: StreamingState['streamingStatus']) => dispatch({ type: 'SET_STREAMING_STATUS', payload: status }),
+    addConversationMessage: (message: StreamingMessage) => dispatch({ type: 'ADD_CONVERSATION_MESSAGE', payload: message }),
+    clearConversationHistory: () => dispatch({ type: 'CLEAR_CONVERSATION_HISTORY' }),
+    setStreamingError: (error: string) => dispatch({ type: 'SET_STREAMING_ERROR', payload: error }),
+    setAbortController: (controller?: AbortController) => dispatch({ type: 'SET_ABORT_CONTROLLER', payload: controller }),
+    stopStreaming: () => dispatch({ type: 'STOP_STREAMING' }),
+
+    // Legacy actions
     savePromptAsTemplate: (name: string) => {
       // Simplified implementation
       return Date.now().toString();
@@ -125,3 +259,6 @@ export function useLibraryActions() {
     }
   };
 }
+
+// Export types for use in components
+export type { StreamingMessage, StreamingState };

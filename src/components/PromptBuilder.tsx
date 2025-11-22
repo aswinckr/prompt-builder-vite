@@ -5,12 +5,17 @@ import { HTML5Backend } from 'react-dnd-html5-backend';
 import { CustomTextInput } from './CustomTextInput';
 import { PromptBuilderBlockList } from './PromptBuilderBlockList';
 import { PromptBuilderActions } from './PromptBuilderActions';
+import { StreamingSidePanel } from './StreamingSidePanel';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 import { mockContextBlocks } from '../data/mockData';
 
 export function PromptBuilder() {
-  const { promptBuilder } = useLibraryState();
-  const { setCustomText, setExecutionPanel } = useLibraryActions();
+  const { promptBuilder, streaming } = useLibraryState();
+  const {
+    setCustomText,
+    setStreamingPanelOpen,
+    setSelectedModel
+  } = useLibraryActions();
 
   // Assemble the full prompt from blocks and custom text
   const assembledPrompt = useMemo(() => {
@@ -55,8 +60,35 @@ export function PromptBuilder() {
     console.log('=== FULL PROMPT ===');
     console.log(finalPrompt);
     console.log('==================');
-    setExecutionPanel(true);
+
+    // Open streaming panel
+    setStreamingPanelOpen(true);
   };
+
+  const handleModelChange = (model: string) => {
+    setSelectedModel(model);
+  };
+
+  // Available models - includes actual OpenRouter models
+  const availableModels = [
+    { value: 'gemini-3-pro', label: 'Gemini 3 Pro', group: 'Google' },
+    { value: 'gemini-2.5-flash', label: 'Gemini 2.5 Flash', group: 'Google' },
+    { value: 'gemini-2.5-flash-lite', label: 'Gemini 2.5 Flash Lite', group: 'Google' },
+    { value: 'gpt-4o', label: 'GPT-4o', group: 'OpenAI' },
+    { value: 'gpt-4o-mini', label: 'GPT-4o Mini', group: 'OpenAI' },
+    { value: 'claude-sonnet', label: 'Claude 3 Sonnet', group: 'Anthropic' },
+    { value: 'claude-haiku', label: 'Claude 3 Haiku', group: 'Anthropic' },
+    { value: 'claude-opus', label: 'Claude 3 Opus', group: 'Anthropic' },
+  ];
+
+  // Group models by provider
+  const groupedModels = availableModels.reduce((acc, model) => {
+    if (!acc[model.group]) {
+      acc[model.group] = [];
+    }
+    acc[model.group].push(model);
+    return acc;
+  }, {} as Record<string, typeof availableModels>);
 
   return (
     <DndProvider backend={HTML5Backend}>
@@ -66,12 +98,19 @@ export function PromptBuilder() {
           {/* Left side - Model Selector */}
           <div className="relative">
             <select
-              className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700/50 rounded-xl px-4 py-2 text-sm appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 hover:bg-neutral-800/70"
-              defaultValue="claude-sonnet"
+              className="bg-neutral-800/50 backdrop-blur-sm border border-neutral-700/50 rounded-xl px-4 py-2 text-sm appearance-none pr-8 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-200 hover:bg-neutral-800/70 min-w-[160px]"
+              value={streaming.selectedModel}
+              onChange={(e) => handleModelChange(e.target.value)}
             >
-              <option value="claude-sonnet">Claude 3 Sonnet</option>
-              <option value="claude-haiku">Claude 3 Haiku</option>
-              <option value="claude-opus">Claude 3 Opus</option>
+              {Object.entries(groupedModels).map(([group, models]) => (
+                <optgroup key={group} label={group}>
+                  {models.map((model) => (
+                    <option key={model.value} value={model.value}>
+                      {model.label}
+                    </option>
+                  ))}
+                </optgroup>
+              ))}
             </select>
             <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
           </div>
@@ -84,7 +123,9 @@ export function PromptBuilder() {
             {/* Run Prompt Button */}
             <button
               onClick={handleRunPrompt}
-              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-neutral-900 shadow-lg hover:shadow-xl transform hover:scale-105"
+              disabled={!promptBuilder.customText && promptBuilder.blockOrder.length === 0}
+              className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-neutral-700 disabled:to-neutral-700 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-neutral-900 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
+              aria-label="Run prompt with selected AI model"
             >
               <Play className="w-4 h-4" />
               Run Prompt
@@ -114,6 +155,11 @@ export function PromptBuilder() {
             </div>
           </div>
         </div>
+
+        {/* Streaming Side Panel */}
+        {streaming.isStreamingPanelOpen && (
+          <StreamingSidePanel formattedPrompt={assembledPrompt} />
+        )}
       </div>
     </DndProvider>
   );

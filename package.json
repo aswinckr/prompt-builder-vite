@@ -7,6 +7,8 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@openrouter/ai-sdk-provider": "^1.2.5",
+    "ai": "^5.0.99",
     "lucide-react": "^0.554.0",
     "react": "^17.0.2",
     "react-dnd": "^16.0.1",
