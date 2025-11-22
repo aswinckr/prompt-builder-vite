@@ -31,6 +31,30 @@ export function PromptBuilder() {
   }, [promptBuilder.blockOrder, promptBuilder.customText]);
 
   const handleRunPrompt = () => {
+    // Format the prompt according to the specified structure
+    const formattedPrompt = [
+      "Help me with the following task:",
+      "",
+      promptBuilder.customText || "",
+      "",
+      "Context:",
+      ""
+    ];
+
+    // Add all context blocks
+    const blocks = promptBuilder.blockOrder
+      .map(blockId => mockContextBlocks.find(block => block.id === blockId))
+      .filter((block): block is NonNullable<typeof block> => block !== undefined);
+
+    blocks.forEach(block => {
+      formattedPrompt.push(block.content);
+    });
+
+    const finalPrompt = formattedPrompt.join('\n');
+
+    console.log('=== FULL PROMPT ===');
+    console.log(finalPrompt);
+    console.log('==================');
     setExecutionPanel(true);
   };
 
