@@ -119,6 +119,7 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
       {selectedBlocks.length > 0 && (
         <SelectionActionBar
           selectedCount={selectedBlocks.length}
+          selectedBlocks={selectedBlocks}
           onClear={clearSelection}
           onSelectAll={selectAllVisible}
           totalVisible={filteredBlocks.length}

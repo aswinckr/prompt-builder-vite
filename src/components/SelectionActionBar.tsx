@@ -1,8 +1,12 @@
 import React from 'react';
 import { X, CheckSquare, Square, Play } from 'lucide-react';
+import { useLibraryActions } from '../contexts/LibraryContext';
+import { useHistory } from 'react-router-dom';
+import { ROUTES } from '../routes/AppRoutes';
 
 interface SelectionActionBarProps {
   selectedCount: number;
+  selectedBlocks: number[];
   onClear: () => void;
   onSelectAll: () => void;
   totalVisible: number;
@@ -11,10 +15,21 @@ interface SelectionActionBarProps {
 /**
  * SelectionActionBar component displays actions for selected context blocks
  */
-export function SelectionActionBar({ selectedCount, onClear, onSelectAll, totalVisible }: SelectionActionBarProps) {
+export function SelectionActionBar({ selectedCount, selectedBlocks, onClear, onSelectAll, totalVisible }: SelectionActionBarProps) {
+  const { addBlockToBuilder } = useLibraryActions();
+  const history = useHistory();
+
   const handleInsertIntoPrompt = () => {
-    console.log('Inserting selected blocks into prompt...');
-    // Handle insert functionality
+    // Add each selected block to the prompt builder in order
+    selectedBlocks.forEach(blockId => {
+      addBlockToBuilder(blockId);
+    });
+
+    // Navigate to the Prompt tab
+    history.push(ROUTES.PROMPT);
+
+    // Clear selection after insertion (will be handled by parent component)
+    onClear();
   };
 
   return (
