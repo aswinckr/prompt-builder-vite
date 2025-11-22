@@ -1,12 +1,12 @@
 import React, { useState, useCallback } from 'react';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { PromptBuilderBlock } from './PromptBuilderBlock';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 import { mockContextBlocks } from '../data/mockData';
 
 export function PromptBuilderBlockList() {
-  const history = useHistory();
+  const navigate = useNavigate();
   const { promptBuilder } = useLibraryState();
   const { reorderBlocksInBuilder, addBlockToBuilder } = useLibraryActions();
 
@@ -17,7 +17,7 @@ export function PromptBuilderBlockList() {
 
   const handleAddBlock = () => {
     // Navigate to knowledge tab to add context blocks
-    history.push('/knowledge');
+    navigate('/knowledge');
   };
 
   // Move block function for drag and drop reordering

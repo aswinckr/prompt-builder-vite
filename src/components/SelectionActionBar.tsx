@@ -1,7 +1,7 @@
 import React from 'react';
 import { X, CheckSquare, Square, Play } from 'lucide-react';
 import { useLibraryActions } from '../contexts/LibraryContext';
-import { useHistory } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../routes/AppRoutes';
 
 interface SelectionActionBarProps {
@@ -17,7 +17,7 @@ interface SelectionActionBarProps {
  */
 export function SelectionActionBar({ selectedCount, selectedBlocks, onClear, onSelectAll, totalVisible }: SelectionActionBarProps) {
   const { addBlockToBuilder } = useLibraryActions();
-  const history = useHistory();
+  const navigate = useNavigate();
 
   const handleInsertIntoPrompt = () => {
     // Add each selected block to the prompt builder in order
@@ -26,7 +26,7 @@ export function SelectionActionBar({ selectedCount, selectedBlocks, onClear, onS
     });
 
     // Navigate to the Prompt tab
-    history.push(ROUTES.PROMPT);
+    navigate(ROUTES.PROMPT);
 
     // Clear selection after insertion (will be handled by parent component)
     onClear();
