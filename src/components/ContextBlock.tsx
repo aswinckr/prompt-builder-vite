@@ -12,7 +12,7 @@ interface ContextBlockProps {
   };
   isSelected: boolean;
   onSelect: () => void;
-  onKeyDown?: (event: React.KeyboardEvent) => void;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>) => void;
 }
 
 /**
@@ -23,7 +23,7 @@ export function ContextBlock({ block, isSelected, onSelect, onKeyDown }: Context
     onSelect();
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       onSelect();

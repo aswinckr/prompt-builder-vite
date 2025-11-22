@@ -50,7 +50,7 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
   }, [filteredBlocks]);
 
   // Grid keyboard navigation
-  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>, blockId: number) => {
+  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLButtonElement>, blockId: number) => {
     if (!gridRef.current) return;
 
     const blocks = Array.from(gridRef.current.querySelectorAll('[data-block-id]'));
