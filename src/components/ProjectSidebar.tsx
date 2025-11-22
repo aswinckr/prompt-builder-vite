@@ -19,12 +19,16 @@ export function ProjectSidebar({ selectedProject, setSelectedProject }: ProjectS
     const count = type === 'prompts' ? promptProjects.length + 1 : datasetProjects.length + 1;
     const name = type === 'prompts' ? `Prompt Project ${count}` : `Dataset Project ${count}`;
 
+    const now = new Date();
     const newProject = {
       id: `project${Date.now()}`,
       name,
       type,
       icon: type === 'prompts' ? '📁' : '📊',
-      ...(type === 'prompts' ? { promptCount: 0 } : {})
+      promptCount: type === 'prompts' ? 0 : 0,
+      isSystem: false,
+      createdAt: now,
+      updatedAt: now
     };
 
     setProjects(prev => [...prev, newProject]);

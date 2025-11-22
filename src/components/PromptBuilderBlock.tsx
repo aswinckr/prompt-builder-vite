@@ -1,6 +1,7 @@
 import React, { useRef, useState } from 'react';
 import { useDrag, useDrop } from 'react-dnd';
-import type { Identifier, XYCoord } from 'react-dnd';
+import type { Identifier } from 'dnd-core';
+import type { XYCoord } from 'react-dnd';
 import { X, GripVertical, Hash, ChevronDown, ChevronRight } from 'lucide-react';
 import { ContextBlock as ContextBlockType } from '../types/ContextBlock';
 import { useLibraryActions } from '../contexts/LibraryContext';
