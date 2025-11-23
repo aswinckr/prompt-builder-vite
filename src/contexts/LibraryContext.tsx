@@ -28,6 +28,8 @@ interface LibraryState {
   savedPrompts: SavedPrompt[];
   promptProjects: Project[];
   datasetProjects: Project[];
+  systemPromptProjects: Project[];
+  systemDatasetProjects: Project[];
   loading: boolean;
   error: string | null;
   // Folder modal state
@@ -45,6 +47,8 @@ type LibraryAction =
   | { type: 'SET_SAVED_PROMPTS'; payload: SavedPrompt[] }
   | { type: 'SET_PROMPT_PROJECTS'; payload: Project[] }
   | { type: 'SET_DATASET_PROJECTS'; payload: Project[] }
+  | { type: 'SET_SYSTEM_PROMPT_PROJECTS'; payload: Project[] }
+  | { type: 'SET_SYSTEM_DATASET_PROJECTS'; payload: Project[] }
   | { type: 'SET_CUSTOM_TEXT'; payload: string }
   | { type: 'ADD_BLOCK_TO_BUILDER'; payload: string }
   | { type: 'REMOVE_BLOCK_FROM_BUILDER'; payload: string }
@@ -94,6 +98,8 @@ const initialState: LibraryState = {
   savedPrompts: [],
   promptProjects: [],
   datasetProjects: [],
+  systemPromptProjects: [],
+  systemDatasetProjects: [],
   loading: false,
   error: null,
   folderModal: {
@@ -117,6 +123,10 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
       return { ...state, promptProjects: action.payload, loading: false };
     case 'SET_DATASET_PROJECTS':
       return { ...state, datasetProjects: action.payload, loading: false };
+    case 'SET_SYSTEM_PROMPT_PROJECTS':
+      return { ...state, systemPromptProjects: action.payload, loading: false };
+    case 'SET_SYSTEM_DATASET_PROJECTS':
+      return { ...state, systemDatasetProjects: action.payload, loading: false };
     case 'SET_CUSTOM_TEXT':
       return {
         ...state,
@@ -323,12 +333,17 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     dispatch({ type: 'SET_LOADING', payload: true });
 
     try {
+      // First, ensure unsorted folders exist for the user
+      await ProjectService.ensureUnsortedFolders();
+
       // Load all data in parallel
-      const [contextBlocksResult, savedPromptsResult, promptProjectsResult, datasetProjectsResult] = await Promise.all([
+      const [contextBlocksResult, savedPromptsResult, promptProjectsResult, datasetProjectsResult, systemPromptProjectsResult, systemDatasetProjectsResult] = await Promise.all([
         ContextService.getContextBlocks(),
         PromptService.getPrompts(),
-        ProjectService.getPromptProjects(),
-        ProjectService.getDatasetProjects()
+        ProjectService.getUserProjects('prompt'),
+        ProjectService.getUserProjects('dataset'),
+        ProjectService.getSystemProjects('prompt'),
+        ProjectService.getSystemProjects('dataset')
       ]);
 
       // Always set the data, even if it's empty (this is normal for new users)
@@ -336,13 +351,17 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'SET_SAVED_PROMPTS', payload: savedPromptsResult.data || [] });
       dispatch({ type: 'SET_PROMPT_PROJECTS', payload: promptProjectsResult.data || [] });
       dispatch({ type: 'SET_DATASET_PROJECTS', payload: datasetProjectsResult.data || [] });
+      dispatch({ type: 'SET_SYSTEM_PROMPT_PROJECTS', payload: systemPromptProjectsResult.data || [] });
+      dispatch({ type: 'SET_SYSTEM_DATASET_PROJECTS', payload: systemDatasetProjectsResult.data || [] });
 
       // Check for any errors from the service calls
       const errors = [
         contextBlocksResult.error,
         savedPromptsResult.error,
         promptProjectsResult.error,
-        datasetProjectsResult.error
+        datasetProjectsResult.error,
+        systemPromptProjectsResult.error,
+        systemDatasetProjectsResult.error
       ].filter(Boolean);
 
       if (errors.length > 0) {
@@ -472,6 +491,36 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'SET_FOLDER_MODAL_LOADING', payload: false });
         throw error;
       }
+    },
+
+    // System project management
+    refreshSystemProjects: async () => {
+      try {
+        const [systemPromptProjectsResult, systemDatasetProjectsResult] = await Promise.all([
+          ProjectService.getSystemProjects('prompt'),
+          ProjectService.getSystemProjects('dataset')
+        ]);
+
+        if (systemPromptProjectsResult.data) {
+          dispatch({ type: 'SET_SYSTEM_PROMPT_PROJECTS', payload: systemPromptProjectsResult.data });
+        }
+        if (systemDatasetProjectsResult.data) {
+          dispatch({ type: 'SET_SYSTEM_DATASET_PROJECTS', payload: systemDatasetProjectsResult.data });
+        }
+      } catch (error) {
+        console.error('Error refreshing system projects:', error);
+      }
+    },
+
+    deleteProject: async (id: string, type: 'prompt' | 'dataset') => {
+      const result = await ProjectService.deleteProject(id, type);
+      if (!result.error) {
+        dispatch({
+          type: type === 'prompt' ? 'DELETE_PROMPT_PROJECT' : 'DELETE_DATASET_PROJECT',
+          payload: id
+        });
+      }
+      return result;
     },
 
     // Chat actions

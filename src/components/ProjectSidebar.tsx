@@ -116,8 +116,12 @@ export function ProjectSidebar({ projects, selectedProject, setSelectedProject, 
                 onClick={() => setSelectedProject(project.id)}
                 className={`w-full flex items-center justify-between px-3 py-2 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-800 ${
                   selectedProject === project.id
-                    ? 'bg-neutral-700 text-white'
-                    : 'text-neutral-400 hover:bg-neutral-750 hover:text-neutral-200'
+                    ? project.is_system
+                      ? 'bg-blue-900/30 text-blue-200 border border-blue-700/50'
+                      : 'bg-neutral-700 text-white'
+                    : project.is_system
+                      ? 'text-blue-300 hover:bg-blue-900/20 hover:text-blue-100 border border-blue-800/30'
+                      : 'text-neutral-400 hover:bg-neutral-750 hover:text-neutral-200'
                 }`}
                 role="listitem"
                 aria-label={`Select ${project.name} project`}
@@ -135,12 +139,7 @@ export function ProjectSidebar({ projects, selectedProject, setSelectedProject, 
                     ({project.promptCount})
                   </span>
                 )}
-                {project.is_system && (
-                  <span className="text-xs text-neutral-500 ml-1">
-                    System
-                  </span>
-                )}
-              </button>
+                              </button>
             ))
           )}
         </div>

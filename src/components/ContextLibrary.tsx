@@ -27,11 +27,13 @@ export function ContextLibrary() {
   const [selectedProject, setSelectedProject] = useState<string>('');
 
   // Get data from LibraryContext
-  const { savedPrompts, promptProjects, datasetProjects, loading, error, folderModal } = useLibraryState();
+  const { savedPrompts, promptProjects, datasetProjects, systemPromptProjects, systemDatasetProjects, loading, error, folderModal } = useLibraryState();
   const { updateSavedPrompt, deleteSavedPrompt, createFolder, closeFolderModal } = useLibraryActions();
 
-  // Combine all projects for sidebar with type information
+  // Combine all projects for sidebar with type information (system projects first)
   const allProjects: ProjectWithType[] = [
+    ...((systemPromptProjects || []).map(p => ({ ...p, type: 'prompts' as const }))),
+    ...((systemDatasetProjects || []).map(p => ({ ...p, type: 'datasets' as const }))),
     ...((promptProjects || []).map(p => ({ ...p, type: 'prompts' as const }))),
     ...((datasetProjects || []).map(p => ({ ...p, type: 'datasets' as const })))
   ];

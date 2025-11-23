@@ -142,35 +142,7 @@ export class ProjectService {
     }
   }
 
-  // Delete a project
-  static async deleteProject(
-    id: string,
-    type: 'prompt' | 'dataset'
-  ): Promise<DatabaseResponse<void>> {
-    try {
-      const user = await DatabaseService.getUser()
-      if (!user) {
-        return { data: null, error: 'User not authenticated' }
-      }
-
-      const tableName = type === 'prompt' ? 'prompt_projects' : 'dataset_projects'
-
-      const { error } = await supabase
-        .from(tableName)
-        .delete()
-        .eq('id', id)
-        .eq('user_id', user.id)
-
-      if (error) {
-        return { data: null, error: error.message }
-      }
-
-      return { data: null, error: null }
-    } catch (err) {
-      return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
-    }
-  }
-
+  
   // Get project by ID
   static async getProjectById(
     id: string,
@@ -219,6 +191,121 @@ export class ProjectService {
 
       const convertedData = DatabaseService.convertRows<Project>(data || [])
       return await DatabaseService.handleResponse(convertedData)
+    } catch (err) {
+      return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
+    }
+  }
+
+  // Ensure unsorted folders exist for the current user
+  static async ensureUnsortedFolders(): Promise<DatabaseResponse<void>> {
+    try {
+      const user = await DatabaseService.getUser()
+      if (!user) {
+        return { data: null, error: 'User not authenticated' }
+      }
+
+      const { error } = await supabase.rpc('ensure_unsorted_folders', {
+        user_uuid: user.id
+      })
+
+      if (error) {
+        return { data: null, error: error.message }
+      }
+
+      return { data: null, error: null }
+    } catch (err) {
+      return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
+    }
+  }
+
+  // Get system projects (unsorted folders) for the current user
+  static async getSystemProjects(type: 'prompt' | 'dataset'): Promise<DatabaseResponse<Project[]>> {
+    try {
+      const user = await DatabaseService.getUser()
+      if (!user) {
+        return { data: null, error: 'User not authenticated' }
+      }
+
+      const tableName = type === 'prompt' ? 'prompt_projects' : 'dataset_projects'
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_system', true)
+        .order('created_at', { ascending: true })
+
+      const convertedData = DatabaseService.convertRows<Project>(data || [])
+      return await DatabaseService.handleResponse(convertedData)
+    } catch (err) {
+      return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
+    }
+  }
+
+  // Get user projects (non-system) for the current user
+  static async getUserProjects(type: 'prompt' | 'dataset'): Promise<DatabaseResponse<Project[]>> {
+    try {
+      const user = await DatabaseService.getUser()
+      if (!user) {
+        return { data: null, error: 'User not authenticated' }
+      }
+
+      const tableName = type === 'prompt' ? 'prompt_projects' : 'dataset_projects'
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_system', false)
+        .order('created_at', { ascending: false })
+
+      const convertedData = DatabaseService.convertRows<Project>(data || [])
+      return await DatabaseService.handleResponse(convertedData)
+    } catch (err) {
+      return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
+    }
+  }
+
+  // Delete a project (with protection for system projects)
+  static async deleteProject(
+    id: string,
+    type: 'prompt' | 'dataset'
+  ): Promise<DatabaseResponse<void>> {
+    try {
+      const user = await DatabaseService.getUser()
+      if (!user) {
+        return { data: null, error: 'User not authenticated' }
+      }
+
+      const tableName = type === 'prompt' ? 'prompt_projects' : 'dataset_projects'
+
+      // First check if it's a system project
+      const { data: project, error: fetchError } = await supabase
+        .from(tableName)
+        .select('is_system')
+        .eq('id', id)
+        .eq('user_id', user.id)
+        .single()
+
+      if (fetchError) {
+        return { data: null, error: fetchError.message }
+      }
+
+      if (project?.is_system) {
+        return { data: null, error: 'Cannot delete system folders' }
+      }
+
+      const { error } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('id', id)
+        .eq('user_id', user.id)
+
+      if (error) {
+        return { data: null, error: error.message }
+      }
+
+      return { data: null, error: null }
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }
