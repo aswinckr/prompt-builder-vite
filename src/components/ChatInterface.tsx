@@ -43,6 +43,7 @@ export function ChatInterface({
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [hasStreamingStarted, setHasStreamingStarted] = useState(false);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
 
@@ -67,19 +68,106 @@ export function ChatInterface({
     "gpt-4o-mini": "openai/gpt-4o-mini",
   };
 
-  // Initialize with welcome message if formattedPrompt exists
+  // Initialize with the prompt and automatically send the first message
   useEffect(() => {
-    if (formattedPrompt && messages.length === 0) {
-      setMessages([
-        {
-          id: generateUUID(),
-          role: "user",
-          content: `You are a helpful assistant. Here's my prompt:\n\n${formattedPrompt}`,
-          createdAt: new Date(),
-        },
-      ]);
+    if (formattedPrompt && messages.length === 0 && isOpen) {
+      // Automatically trigger the first AI response
+      setTimeout(() => {
+        handleFirstResponse();
+      }, 500);
     }
-  }, [formattedPrompt]);
+  }, [formattedPrompt, isOpen]);
+
+  const handleFirstResponse = async () => {
+    try {
+      setError(null);
+      setIsLoading(true);
+      setHasStreamingStarted(false); // Reset streaming state
+
+      // Prepare messages with context
+      const conversationMessages = [
+        {
+          role: "user" as const,
+          content: formattedPrompt,
+        }
+      ];
+
+      // Add the user message to the UI
+      const userMessage: ChatMessageData = {
+        id: generateUUID(),
+        role: "user",
+        content: formattedPrompt,
+        createdAt: new Date(),
+      };
+      setMessages([userMessage]);
+
+      const controller = new AbortController();
+      setAbortController(controller);
+
+      const mappedModel = modelMap[selectedModel] || selectedModel;
+
+      const result = await streamText({
+        model: openrouter(mappedModel),
+        messages: conversationMessages,
+        temperature: 0.7,
+        abortSignal: controller.signal,
+      });
+
+      let accumulatedContent = "";
+      const assistantId = generateUUID();
+
+      for await (const delta of result.textStream) {
+        if (controller.signal.aborted) {
+          break;
+        }
+        accumulatedContent += delta;
+
+        // Add the assistant message only when we have content, or update existing one
+        setMessages((prev) => {
+          const existingMessage = prev.find(msg => msg.id === assistantId);
+          if (existingMessage) {
+            // Update existing message
+            return prev.map((msg) =>
+              msg.id === assistantId
+                ? { ...msg, content: accumulatedContent }
+                : msg
+            );
+          } else {
+            // Add new message with first content and set streaming started
+            setHasStreamingStarted(true);
+            return [
+              ...prev,
+              {
+                id: assistantId,
+                role: "assistant",
+                content: accumulatedContent,
+                createdAt: new Date(),
+              },
+            ];
+          }
+        });
+      }
+
+      if (!controller.signal.aborted) {
+        // Final update to ensure the message is complete
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantId
+              ? { ...msg, content: accumulatedContent }
+              : msg
+          )
+        );
+      }
+
+    } catch (error: any) {
+      console.error("Initial chat error:", error);
+      setError(error.message || "Failed to generate response");
+    } finally {
+      setIsLoading(false);
+      setHasStreamingStarted(false);
+      setAbortController(null);
+    }
+  };
 
   useEffect(() => {
     scrollToBottom();
@@ -104,6 +192,7 @@ export function ChatInterface({
     setInput("");
     setError(null);
     setIsLoading(true);
+    setHasStreamingStarted(false); // Reset streaming state
 
     try {
       // Prepare messages with context
@@ -111,21 +200,6 @@ export function ChatInterface({
         role: msg.role as "user" | "assistant" | "system",
         content: msg.content,
       }));
-
-      // Add system message with context if available and not already present
-      if (
-        formattedPrompt &&
-        (conversationMessages.length === 0 ||
-          conversationMessages[0].role !== "system")
-      ) {
-        conversationMessages = [
-          {
-            role: "system" as const,
-            content: `You are an AI assistant helping with a prompt builder. The user has built a prompt with the following context:\n\n${formattedPrompt}\n\nPlease help them with their request while considering this context.`,
-          },
-          ...conversationMessages,
-        ];
-      }
 
       // Add the new user message
       conversationMessages.push({
@@ -148,31 +222,36 @@ export function ChatInterface({
       let accumulatedContent = "";
       const assistantId = generateUUID();
 
-      // Add initial assistant message
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: assistantId,
-          role: "assistant",
-          content: "",
-          createdAt: new Date(),
-        },
-      ]);
-
       for await (const delta of result.textStream) {
         if (controller.signal.aborted) {
           break;
         }
         accumulatedContent += delta;
 
-        // Update the assistant message
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantId
-              ? { ...msg, content: accumulatedContent }
-              : msg
-          )
-        );
+        // Add the assistant message only when we have content, or update existing one
+        setMessages((prev) => {
+          const existingMessage = prev.find(msg => msg.id === assistantId);
+          if (existingMessage) {
+            // Update existing message
+            return prev.map((msg) =>
+              msg.id === assistantId
+                ? { ...msg, content: accumulatedContent }
+                : msg
+            );
+          } else {
+            // Add new message with first content and set streaming started
+            setHasStreamingStarted(true);
+            return [
+              ...prev,
+              {
+                id: assistantId,
+                role: "assistant",
+                content: accumulatedContent,
+                createdAt: new Date(),
+              },
+            ];
+          }
+        });
       }
 
       if (!controller.signal.aborted) {
@@ -193,6 +272,7 @@ export function ChatInterface({
       setMessages((prev) => prev.filter((msg) => msg.content !== ""));
     } finally {
       setIsLoading(false);
+      setHasStreamingStarted(false);
       setAbortController(null);
     }
   };
@@ -287,7 +367,7 @@ export function ChatInterface({
 
       {/* Side panel */}
       <div
-        className={`fixed right-0 top-0 z-50 h-full w-full transform bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 text-neutral-100 shadow-2xl transition-transform duration-300 ease-in-out md:w-2/5 lg:w-2/5 xl:w-2/5 ${
+        className={`fixed right-0 top-0 z-50 h-full w-full transform bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 text-neutral-100 shadow-2xl transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         role="dialog"
@@ -369,52 +449,56 @@ export function ChatInterface({
 
         {/* Messages area */}
         <div
-          className="flex-1 overflow-y-auto p-4"
+          className="flex-1 overflow-y-auto py-4"
           style={{ height: "calc(100% - 180px)" }}
         >
-          {messages.map((message) => (
-            <ChatMessage key={message.id} message={message} />
-          ))}
+          <div className="max-w-3xl mx-auto px-8">
+            {messages.map((message) => (
+              <ChatMessage key={message.id} message={message} />
+            ))}
 
-          {isLoading && <TypingIndicator />}
+            {isLoading && !hasStreamingStarted && <TypingIndicator />}
 
-          {/* Empty state */}
-          {messages.length === 0 && !isLoading && (
-            <div className="py-8 text-center text-neutral-500">
-              <div className="mb-4">
-                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-neutral-800/50">
-                  <Send className="h-8 w-8" />
+            {/* Empty state */}
+            {messages.length === 0 && !isLoading && (
+              <div className="py-8 text-center text-neutral-500">
+                <div className="mb-4">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-neutral-800/50">
+                    <Send className="h-8 w-8" />
+                  </div>
                 </div>
+                <p>
+                  Start a conversation with the AI assistant about your prompt!
+                </p>
               </div>
-              <p>
-                Start a conversation with the AI assistant about your prompt!
-              </p>
-            </div>
-          )}
+            )}
 
-          <div ref={messagesEndRef} />
+            <div ref={messagesEndRef} />
+          </div>
         </div>
 
         {/* Input form */}
         <form
           onSubmit={handleSubmit}
-          className="border-t border-neutral-800/50 p-4"
+          className="border-t border-neutral-800/50 py-4"
         >
-          <div className="flex gap-2">
-            <input
-              value={input}
-              onChange={handleInputChange}
-              placeholder="Type your message..."
-              className="flex-1 rounded-lg border border-neutral-700/30 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-              disabled={isLoading}
-            />
-            <button
-              type="submit"
-              disabled={isLoading || !input.trim()}
-              className="rounded-lg border border-blue-500/30 bg-blue-500/20 px-4 py-2 text-sm font-medium text-blue-400 transition-colors hover:bg-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isLoading ? "Stop" : "Send"}
-            </button>
+          <div className="max-w-3xl mx-auto px-8">
+            <div className="flex gap-2">
+              <input
+                value={input}
+                onChange={handleInputChange}
+                placeholder="Type your message..."
+                className="flex-1 rounded-lg border border-neutral-700/30 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+                disabled={isLoading}
+              />
+              <button
+                type="submit"
+                disabled={isLoading || !input.trim()}
+                className="rounded-lg border border-blue-500/30 bg-blue-500/20 px-4 py-2 text-sm font-medium text-blue-400 transition-colors hover:bg-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {isLoading ? "Stop" : "Send"}
+              </button>
+            </div>
           </div>
         </form>
       </div>

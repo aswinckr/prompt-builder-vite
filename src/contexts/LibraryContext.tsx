@@ -6,22 +6,9 @@ import { DatabaseResponse } from '../services/databaseService';
 import { PromptService } from '../services/promptService';
 import { ProjectService, Project } from '../services/projectService';
 
-interface StreamingMessage {
-  id: string;
-  role: 'user' | 'assistant';
-  content: string;
-  timestamp: Date;
-}
-
-interface StreamingState {
-  isStreamingPanelOpen: boolean;
+interface ChatState {
   isChatPanelOpen: boolean;
   selectedModel: string;
-  streamingContent: string;
-  streamingStatus: 'idle' | 'connecting' | 'streaming' | 'error' | 'stopped';
-  conversationHistory: StreamingMessage[];
-  errorMessage?: string;
-  currentAbortController?: AbortController;
 }
 
 interface PromptBuilderState {
@@ -35,7 +22,7 @@ interface ContextSelectionState {
 
 interface LibraryState {
   promptBuilder: PromptBuilderState;
-  streaming: StreamingState;
+  chat: ChatState;
   contextSelection: ContextSelectionState;
   contextBlocks: ContextBlock[];
   savedPrompts: SavedPrompt[];
@@ -87,30 +74,18 @@ type LibraryAction =
   | { type: 'OPEN_FOLDER_MODAL'; payload: 'prompts' | 'datasets' }
   | { type: 'CLOSE_FOLDER_MODAL' }
   | { type: 'SET_FOLDER_MODAL_LOADING'; payload: boolean }
-  // Streaming actions
-  | { type: 'SET_STREAMING_PANEL_OPEN'; payload: boolean }
+  // Chat actions
   | { type: 'SET_CHAT_PANEL_OPEN'; payload: boolean }
   | { type: 'SET_SELECTED_MODEL'; payload: string }
-  | { type: 'UPDATE_STREAMING_CONTENT'; payload: string }
-  | { type: 'SET_STREAMING_STATUS'; payload: StreamingState['streamingStatus'] }
-  | { type: 'ADD_CONVERSATION_MESSAGE'; payload: StreamingMessage }
-  | { type: 'CLEAR_CONVERSATION_HISTORY' }
-  | { type: 'SET_STREAMING_ERROR'; payload: string }
-  | { type: 'SET_ABORT_CONTROLLER'; payload: AbortController | undefined }
-  | { type: 'STOP_STREAMING' };
 
 const initialState: LibraryState = {
   promptBuilder: {
     customText: '',
     blockOrder: []
   },
-  streaming: {
-    isStreamingPanelOpen: false,
+  chat: {
     isChatPanelOpen: false,
     selectedModel: 'gemini-3-pro',
-    streamingContent: '',
-    streamingStatus: 'idle',
-    conversationHistory: []
   },
   contextSelection: {
     selectedBlockIds: []
@@ -180,14 +155,6 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
         promptBuilder: {
           customText: '',
           blockOrder: []
-        }
-      };
-    case 'SET_EXECUTION_PANEL':
-      return {
-        ...state,
-        streaming: {
-          ...state.streaming,
-          isStreamingPanelOpen: action.payload
         }
       };
     case 'TOGGLE_BLOCK_SELECTION':
@@ -317,92 +284,20 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
           loading: action.payload
         }
       };
-    case 'SET_STREAMING_PANEL_OPEN':
-      return {
-        ...state,
-        streaming: {
-          ...state.streaming,
-          isStreamingPanelOpen: action.payload
-        }
-      };
     case 'SET_CHAT_PANEL_OPEN':
       return {
         ...state,
-        streaming: {
-          ...state.streaming,
+        chat: {
+          ...state.chat,
           isChatPanelOpen: action.payload
         }
       };
     case 'SET_SELECTED_MODEL':
       return {
         ...state,
-        streaming: {
-          ...state.streaming,
+        chat: {
+          ...state.chat,
           selectedModel: action.payload
-        }
-      };
-    case 'UPDATE_STREAMING_CONTENT':
-      return {
-        ...state,
-        streaming: {
-          ...state.streaming,
-          streamingContent: action.payload
-        }
-      };
-    case 'SET_STREAMING_STATUS':
-      return {
-        ...state,
-        streaming: {
-          ...state.streaming,
-          streamingStatus: action.payload,
-          errorMessage: action.payload === 'error' ? state.streaming.errorMessage : undefined
-        }
-      };
-    case 'ADD_CONVERSATION_MESSAGE':
-      return {
-        ...state,
-        streaming: {
-          ...state.streaming,
-          conversationHistory: [...state.streaming.conversationHistory, action.payload]
-        }
-      };
-    case 'CLEAR_CONVERSATION_HISTORY':
-      return {
-        ...state,
-        streaming: {
-          ...state.streaming,
-          conversationHistory: [],
-          streamingContent: ''
-        }
-      };
-    case 'SET_STREAMING_ERROR':
-      return {
-        ...state,
-        streaming: {
-          ...state.streaming,
-          streamingStatus: 'error',
-          errorMessage: action.payload
-        }
-      };
-    case 'SET_ABORT_CONTROLLER':
-      return {
-        ...state,
-        streaming: {
-          ...state.streaming,
-          currentAbortController: action.payload
-        }
-      };
-    case 'STOP_STREAMING':
-      const abortController = state.streaming.currentAbortController;
-      if (abortController) {
-        abortController.abort();
-      }
-      return {
-        ...state,
-        streaming: {
-          ...state.streaming,
-          streamingStatus: 'stopped',
-          currentAbortController: undefined
         }
       };
     default:
@@ -579,17 +474,9 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       }
     },
 
-    // Streaming actions
-    setStreamingPanelOpen: (open: boolean) => dispatch({ type: 'SET_STREAMING_PANEL_OPEN', payload: open }),
+    // Chat actions
     setChatPanelOpen: (open: boolean) => dispatch({ type: 'SET_CHAT_PANEL_OPEN', payload: open }),
     setSelectedModel: (model: string) => dispatch({ type: 'SET_SELECTED_MODEL', payload: model }),
-    updateStreamingContent: (content: string) => dispatch({ type: 'UPDATE_STREAMING_CONTENT', payload: content }),
-    setStreamingStatus: (status: StreamingState['streamingStatus']) => dispatch({ type: 'SET_STREAMING_STATUS', payload: status }),
-    addConversationMessage: (message: StreamingMessage) => dispatch({ type: 'ADD_CONVERSATION_MESSAGE', payload: message }),
-    clearConversationHistory: () => dispatch({ type: 'CLEAR_CONVERSATION_HISTORY' }),
-    setStreamingError: (error: string) => dispatch({ type: 'SET_STREAMING_ERROR', payload: error }),
-    setAbortController: (controller?: AbortController) => dispatch({ type: 'SET_ABORT_CONTROLLER', payload: controller }),
-    stopStreaming: () => dispatch({ type: 'STOP_STREAMING' }),
 
     // Legacy actions (保持向后兼容)
     savePromptAsTemplate: (name: string) => {
@@ -623,5 +510,3 @@ export function useLibraryActions() {
   return context.actions;
 }
 
-// Export types for use in components
-export type { StreamingMessage, StreamingState };
