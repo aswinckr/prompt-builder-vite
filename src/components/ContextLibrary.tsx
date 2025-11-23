@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { AppLogo } from './AppLogo';
 import { ProjectSidebar } from './ProjectSidebar';
@@ -9,6 +9,9 @@ import { CollapsibleTagSection } from './CollapsibleTagSection';
 import { ContextBlocksGrid } from './ContextBlocksGrid';
 import { SavedPromptList } from './SavedPromptList';
 import { mockProjects } from '../data/mockData';
+import { mockSavedPrompts } from '../data/mockData';
+import { loadPrompts, savePrompt, deletePrompt } from '../utils/promptStorage';
+import { SavedPrompt } from '../types/SavedPrompt';
 
 export function ContextLibrary() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -16,6 +19,28 @@ export function ContextLibrary() {
     window.innerWidth >= 768 // Auto-collapse on mobile
   );
   const [selectedProject, setSelectedProject] = useState('notes');
+  const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([]);
+
+  // Load prompts from localStorage on component mount
+  useEffect(() => {
+    const loadSavedPrompts = () => {
+      try {
+        const prompts = loadPrompts();
+        if (prompts.length === 0) {
+          // If no prompts in localStorage, use mock data for demo
+          setSavedPrompts(mockSavedPrompts);
+        } else {
+          setSavedPrompts(prompts);
+        }
+      } catch (error) {
+        console.error('Failed to load prompts:', error);
+        // Fallback to mock data
+        setSavedPrompts(mockSavedPrompts);
+      }
+    };
+
+    loadSavedPrompts();
+  }, []);
 
   const toggleContextLibrarySidebar = () => {
     setContextLibrarySidebarExpanded(!contextLibrarySidebarExpanded);
@@ -29,7 +54,50 @@ export function ContextLibrary() {
     setIsProfileModalOpen(false);
   };
 
-  
+  // Handle prompt updates
+  const handlePromptUpdate = async (updatedPrompt: SavedPrompt) => {
+    try {
+      // Save to localStorage
+      savePrompt(updatedPrompt);
+
+      // Update local state
+      setSavedPrompts(prev =>
+        prev.map(p => p.id === updatedPrompt.id ? updatedPrompt : p)
+      );
+
+      console.log('Prompt updated successfully:', updatedPrompt);
+    } catch (error) {
+      console.error('Failed to update prompt:', error);
+      // Handle error - could show toast notification
+    }
+  };
+
+  // Handle prompt deletion
+  const handlePromptDelete = async (promptId: number) => {
+    try {
+      // Delete from localStorage
+      deletePrompt(promptId);
+
+      // Update local state
+      setSavedPrompts(prev => prev.filter(p => p.id !== promptId));
+
+      console.log('Prompt deleted successfully:', promptId);
+    } catch (error) {
+      console.error('Failed to delete prompt:', error);
+      // Handle error - could show toast notification
+    }
+  };
+
+  // Handle prompt loading
+  const handlePromptLoad = (promptId: number) => {
+    const prompt = savedPrompts.find(p => p.id === promptId);
+    if (prompt) {
+      console.log('Loading prompt:', prompt);
+      // Here you could implement logic to load the prompt into the main editor
+      // For now, we'll just log it
+    }
+  };
+
   // Find the current project to determine its type
   const currentProject = mockProjects.find(p => p.id === selectedProject);
   const isPromptProject = currentProject?.type === 'prompts';
@@ -131,7 +199,13 @@ export function ContextLibrary() {
         {/* Scrollable Content - Conditional rendering based on project type */}
         <div className="flex-1 overflow-hidden">
           {isPromptProject ? (
-            <SavedPromptList selectedProject={selectedProject} />
+            <SavedPromptList
+              selectedProject={selectedProject}
+              prompts={savedPrompts}
+              onPromptUpdate={handlePromptUpdate}
+              onPromptDelete={handlePromptDelete}
+              onPromptLoad={handlePromptLoad}
+            />
           ) : (
             <ContextBlocksGrid selectedProject={selectedProject} />
           )}

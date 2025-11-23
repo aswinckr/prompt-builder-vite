@@ -4,10 +4,17 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "test": "vitest",
+    "test:ui": "vitest --ui",
+    "test:run": "vitest run"
   },
   "dependencies": {
     "@openrouter/ai-sdk-provider": "^1.2.5",
+    "@tiptap/extension-placeholder": "^3.11.0",
+    "@tiptap/pm": "^3.11.0",
+    "@tiptap/react": "^3.11.0",
+    "@tiptap/starter-kit": "^3.11.0",
     "ai": "^5.0.99",
     "lucide-react": "^0.554.0",
     "react": "^17.0.2",
@@ -18,13 +25,18 @@
     "vitawind": "^2.0.0"
   },
   "devDependencies": {
+    "@testing-library/jest-dom": "^5.17.0",
+    "@testing-library/react": "^12.1.5",
     "@types/react": "^17.0.33",
     "@types/react-dom": "^17.0.10",
     "@types/react-router-dom": "^5.3.3",
     "@vitejs/plugin-react": "^1.0.7",
+    "@vitest/ui": "^4.0.13",
+    "jsdom": "^27.0.1",
     "prettier": "^2.5.1",
     "prettier-plugin-tailwindcss": "^0.1.5",
     "typescript": "^5.9.3",
-    "vite": "^2.7.2"
+    "vite": "^2.7.2",
+    "vitest": "^4.0.13"
   }
 }
