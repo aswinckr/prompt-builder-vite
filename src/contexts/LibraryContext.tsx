@@ -89,7 +89,7 @@ const initialState: LibraryState = {
   },
   chat: {
     isChatPanelOpen: false,
-    selectedModel: 'gemini-3-pro',
+    selectedModel: 'gemini-2.5-flash',
   },
   contextSelection: {
     selectedBlockIds: []
