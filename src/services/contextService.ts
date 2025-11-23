@@ -1,12 +1,6 @@
 import { supabase } from '../lib/supabase'
 import { DatabaseService, DatabaseResponse } from './databaseService'
 
-// TypeScript interfaces
-export interface DatabaseResponse<T> {
-  data: T | null;
-  error: string | null;
-}
-
 export interface ContextBlock {
   id: string
   user_id: string
@@ -118,9 +112,8 @@ export class ContextService {
         .is('project_id', null)
         .order('updated_at', { ascending: false })
 
-      return await DatabaseService.handleResponse(
-        DatabaseService.convertRows<ContextBlock>(data || [])
-      )
+      const convertedData = DatabaseService.convertRows<ContextBlock>(data || [])
+      return await DatabaseService.handleResponse(convertedData)
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }
@@ -146,9 +139,7 @@ export class ContextService {
         .select()
         .single()
 
-      return await DatabaseService.handleResponse(
-        DatabaseService.convertRow<ContextBlock>(data)
-      )
+      return await DatabaseService.handleResponse({ data, error })
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }
@@ -176,9 +167,7 @@ export class ContextService {
         .select()
         .single()
 
-      return await DatabaseService.handleResponse(
-        DatabaseService.convertRow<ContextBlock>(data)
-      )
+      return await DatabaseService.handleResponse({ data, error })
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }
@@ -261,9 +250,8 @@ export class ContextService {
         .or(`title.ilike.%${query}%,content.ilike.%${query}%`)
         .order('updated_at', { ascending: false })
 
-      return await DatabaseService.handleResponse(
-        DatabaseService.convertRows<ContextBlock>(data || [])
-      )
+      const convertedData = DatabaseService.convertRows<ContextBlock>(data || [])
+      return await DatabaseService.handleResponse(convertedData)
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }
@@ -284,9 +272,8 @@ export class ContextService {
         .contains('tags', tags)
         .order('updated_at', { ascending: false })
 
-      return await DatabaseService.handleResponse(
-        DatabaseService.convertRows<ContextBlock>(data || [])
-      )
+      const convertedData = DatabaseService.convertRows<ContextBlock>(data || [])
+      return await DatabaseService.handleResponse(convertedData)
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }

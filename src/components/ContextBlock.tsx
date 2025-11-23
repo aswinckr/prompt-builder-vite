@@ -35,10 +35,8 @@ export function ContextBlock({ block, isSelected, onSelect, onEdit, onKeyDown }:
   };
 
   return (
-    <button
+    <div
       data-block-id={block.id}
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
       className={`h-full p-4 rounded-lg border transition-all text-left focus:outline-none focus:ring-2 focus:ring-blue-500/50 flex flex-col ${
         isSelected
           ? 'bg-blue-500/10 border-blue-500/30 shadow-lg'
@@ -48,6 +46,8 @@ export function ContextBlock({ block, isSelected, onSelect, onEdit, onKeyDown }:
       aria-selected={isSelected}
       tabIndex={0}
       aria-label={`Context block: ${block.title}`}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
     >
       {/* Header */}
       <div className="flex items-start justify-between mb-3 flex-shrink-0">
@@ -98,6 +98,6 @@ export function ContextBlock({ block, isSelected, onSelect, onEdit, onKeyDown }:
           </span>
         )}
       </div>
-    </button>
+    </div>
   );
 }

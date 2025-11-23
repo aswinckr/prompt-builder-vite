@@ -42,11 +42,10 @@ export class ProjectService {
         .from('prompt_projects')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: false })
 
-      return await DatabaseService.handleResponse(
-        DatabaseService.convertRows<Project>(data || [])
-      )
+      const convertedData = DatabaseService.convertRows<Project>(data || [])
+      return await DatabaseService.handleResponse(convertedData)
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }
@@ -64,11 +63,10 @@ export class ProjectService {
         .from('dataset_projects')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: false })
 
-      return await DatabaseService.handleResponse(
-        DatabaseService.convertRows<Project>(data || [])
-      )
+      const convertedData = DatabaseService.convertRows<Project>(data || [])
+      return await DatabaseService.handleResponse(convertedData)
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }
@@ -84,23 +82,29 @@ export class ProjectService {
 
       const tableName = projectData.type === 'prompt' ? 'prompt_projects' : 'dataset_projects'
 
+      const insertData = {
+        user_id: user.id,
+        name: projectData.name,
+        icon: projectData.icon || '📁',
+        parent_id: projectData.parent_id || null,
+        folder_path: projectData.folder_path || null,
+        is_system: false
+      };
+
       const { data, error } = await supabase
         .from(tableName)
-        .insert({
-          user_id: user.id,
-          name: projectData.name,
-          icon: projectData.icon || '📁',
-          parent_id: projectData.parent_id || null,
-          folder_path: projectData.folder_path || null,
-          is_system: false
-        })
+        .insert(insertData)
         .select()
         .single()
 
-      return await DatabaseService.handleResponse(
-        DatabaseService.convertRow<Project>(data)
-      )
+      if (error) {
+        return { data: null, error: error.message };
+      }
+
+      const result = await DatabaseService.handleResponse<Project>({ data, error });
+      return result;
     } catch (err) {
+      console.error('❌ Exception in createProject:', err);
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }
   }
@@ -130,9 +134,7 @@ export class ProjectService {
         .select()
         .single()
 
-      return await DatabaseService.handleResponse(
-        DatabaseService.convertRow<Project>(data)
-      )
+      return await DatabaseService.handleResponse({ data, error })
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }
@@ -187,9 +189,7 @@ export class ProjectService {
         .eq('user_id', user.id)
         .single()
 
-      return await DatabaseService.handleResponse(
-        DatabaseService.convertRow<Project>(data)
-      )
+      return await DatabaseService.handleResponse({ data, error })
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }
@@ -213,11 +213,10 @@ export class ProjectService {
         .select('*')
         .eq('parent_id', parentId)
         .eq('user_id', user.id)
-        .order('created_at', { ascending: true })
+        .order('created_at', { ascending: false })
 
-      return await DatabaseService.handleResponse(
-        DatabaseService.convertRows<Project>(data || [])
-      )
+      const convertedData = DatabaseService.convertRows<Project>(data || [])
+      return await DatabaseService.handleResponse(convertedData)
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }

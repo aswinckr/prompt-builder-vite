@@ -1,11 +1,12 @@
 import React, { useState } from "react";
 import { Modal } from "./Modal";
 import { TipTapEditor } from "./TipTapEditor";
-import { useLibraryActions } from "../contexts/LibraryContext";
+import { useLibraryActions, useLibraryState } from "../contexts/LibraryContext";
 
 interface CreateContextModalProps {
   isOpen: boolean;
   onClose: () => void;
+  selectedProjectId?: string;
 }
 
 /**
@@ -14,6 +15,7 @@ interface CreateContextModalProps {
 export function CreateContextModal({
   isOpen,
   onClose,
+  selectedProjectId,
 }: CreateContextModalProps) {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState<{ html: string; json: any; text: string }>({
@@ -54,8 +56,7 @@ export function CreateContextModal({
         title: title.trim(),
         content: content.text, // Use plain text instead of HTML
         tags: [], // Empty tags for now - could be added later
-        project: 'notes', // Default project - could be updated based on current project
-        lastUpdated: new Date(),
+        project_id: selectedProjectId || null, // Use the selected project ID
       });
 
       onClose();

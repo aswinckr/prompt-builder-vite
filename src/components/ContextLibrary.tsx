@@ -9,8 +9,14 @@ import { CollapsibleTagSection } from './CollapsibleTagSection';
 import { ContextBlocksGrid } from './ContextBlocksGrid';
 import { SavedPromptList } from './SavedPromptList';
 import { CreateContextModal } from './CreateContextModal';
+import { CreateFolderModal } from './CreateFolderModal';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 import { Project } from '../types/Project';
+
+// Extended project interface with type information
+interface ProjectWithType extends Project {
+  type: 'prompts' | 'datasets';
+}
 
 export function ContextLibrary() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -21,13 +27,13 @@ export function ContextLibrary() {
   const [selectedProject, setSelectedProject] = useState<string>('');
 
   // Get data from LibraryContext
-  const { savedPrompts, promptProjects, datasetProjects, loading, error } = useLibraryState();
-  const { updateSavedPrompt, deleteSavedPrompt } = useLibraryActions();
+  const { savedPrompts, promptProjects, datasetProjects, loading, error, folderModal } = useLibraryState();
+  const { updateSavedPrompt, deleteSavedPrompt, createFolder, closeFolderModal } = useLibraryActions();
 
-  // Combine all projects for sidebar
-  const allProjects: Project[] = [
-    ...(promptProjects || []),
-    ...(datasetProjects || [])
+  // Combine all projects for sidebar with type information
+  const allProjects: ProjectWithType[] = [
+    ...((promptProjects || []).map(p => ({ ...p, type: 'prompts' as const }))),
+    ...((datasetProjects || []).map(p => ({ ...p, type: 'datasets' as const })))
   ];
 
   // Set default project if none selected
@@ -96,9 +102,7 @@ export function ContextLibrary() {
   // Default to context blocks view if no project or if project is a dataset
   const isPromptProject = currentProject?.type === 'prompts';
 
-  // Debug logging
-  console.log('Selected Project:', selectedProject, 'Type:', currentProject?.type, 'Is Prompt Project:', isPromptProject);
-
+  
   // Show loading state only on initial load
   if (loading && !error && allProjects.length === 0) {
     return (
@@ -244,6 +248,16 @@ export function ContextLibrary() {
       <CreateContextModal
         isOpen={isCreateContextModalOpen}
         onClose={handleCloseCreateContextModal}
+        selectedProjectId={isPromptProject ? null : selectedProject}
+      />
+
+      {/* Create Folder Modal */}
+      <CreateFolderModal
+        isOpen={folderModal.isOpen}
+        onClose={closeFolderModal}
+        onCreateFolder={createFolder}
+        folderType={folderModal.defaultType}
+        loading={folderModal.loading}
       />
     </div>
   );

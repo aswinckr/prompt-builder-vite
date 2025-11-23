@@ -41,6 +41,12 @@ interface LibraryState {
   datasetProjects: Project[];
   loading: boolean;
   error: string | null;
+  // Folder modal state
+  folderModal: {
+    isOpen: boolean;
+    defaultType: 'prompts' | 'datasets';
+    loading: boolean;
+  };
 }
 
 type LibraryAction =
@@ -75,6 +81,10 @@ type LibraryAction =
   | { type: 'CREATE_DATASET_PROJECT'; payload: Project }
   | { type: 'UPDATE_DATASET_PROJECT'; payload: { id: string; projectData: Partial<Project> } }
   | { type: 'DELETE_DATASET_PROJECT'; payload: string }
+  // Folder modal actions
+  | { type: 'OPEN_FOLDER_MODAL'; payload: 'prompts' | 'datasets' }
+  | { type: 'CLOSE_FOLDER_MODAL' }
+  | { type: 'SET_FOLDER_MODAL_LOADING'; payload: boolean }
   // Streaming actions
   | { type: 'SET_STREAMING_PANEL_OPEN'; payload: boolean }
   | { type: 'SET_SELECTED_MODEL'; payload: string }
@@ -106,7 +116,12 @@ const initialState: LibraryState = {
   promptProjects: [],
   datasetProjects: [],
   loading: false,
-  error: null
+  error: null,
+  folderModal: {
+    isOpen: false,
+    defaultType: 'prompts',
+    loading: false
+  }
 };
 
 function libraryReducer(state: LibraryState, action: LibraryAction): LibraryState {
@@ -271,6 +286,32 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
       return {
         ...state,
         datasetProjects: state.datasetProjects.filter(project => project.id !== action.payload)
+      };
+    case 'OPEN_FOLDER_MODAL':
+      return {
+        ...state,
+        folderModal: {
+          isOpen: true,
+          defaultType: action.payload,
+          loading: false
+        }
+      };
+    case 'CLOSE_FOLDER_MODAL':
+      return {
+        ...state,
+        folderModal: {
+          ...state.folderModal,
+          isOpen: false,
+          loading: false
+        }
+      };
+    case 'SET_FOLDER_MODAL_LOADING':
+      return {
+        ...state,
+        folderModal: {
+          ...state.folderModal,
+          loading: action.payload
+        }
       };
     case 'SET_STREAMING_PANEL_OPEN':
       return {
@@ -482,6 +523,50 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       return result;
     },
 
+    // Folder modal actions
+    openFolderModal: (type: 'prompts' | 'datasets') => dispatch({ type: 'OPEN_FOLDER_MODAL', payload: type }),
+    closeFolderModal: () => dispatch({ type: 'CLOSE_FOLDER_MODAL' }),
+    setFolderModalLoading: (loading: boolean) => dispatch({ type: 'SET_FOLDER_MODAL_LOADING', payload: loading }),
+
+    // Unified folder creation (type is determined by modal context)
+    createFolder: async (folderData: { name: string; icon: string }) => {
+      console.log('🔨 Create folder called with:', folderData);
+      console.log('📊 Current modal state:', state.folderModal);
+
+      try {
+        dispatch({ type: 'SET_FOLDER_MODAL_LOADING', payload: true });
+
+        // Get the current folder type from the modal state
+        const currentType = state.folderModal.defaultType;
+        console.log('🎯 Creating folder of type:', currentType);
+
+        const result = currentType === 'prompts'
+          ? await ProjectService.createProject({ name: folderData.name, icon: folderData.icon, type: 'prompt' })
+          : await ProjectService.createProject({ name: folderData.name, icon: folderData.icon, type: 'dataset' });
+
+        console.log('✅ ProjectService result:', result);
+
+        if (result.data) {
+          console.log('📝 Dispatching project creation to state');
+          dispatch({
+            type: currentType === 'prompts' ? 'CREATE_PROMPT_PROJECT' : 'CREATE_DATASET_PROJECT',
+            payload: result.data
+          });
+        } else {
+          console.error('❌ No data returned from ProjectService:', result.error);
+        }
+
+        dispatch({ type: 'SET_FOLDER_MODAL_LOADING', payload: false });
+        dispatch({ type: 'CLOSE_FOLDER_MODAL' });
+
+        return result;
+      } catch (error) {
+        console.error('❌ Error creating folder:', error);
+        dispatch({ type: 'SET_FOLDER_MODAL_LOADING', payload: false });
+        throw error;
+      }
+    },
+
     // Streaming actions
     setStreamingPanelOpen: (open: boolean) => dispatch({ type: 'SET_STREAMING_PANEL_OPEN', payload: open }),
     setSelectedModel: (model: string) => dispatch({ type: 'SET_SELECTED_MODEL', payload: model }),
@@ -495,9 +580,6 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
     // Legacy actions (保持向后兼容)
     savePromptAsTemplate: (name: string) => {
-      return Date.now().toString();
-    },
-    createFolder: (name: string) => {
       return Date.now().toString();
     },
     movePromptToFolder: (promptId: string, folderId: string) => {

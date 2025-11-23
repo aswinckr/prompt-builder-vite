@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { Plus, Loader2 } from 'lucide-react';
+import { Plus } from 'lucide-react';
 import { useLibraryActions } from '../contexts/LibraryContext';
 import { Project } from '../types/Project';
 
@@ -11,30 +11,16 @@ interface ProjectSidebarProps {
 }
 
 export function ProjectSidebar({ projects, selectedProject, setSelectedProject, loading = false }: ProjectSidebarProps) {
-  const { createPromptProject, createDatasetProject } = useLibraryActions();
+  const { openFolderModal } = useLibraryActions();
 
   // Organize projects by type
   const promptProjects = projects.filter(p => p.type === 'prompts');
   const datasetProjects = projects.filter(p => p.type === 'datasets');
 
-  // Handle project creation
-  const handleCreateProject = useCallback(async (type: 'prompts' | 'datasets') => {
-    const count = type === 'prompts' ? promptProjects.length + 1 : datasetProjects.length + 1;
-    const name = type === 'prompts' ? `Prompt Project ${count}` : `Dataset Project ${count}`;
-
-    try {
-      const result = type === 'prompts'
-        ? await createPromptProject({ name, icon: type === 'prompts' ? '📁' : '📊' })
-        : await createDatasetProject({ name, icon: type === 'prompts' ? '📁' : '📊' });
-
-      if (result.data) {
-        setSelectedProject(result.data.id);
-      }
-    } catch (error) {
-      console.error('Failed to create project:', error);
-      // Handle error - could show toast notification
-    }
-  }, [promptProjects.length, datasetProjects.length, createPromptProject, createDatasetProject, setSelectedProject]);
+  // Handle project creation - open modal instead of direct creation
+  const handleCreateProject = useCallback((type: 'prompts' | 'datasets') => {
+    openFolderModal(type);
+  }, [openFolderModal]);
 
   // Handle keyboard navigation
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -103,19 +89,18 @@ export function ProjectSidebar({ projects, selectedProject, setSelectedProject, 
           </h3>
           <button
             onClick={() => handleCreateProject(type)}
-            disabled={loading}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 handleCreateProject(type);
               }
             }}
-            className="p-1 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-700 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="p-1 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-700 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-800"
             aria-label={`Add new ${type.slice(0, -1)} project`}
             data-add-button={type}
             data-testid={`add-${type}-project`}
           >
-            {loading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
+            <Plus size={16} />
           </button>
         </div>
 

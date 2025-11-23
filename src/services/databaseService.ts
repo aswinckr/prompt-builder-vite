@@ -15,11 +15,18 @@ export interface DatabaseResponse<T> {
 // Generic database operations
 export class DatabaseService {
   static async handleResponse<T>(response: any): Promise<DatabaseResponse<T>> {
-    if (response.error) {
-      console.error('Database error:', response.error)
-      return { data: null, error: response.error.message }
+    // Handle both wrapped responses (like Supabase) and unwrapped data
+    if (response && typeof response === 'object' && 'error' in response) {
+      // This is a wrapped response (like from Supabase)
+      if (response.error) {
+        console.error('Database error:', response.error)
+        return { data: null, error: response.error.message }
+      }
+      return { data: response.data, error: null }
+    } else {
+      // This is unwrapped data (already converted)
+      return { data: response, error: null }
     }
-    return { data: response.data, error: null }
   }
 
   static async getUser() {
@@ -46,12 +53,13 @@ export class DatabaseService {
   static convertRow<T>(row: any): T {
     if (!row) return {} as T
 
-    return {
+    const converted = {
       ...row,
       id: row.id,
       created_at: new Date(row.created_at),
       updated_at: new Date(row.updated_at)
-    } as T
+    };
+    return converted as T
   }
 
   static convertRows<T>(rows: any[]): T[] {
