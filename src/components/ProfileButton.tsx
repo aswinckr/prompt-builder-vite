@@ -1,5 +1,6 @@
 import React from 'react';
 import { User } from 'lucide-react';
+import { useAuthState } from '../contexts/AuthContext';
 
 interface ProfileButtonProps {
   onClick: () => void;
@@ -10,6 +11,8 @@ interface ProfileButtonProps {
  * Shows user avatar and name with click functionality to open profile modal
  */
 export function ProfileButton({ onClick }: ProfileButtonProps) {
+  const { user, isAuthenticated, isLoading } = useAuthState();
+
   const handleKeyDown = (event: React.KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
@@ -17,8 +20,10 @@ export function ProfileButton({ onClick }: ProfileButtonProps) {
     }
   };
 
-  const displayName = 'John Doe';
-  const accountType = 'Personal Account';
+  const displayName = isAuthenticated
+    ? (user?.user_metadata?.full_name || user?.email?.split('@')[0] || 'User')
+    : 'Sign In';
+  const accountType = isAuthenticated ? 'Personal Account' : 'Click to sign in';
 
   return (
     <div className="p-4 border-t border-neutral-700">
@@ -31,11 +36,25 @@ export function ProfileButton({ onClick }: ProfileButtonProps) {
       >
         {/* Avatar Icon */}
         <div className="flex-shrink-0 w-8 h-8 bg-neutral-600 rounded-full flex items-center justify-center overflow-hidden">
-          <User
-            size={18}
-            className="text-neutral-300"
-            aria-hidden="true"
-          />
+          {isLoading ? (
+            <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-400 border-t-white"></div>
+          ) : isAuthenticated && user?.user_metadata?.avatar_url ? (
+            <img
+              src={user.user_metadata.avatar_url}
+              alt="User avatar"
+              className="w-full h-full object-cover"
+            />
+          ) : isAuthenticated && user?.email ? (
+            <span className="text-sm font-medium text-neutral-300">
+              {user.email.charAt(0).toUpperCase()}
+            </span>
+          ) : (
+            <User
+              size={18}
+              className="text-neutral-300"
+              aria-hidden="true"
+            />
+          )}
         </div>
 
         {/* User Name and Account Type */}
