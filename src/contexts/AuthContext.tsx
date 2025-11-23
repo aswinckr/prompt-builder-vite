@@ -110,23 +110,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return false;
   };
 
-  // Log immediately on mount before useEffect
-  console.log('=== AUTH PROVIDER MOUNT ===');
-  console.log('Full URL on mount:', window.location.href);
-  console.log('Hash on mount:', window.location.hash);
-
+  // Process OAuth hash if present before React Router strips it
   const hashParams = new URLSearchParams(window.location.hash.substring(1));
   const accessToken = hashParams.get('access_token');
-  const hasOAuthHash = !!accessToken;
-
-  console.log('Has OAuth hash:', hasOAuthHash);
 
   useEffect(() => {
-    // Debug: Print URL hash and parameters
-    console.log('=== AUTH DEBUG ===');
-    console.log('Current URL:', window.location.href);
-    console.log('URL hash:', window.location.hash);
-    console.log('URL search:', window.location.search);
 
     // Process OAuth hash if present
     const processOAuthHash = async () => {
