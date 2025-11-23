@@ -43,7 +43,22 @@ export function ProfileButton({ onClick }: ProfileButtonProps) {
               src={user.user_metadata.avatar_url}
               alt="User avatar"
               className="w-full h-full object-cover"
+              onError={(e) => {
+                // Fallback to user initial if avatar fails to load
+                e.currentTarget.style.display = 'none';
+                const fallback = e.currentTarget.nextElementSibling as HTMLElement;
+                if (fallback) fallback.style.display = 'flex';
+              }}
             />
+          ) : null}
+          {/* Fallback content */}
+          {isAuthenticated && user?.user_metadata?.avatar_url ? (
+            <span
+              className="text-sm font-medium text-neutral-300"
+              style={{display: 'none'}}
+            >
+              {user?.email?.charAt(0).toUpperCase() || 'U'}
+            </span>
           ) : isAuthenticated && user?.email ? (
             <span className="text-sm font-medium text-neutral-300">
               {user.email.charAt(0).toUpperCase()}
@@ -58,9 +73,9 @@ export function ProfileButton({ onClick }: ProfileButtonProps) {
         </div>
 
         {/* User Name and Account Type */}
-        <div className="flex flex-col items-start">
-          <span className="text-sm font-medium">{displayName}</span>
-          <span className="text-xs text-neutral-500">{accountType}</span>
+        <div className="flex flex-col items-start text-left">
+          <span className="text-sm font-medium text-left">{displayName}</span>
+          <span className="text-xs text-neutral-500 text-left">{accountType}</span>
         </div>
       </button>
     </div>

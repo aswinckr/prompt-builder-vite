@@ -1,16 +1,21 @@
 import React, { useState, useMemo } from 'react';
-import { Play, ChevronDown } from 'lucide-react';
+import { Play, ChevronDown, User } from 'lucide-react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { CustomTextInput } from './CustomTextInput';
 import { PromptBuilderBlockList } from './PromptBuilderBlockList';
 import { PromptBuilderActions } from './PromptBuilderActions';
 import { StreamingSidePanel } from './StreamingSidePanel';
+import { ProfileModal } from './ProfileModal';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
+import { useAuthState } from '../contexts/AuthContext';
 import { mockContextBlocks } from '../data/mockData';
 
 export function PromptBuilder() {
   const { promptBuilder, streaming } = useLibraryState();
+  const { user, isAuthenticated, isLoading } = useAuthState();
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+
   const {
     setCustomText,
     setStreamingPanelOpen,
@@ -135,6 +140,49 @@ export function PromptBuilder() {
 
         {/* Main Content - ChatGPT-style Centered Layout */}
         <div className="flex-1 flex flex-col overflow-hidden relative">
+          {/* Profile Circle - Bottom Left */}
+          <div className="fixed bottom-6 left-6 z-50">
+            <button
+              onClick={() => setIsProfileModalOpen(true)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  setIsProfileModalOpen(true);
+                }
+              }}
+              className="w-10 h-10 rounded-full bg-neutral-700 hover:bg-neutral-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-900 overflow-hidden shadow-lg flex items-center justify-center"
+              aria-label="Open profile menu"
+            >
+              {isLoading ? (
+                <div className="w-4 h-4 animate-spin rounded-full border-2 border-neutral-400 border-t-white"></div>
+              ) : isAuthenticated && user?.user_metadata?.avatar_url ? (
+                <img
+                  src={user.user_metadata.avatar_url}
+                  alt="User avatar"
+                  className="w-full h-full object-cover"
+                  onError={(e) => {
+                    // Fallback to user initial if avatar fails to load
+                    e.currentTarget.style.display = 'none';
+                    const parent = e.currentTarget.parentElement;
+                    if (parent) {
+                      parent.innerHTML = `<span class="text-sm font-medium text-neutral-300 flex items-center justify-center w-full h-full">${user?.email?.charAt(0).toUpperCase() || 'U'}</span>`;
+                    }
+                  }}
+                />
+              ) : isAuthenticated && user?.email ? (
+                <span className="text-sm font-medium text-neutral-300">
+                  {user.email.charAt(0).toUpperCase()}
+                </span>
+              ) : (
+                <User
+                  size={18}
+                  className="text-neutral-300"
+                  aria-hidden="true"
+                />
+              )}
+            </button>
+          </div>
+
           <div className="flex-1 overflow-y-auto p-6 lg:p-8">
             <div className="w-full max-w-3xl mx-auto space-y-6 min-h-full flex flex-col justify-center">
               {/* Title - Like Claude/ChatGPT branding */}
@@ -159,6 +207,14 @@ export function PromptBuilder() {
         {/* Streaming Side Panel */}
         {streaming.isStreamingPanelOpen && (
           <StreamingSidePanel formattedPrompt={assembledPrompt} />
+        )}
+
+        {/* Profile Modal */}
+        {isProfileModalOpen && (
+          <ProfileModal
+            isOpen={isProfileModalOpen}
+            onClose={() => setIsProfileModalOpen(false)}
+          />
         )}
       </div>
     </DndProvider>
