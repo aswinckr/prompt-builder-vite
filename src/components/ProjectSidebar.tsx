@@ -1,10 +1,10 @@
 import React, { useState, useCallback } from 'react';
 import { Plus } from 'lucide-react';
 import { useLibraryActions } from '../contexts/LibraryContext';
-import { Project } from '../types/Project';
+import { Project } from '../services/projectService';
 
 interface ProjectSidebarProps {
-  projects: Project[];
+  projects: (Project & { type: 'prompts' | 'datasets' })[];
   selectedProject: string;
   setSelectedProject: (id: string) => void;
   loading?: boolean;
@@ -76,8 +76,8 @@ export function ProjectSidebar({ projects, selectedProject, setSelectedProject, 
   }) => {
     // Sort projects: system projects first, then alphabetically
     const sortedProjects = [...projects].sort((a, b) => {
-      if (a.isSystem && !b.isSystem) return -1;
-      if (!a.isSystem && b.isSystem) return 1;
+      if (a.is_system && !b.is_system) return -1;
+      if (!a.is_system && b.is_system) return 1;
       return a.name.localeCompare(b.name);
     });
 
@@ -135,7 +135,7 @@ export function ProjectSidebar({ projects, selectedProject, setSelectedProject, 
                     ({project.promptCount})
                   </span>
                 )}
-                {project.isSystem && (
+                {project.is_system && (
                   <span className="text-xs text-neutral-500 ml-1">
                     System
                   </span>

@@ -7,8 +7,8 @@ interface SavedPromptListProps {
   selectedProject: string;
   prompts?: SavedPrompt[];
   onPromptUpdate?: (prompt: SavedPrompt) => void;
-  onPromptDelete?: (promptId: number) => void;
-  onPromptLoad?: (promptId: number) => void;
+  onPromptDelete?: (promptId: string) => void;
+  onPromptLoad?: (promptId: string) => void;
 }
 
 export function SavedPromptList({
@@ -32,9 +32,9 @@ export function SavedPromptList({
     console.log('SavedPromptList - all prompts:', filtered.length);
 
     // Filter by selected project
-    const filteredByProject = filtered.filter(prompt => prompt.projectId === selectedProject);
+    const filteredByProject = filtered.filter(prompt => prompt.project_id === selectedProject);
     console.log('SavedPromptList - filtered prompts count:', filteredByProject.length);
-    console.log('SavedPromptList - filtered prompts:', filteredByProject.map(p => ({ id: p.id, title: p.title, projectId: p.projectId })));
+    console.log('SavedPromptList - filtered prompts:', filteredByProject.map(p => ({ id: p.id, title: p.title, project_id: p.project_id })));
 
     filtered = filteredByProject;
 
@@ -66,7 +66,7 @@ export function SavedPromptList({
       }
 
       filtered = filtered.filter(prompt =>
-        prompt.createdAt >= filterDate
+        prompt.created_at >= filterDate
       );
     }
 
@@ -76,17 +76,17 @@ export function SavedPromptList({
         case 'title':
           return a.title.localeCompare(b.title);
         case 'created':
-          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
         case 'updated':
         default:
-          return new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime();
+          return new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime();
       }
     });
 
     return filtered;
   }, [prompts, selectedProject, searchQuery, selectedDate, sortBy]);
 
-  const handleLoadPrompt = (promptId: number) => {
+  const handleLoadPrompt = (promptId: string) => {
     console.log('Loading prompt:', promptId);
     onPromptLoad?.(promptId);
   };
@@ -104,7 +104,7 @@ export function SavedPromptList({
       const promptToSave: SavedPrompt = {
         ...editingPrompt,
         ...updatedPrompt,
-        updatedAt: new Date(),
+        updated_at: new Date(),
       };
 
       // Call the parent's update handler
@@ -119,7 +119,7 @@ export function SavedPromptList({
     }
   };
 
-  const handleDeletePrompt = async (promptId: number) => {
+  const handleDeletePrompt = async (promptId: string) => {
     console.log('Deleting prompt:', promptId);
     onPromptDelete?.(promptId);
   };
@@ -261,10 +261,10 @@ export function SavedPromptList({
                   <div className="flex items-center justify-between text-xs text-neutral-500">
                     <div className="flex items-center gap-1">
                       <Calendar size={12} />
-                      Updated {prompt.updatedAt.toLocaleDateString()}
+                      Updated {prompt.updated_at.toLocaleDateString()}
                     </div>
                     <div className="flex items-center gap-3">
-                      <span>Created {prompt.createdAt.toLocaleDateString()}</span>
+                      <span>Created {prompt.created_at.toLocaleDateString()}</span>
                     </div>
                   </div>
                 </div>

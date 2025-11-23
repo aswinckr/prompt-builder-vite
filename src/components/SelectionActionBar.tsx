@@ -6,7 +6,7 @@ import { ROUTES } from '../routes/AppRoutes';
 
 interface SelectionActionBarProps {
   selectedCount: number;
-  selectedBlocks: number[];
+  selectedBlocks: string[];
   onClear: () => void;
   onSelectAll: () => void;
   totalVisible: number;

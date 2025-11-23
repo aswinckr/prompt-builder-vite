@@ -45,11 +45,11 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
   }, []);
 
   // Grid keyboard navigation
-  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLButtonElement>, blockId: number) => {
+  const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>, blockId: string) => {
     if (!gridRef.current) return;
 
     const blocks = Array.from(gridRef.current.querySelectorAll('[data-block-id]'));
-    const currentIndex = blocks.findIndex(el => parseInt(el.getAttribute('data-block-id') || '0') === blockId);
+    const currentIndex = blocks.findIndex(el => el.getAttribute('data-block-id') === blockId);
 
     let nextIndex = currentIndex;
     const gridCols = window.innerWidth >= 1024 ? 3 : window.innerWidth >= 768 ? 2 : 1;

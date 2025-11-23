@@ -63,7 +63,7 @@ export function EditPromptModal({
         title: title.trim(),
         content: content.trim(),
         description: content.trim(), // Keep description for backward compatibility
-        updatedAt: new Date(),
+        updated_at: new Date(),
       });
       onClose();
     }

@@ -7,7 +7,7 @@ interface ContextBlockProps {
   isSelected: boolean;
   onSelect: () => void;
   onEdit?: (block: ContextBlockType) => void;
-  onKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>) => void;
+  onKeyDown?: (event: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
 /**
@@ -18,7 +18,7 @@ export function ContextBlock({ block, isSelected, onSelect, onEdit, onKeyDown }:
     onSelect();
   };
 
-  const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === 'e' || event.key === 'E') {
       event.preventDefault();
       onEdit?.(block);

@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { ContextBlock } from '../types/ContextBlock';
 import { SavedPrompt } from '../types/SavedPrompt';
-import { ContextService, DatabaseResponse } from '../services/contextService';
+import { ContextService } from '../services/contextService';
+import { DatabaseResponse } from '../services/databaseService';
 import { PromptService } from '../services/promptService';
 import { ProjectService, Project } from '../services/projectService';
 

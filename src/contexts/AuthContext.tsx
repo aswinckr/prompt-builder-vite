@@ -259,11 +259,11 @@ export function useAuthActions() {
         dispatch({ type: 'AUTH_LOADING', payload: true });
         dispatch({ type: 'CLEAR_ERROR' });
 
-        const { data } = await auth.signInWithEmail(email, password);
-        if (data.user && data.session) {
+        const authData = await auth.signInWithEmail(email, password);
+        if (authData.user && authData.session) {
           dispatch({
             type: 'AUTH_SUCCESS',
-            payload: { user: data.user, session: data.session },
+            payload: { user: authData.user, session: authData.session },
           });
         }
       } catch (error) {
@@ -279,10 +279,10 @@ export function useAuthActions() {
         dispatch({ type: 'AUTH_LOADING', payload: true });
         dispatch({ type: 'CLEAR_ERROR' });
 
-        const { data } = await auth.signUpWithEmail(email, password);
+        const authData = await auth.signUpWithEmail(email, password);
         // Don't immediately sign in user - they need to confirm email first
         dispatch({ type: 'AUTH_LOADING', payload: false });
-        return data;
+        return authData;
       } catch (error) {
         dispatch({
           type: 'AUTH_ERROR',

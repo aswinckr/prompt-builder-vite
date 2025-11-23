@@ -11,7 +11,7 @@ import { SavedPromptList } from './SavedPromptList';
 import { CreateContextModal } from './CreateContextModal';
 import { CreateFolderModal } from './CreateFolderModal';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
-import { Project } from '../types/Project';
+import { Project } from '../services/projectService';
 
 // Extended project interface with type information
 interface ProjectWithType extends Project {

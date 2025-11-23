@@ -15,14 +15,14 @@ export interface ContextBlock {
 export interface CreateContextBlockData {
   title: string
   content: string
-  project_id?: string
+  project_id?: string | null
   tags?: string[]
 }
 
 export interface UpdateContextBlockData {
   title?: string
   content?: string
-  project_id?: string
+  project_id?: string | null
   tags?: string[]
 }
 
@@ -301,13 +301,16 @@ export class ContextService {
         `)
         .eq('prompt_id', promptId)
 
-      if (data) {
+      if (data && data.length > 0) {
         const contextBlocks = data
-          .map(item => ({
-            ...item.context_blocks,
-            project: item.context_blocks.dataset_projects
-          }))
-          .filter(cb => cb.user_id === user.id)
+          .map((item: any) => {
+            if (!item.context_blocks) return null;
+            return {
+              ...item.context_blocks,
+              project: item.context_blocks.dataset_projects || null
+            };
+          })
+          .filter((cb: any): cb is ContextBlock => cb && cb.user_id === user.id)
 
         return { data: DatabaseService.convertRows<ContextBlock>(contextBlocks), error: null }
       }

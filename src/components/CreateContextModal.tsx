@@ -6,7 +6,7 @@ import { useLibraryActions, useLibraryState } from "../contexts/LibraryContext";
 interface CreateContextModalProps {
   isOpen: boolean;
   onClose: () => void;
-  selectedProjectId?: string;
+  selectedProjectId?: string | null;
 }
 
 /**

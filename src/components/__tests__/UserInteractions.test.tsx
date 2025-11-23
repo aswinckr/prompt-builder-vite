@@ -6,13 +6,14 @@ import { EditPromptModal } from '../EditPromptModal';
 import { SavedPrompt } from '../../types/SavedPrompt';
 
 const mockPrompt: SavedPrompt = {
-  id: 1,
+  id: '1',
+  user_id: 'test-user-1',
   title: 'Test Prompt',
   description: 'Test description',
   content: '<p>Test content</p>',
-  projectId: 'test-project',
-  createdAt: new Date(),
-  updatedAt: new Date(),
+  project_id: 'test-project',
+  created_at: new Date(),
+  updated_at: new Date(),
   folder: null,
   tags: ['test']
 };

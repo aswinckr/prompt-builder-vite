@@ -23,35 +23,38 @@ vi.mock('../EditPromptModal', () => ({
 
 const mockPrompts: SavedPrompt[] = [
   {
-    id: 1,
+    id: '1',
+    user_id: 'test-user-1',
     title: 'Test Prompt 1',
     description: 'First test prompt',
     content: '<p>Content 1</p>',
-    projectId: 'project-1',
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-02'),
+    project_id: 'project-1',
+    created_at: new Date('2024-01-01'),
+    updated_at: new Date('2024-01-02'),
     folder: null,
     tags: ['test', 'first']
   },
   {
-    id: 2,
+    id: '2',
+    user_id: 'test-user-1',
     title: 'Test Prompt 2',
     description: 'Second test prompt',
     content: '<p>Content 2</p>',
-    projectId: 'project-1',
-    createdAt: new Date('2024-01-03'),
-    updatedAt: new Date('2024-01-04'),
+    project_id: 'project-1',
+    created_at: new Date('2024-01-03'),
+    updated_at: new Date('2024-01-04'),
     folder: null,
     tags: ['test', 'second']
   },
   {
-    id: 3,
+    id: '3',
+    user_id: 'test-user-1',
     title: 'Project 2 Prompt',
     description: 'Prompt for different project',
     content: '<p>Content 3</p>',
-    projectId: 'project-2',
-    createdAt: new Date('2024-01-05'),
-    updatedAt: new Date('2024-01-06'),
+    project_id: 'project-2',
+    created_at: new Date('2024-01-05'),
+    updated_at: new Date('2024-01-06'),
     folder: null,
     tags: ['different']
   }
@@ -126,7 +129,7 @@ describe('Component Integration', () => {
       // Should call onPromptUpdate
       expect(mockOnPromptUpdate).toHaveBeenCalledWith(
         expect.objectContaining({
-          id: 1,
+          id: '1',
           title: 'Test Prompt 1'
         })
       );
@@ -280,8 +283,8 @@ describe('Component Integration', () => {
       const today = new Date();
       const todayPrompt: SavedPrompt = {
         ...mockPrompts[0],
-        createdAt: today,
-        updatedAt: today
+        created_at: today,
+        updated_at: today
       };
 
       render(

@@ -7,7 +7,7 @@ import { ContextBlock } from "../types/ContextBlock";
 interface EditContextModalProps {
   isOpen: boolean;
   onClose: () => void;
-  blockId: number | null;
+  blockId: string | null;
 }
 
 /**

@@ -12,6 +12,8 @@ export interface Project {
   is_system: boolean
   created_at: Date
   updated_at: Date
+  // Optional fields for UI compatibility
+  promptCount?: number
 }
 
 export interface CreateProjectData {

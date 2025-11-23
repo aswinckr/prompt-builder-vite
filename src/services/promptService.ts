@@ -17,19 +17,19 @@ export interface Prompt {
 
 export interface CreatePromptData {
   title: string
-  description?: string
+  description?: string | null
   content: string
-  project_id?: string
-  folder?: string
+  project_id?: string | null
+  folder?: string | null
   tags?: string[]
 }
 
 export interface UpdatePromptData {
   title?: string
-  description?: string
+  description?: string | null
   content?: string
-  project_id?: string
-  folder?: string
+  project_id?: string | null
+  folder?: string | null
   tags?: string[]
 }
 
