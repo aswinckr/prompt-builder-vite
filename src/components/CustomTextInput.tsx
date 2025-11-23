@@ -47,15 +47,12 @@ function PromptInput({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && onSubmit) {
-      e.preventDefault();
-      onSubmit();
-    }
-    // Cmd+Enter (Mac) or Ctrl+Enter (Windows/Linux) support
+    // Only Cmd+Enter (Mac) or Ctrl+Enter (Windows/Linux) triggers submit
     if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && onSubmit) {
       e.preventDefault();
       onSubmit();
     }
+    // Let Enter behave normally (adds new line)
   };
 
   const handleSubmit = (e: React.FormEvent) => {
