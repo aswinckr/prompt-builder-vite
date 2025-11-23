@@ -166,29 +166,25 @@ export function ContextLibrary() {
       <div className="flex-1 flex flex-col overflow-hidden w-full">
         {/* Fixed Header Section */}
         <div className="flex-shrink-0">
-          {/* Mobile Sidebar Toggle and Search Bar */}
+          {/* Unified Search Bar with Mobile Sidebar Toggle */}
           {!isPromptProject && (
-            <div className="flex items-center gap-3 p-4 md:p-6 border-b border-neutral-700">
-              {/* Mobile Sidebar Toggle - Only visible on mobile when sidebar is collapsed */}
-              <button
-                onClick={toggleContextLibrarySidebar}
-                className="md:hidden p-2 rounded-md hover:bg-neutral-700 text-neutral-400 hover:text-neutral-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-                aria-label="Expand sidebar"
-                data-testid="mobile-sidebar-toggle"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
+            <div className="border-b border-neutral-700">
+              <div className="flex items-center gap-3 p-4 md:p-6">
+                {/* Mobile Sidebar Toggle - Only visible on mobile when sidebar is collapsed */}
+                <button
+                  onClick={toggleContextLibrarySidebar}
+                  className="md:hidden p-2 rounded-md hover:bg-neutral-700 text-neutral-400 hover:text-neutral-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                  aria-label="Expand sidebar"
+                  data-testid="mobile-sidebar-toggle"
+                >
+                  <ChevronRight className="w-4 h-4" />
+                </button>
 
-              <div className="flex-1">
-                <SearchBar showFullWidth={false} />
+                {/* Search Bar - Responsive across all screen sizes */}
+                <div className="flex-1 min-w-0">
+                  <SearchBar showFullWidth={false} />
+                </div>
               </div>
-            </div>
-          )}
-
-          {/* Desktop Search Bar - Only visible on desktop */}
-          {!isPromptProject && (
-            <div className="hidden md:block">
-              <SearchBar />
             </div>
           )}
 
