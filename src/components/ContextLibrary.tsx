@@ -10,6 +10,7 @@ import { ContextBlocksGrid } from './ContextBlocksGrid';
 import { SavedPromptList } from './SavedPromptList';
 import { CreateContextModal } from './CreateContextModal';
 import { CreateFolderModal } from './CreateFolderModal';
+import { SynchronizedLoading } from './ui/SynchronizedLoading';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 import { Project } from '../services/projectService';
 
@@ -105,33 +106,12 @@ export function ContextLibrary() {
   const isPromptProject = currentProject?.type === 'prompts';
 
   
-  // Show loading state only on initial load
-  if (loading && !error && allProjects.length === 0) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-neutral-400" />
-          <p className="text-neutral-400">Loading your data...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // Show error state
-  if (error) {
-    return (
-      <div className="h-full flex items-center justify-center">
-        <div className="text-center max-w-md">
-          <AlertCircle className="w-8 h-8 mx-auto mb-4 text-red-400" />
-          <p className="text-red-400 mb-2">Failed to load data</p>
-          <p className="text-neutral-400 text-sm">{error}</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="h-full flex overflow-hidden">
+    <SynchronizedLoading
+      isLoading={loading && !error && allProjects.length === 0}
+      message="Loading your data..."
+    >
+      <div className="h-full flex overflow-hidden">
       {/* Mobile Overlay - Only visible on mobile when sidebar is expanded */}
       {contextLibrarySidebarExpanded && (
         <div
@@ -261,6 +241,18 @@ export function ContextLibrary() {
         folderType={folderModal.defaultType}
         loading={folderModal.loading}
       />
+
+      {/* Error State Overlay */}
+      {error && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
+          <div className="bg-neutral-800 rounded-lg p-6 max-w-md mx-4 text-center">
+            <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-400" />
+            <p className="text-red-400 mb-2 font-medium">Failed to load data</p>
+            <p className="text-neutral-400 text-sm">{error}</p>
+          </div>
+        </div>
+      )}
     </div>
+    </SynchronizedLoading>
   );
 }

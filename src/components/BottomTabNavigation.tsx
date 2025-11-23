@@ -65,7 +65,8 @@ export function BottomTabNavigation() {
             role="tab"
             aria-selected={isBuilderActive}
             aria-controls="prompt-builder-panel"
-            className="nav-tab-no-outline flex items-center gap-2 px-3 md:px-4 h-8 rounded-full text-sm font-medium transition-all duration-300 no-underline data-[active=true]:text-white data-[active=true]:font-medium text-neutral-900 cursor-pointer justify-center"
+            className="nav-tab-no-outline flex items-center gap-2 px-3 md:px-4 h-8 rounded-full text-sm font-medium transition-colors duration-200 ease-out no-underline data-[active=true]:text-white data-[active=true]:font-medium text-neutral-900 cursor-pointer justify-center"
+            style={{ willChange: 'color', backfaceVisibility: 'hidden' }}
           >
             <Sparkles className="w-4 h-4" />
             <span>Prompt</span>
@@ -77,7 +78,8 @@ export function BottomTabNavigation() {
             role="tab"
             aria-selected={isKnowledgeActive}
             aria-controls="context-library-panel"
-            className="nav-tab-no-outline flex items-center gap-2 px-3 md:px-4 h-8 rounded-full text-sm font-medium transition-all duration-300 no-underline data-[active=true]:text-white data-[active=true]:font-medium text-neutral-900 cursor-pointer justify-center"
+            className="nav-tab-no-outline flex items-center gap-2 px-3 md:px-4 h-8 rounded-full text-sm font-medium transition-colors duration-200 ease-out no-underline data-[active=true]:text-white data-[active=true]:font-medium text-neutral-900 cursor-pointer justify-center"
+            style={{ willChange: 'color', backfaceVisibility: 'hidden' }}
           >
             <Library className="w-4 h-4" />
             <span>Knowledge</span>

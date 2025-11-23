@@ -7,6 +7,7 @@ import { PromptBuilderBlockList } from "./PromptBuilderBlockList";
 import { PromptBuilderActions } from "./PromptBuilderActions";
 import { ChatInterface } from "./ChatInterface";
 import { ProfileModal } from "./ProfileModal";
+import { SynchronizedLoading } from "./ui/SynchronizedLoading";
 import { useLibraryState, useLibraryActions } from "../contexts/LibraryContext";
 import { useAuthState } from "../contexts/AuthContext";
 
@@ -81,7 +82,8 @@ export function PromptBuilder() {
 
   return (
     <DndProvider backend={HTML5Backend}>
-      <div className="flex h-full flex-col bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 text-neutral-100">
+      <SynchronizedLoading isLoading={isLoading}>
+        <div className="flex h-full flex-col bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 text-neutral-100">
         {/* Header with Model Selector and Actions */}
         <div className="flex items-center justify-between border-b border-neutral-800/50 p-4 backdrop-blur-sm">
           {/* Left side - Model Selector */}
@@ -199,7 +201,8 @@ export function PromptBuilder() {
             onClose={() => setIsProfileModalOpen(false)}
           />
         )}
-      </div>
+        </div>
+      </SynchronizedLoading>
     </DndProvider>
   );
 }

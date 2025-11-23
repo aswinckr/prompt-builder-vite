@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
 
 interface MotionHighlightProps {
   children: React.ReactNode;
@@ -14,11 +14,17 @@ export function MotionHighlight({
   onValueChange
 }: MotionHighlightProps) {
   const [activeValue, setActiveValue] = useState<string | null>(defaultValue || null);
-  const [highlightStyle, setHighlightStyle] = useState<React.CSSProperties>({});
+  const [highlightStyle, setHighlightStyle] = useState<React.CSSProperties>({
+    transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1), width 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
+    opacity: 0,
+    transform: 'translateZ(0)', // Hardware acceleration
+    willChange: 'left, width, opacity',
+  });
   const containerRef = useRef<HTMLDivElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
+  const isInitialized = useRef(false);
 
-  const updateHighlight = (targetElement: HTMLElement) => {
+  const updateHighlight = useCallback((targetElement: HTMLElement) => {
     if (!containerRef.current) return;
 
     const containerRect = containerRef.current.getBoundingClientRect();
@@ -27,88 +33,96 @@ export function MotionHighlight({
     const left = targetRect.left - containerRect.left;
     const width = targetRect.width;
 
-    setHighlightStyle({
+    setHighlightStyle(prev => ({
+      ...prev,
       left: `${left}px`,
       width: `${width}px`,
-      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
-    });
-  };
+      opacity: 1,
+      transform: 'translateZ(0)', // Hardware acceleration
+    }));
+  }, []);
 
-  const handleChildClick = (event: React.MouseEvent) => {
+  const handleChildClick = useCallback((event: React.MouseEvent) => {
     const target = event.target as HTMLElement;
     const tabElement = target.closest('[data-value]') as HTMLElement;
 
     if (tabElement) {
       const value = tabElement.getAttribute('data-value');
-      if (value) {
+      if (value && value !== activeValue) {
         setActiveValue(value);
         updateHighlight(tabElement);
         onValueChange?.(value);
       }
     }
-  };
+  }, [activeValue, updateHighlight, onValueChange]);
 
-  const handleKeyDown = (event: React.KeyboardEvent) => {
+  const handleKeyDown = useCallback((event: React.KeyboardEvent) => {
     if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       handleChildClick(event as any);
     }
-  };
+  }, [handleChildClick]);
 
-  useEffect(() => {
+  // Use useLayoutEffect for synchronous DOM updates to prevent flicker
+  useLayoutEffect(() => {
     if (containerRef.current && activeValue) {
       const activeElement = containerRef.current.querySelector(`[data-value="${activeValue}"]`) as HTMLElement;
       if (activeElement) {
-        // Small delay to ensure DOM is ready
-        setTimeout(() => updateHighlight(activeElement), 0);
+        updateHighlight(activeElement);
       }
     }
-  }, [activeValue]);
+  }, [activeValue, updateHighlight]);
 
-  // Set initial active tab if defaultValue is provided
-  useEffect(() => {
-    if (defaultValue && !activeValue && containerRef.current) {
+  // Initialize the highlight position on mount
+  useLayoutEffect(() => {
+    if (containerRef.current && defaultValue && !isInitialized.current) {
       const defaultElement = containerRef.current.querySelector(`[data-value="${defaultValue}"]`) as HTMLElement;
       if (defaultElement) {
         setActiveValue(defaultValue);
         updateHighlight(defaultElement);
+        isInitialized.current = true;
       }
     }
-  }, [defaultValue, activeValue]);
+  }, [defaultValue, updateHighlight]);
 
-  // Clone children and add props
-  const childrenWithProps = React.Children.map(children, (child) => {
-    if (React.isValidElement(child)) {
-      const value = child.props['data-value'];
-      const isActive = activeValue && value === activeValue;
+  // Memoize children with props to prevent unnecessary re-renders
+  const childrenWithProps = React.useMemo(() => {
+    return React.Children.map(children, (child) => {
+      if (React.isValidElement(child)) {
+        const value = child.props['data-value'];
+        const isActive = activeValue && value === activeValue;
 
-      return React.cloneElement(child, {
-        'data-active': isActive,
-        onClick: (e: React.MouseEvent) => {
-          handleChildClick(e);
-          child.props.onClick?.(e);
-        },
-        onKeyDown: (e: React.KeyboardEvent) => {
-          handleKeyDown(e);
-          child.props.onKeyDown?.(e);
-        },
-        tabIndex: isActive ? 0 : -1,
-      });
-    }
-    return child;
-  });
+        return React.cloneElement(child, {
+          'data-active': isActive,
+          onClick: (e: React.MouseEvent) => {
+            handleChildClick(e);
+            child.props.onClick?.(e);
+          },
+          onKeyDown: (e: React.KeyboardEvent) => {
+            handleKeyDown(e);
+            child.props.onKeyDown?.(e);
+          },
+          tabIndex: isActive ? 0 : -1,
+        });
+      }
+      return child;
+    });
+  }, [children, activeValue, handleChildClick, handleKeyDown]);
 
   return (
     <div
       ref={containerRef}
       className={`relative ${className}`}
-      onClick={handleChildClick}
       role="tablist"
     >
       <div
         ref={highlightRef}
         className="absolute top-0 h-full bg-neutral-900 rounded-full shadow-sm"
-        style={highlightStyle}
+        style={{
+          ...highlightStyle,
+          backfaceVisibility: 'hidden',
+          WebkitFontSmoothing: 'antialiased',
+        }}
       />
       <div className="relative z-10 flex">
         {childrenWithProps}
