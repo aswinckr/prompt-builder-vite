@@ -254,6 +254,60 @@ export function useAuthActions() {
       }
     },
 
+    signInWithEmail: async (email: string, password: string) => {
+      try {
+        dispatch({ type: 'AUTH_LOADING', payload: true });
+        dispatch({ type: 'CLEAR_ERROR' });
+
+        const { data } = await auth.signInWithEmail(email, password);
+        if (data.user && data.session) {
+          dispatch({
+            type: 'AUTH_SUCCESS',
+            payload: { user: data.user, session: data.session },
+          });
+        }
+      } catch (error) {
+        dispatch({
+          type: 'AUTH_ERROR',
+          payload: error instanceof Error ? error.message : 'Failed to sign in with email',
+        });
+      }
+    },
+
+    signUpWithEmail: async (email: string, password: string) => {
+      try {
+        dispatch({ type: 'AUTH_LOADING', payload: true });
+        dispatch({ type: 'CLEAR_ERROR' });
+
+        const { data } = await auth.signUpWithEmail(email, password);
+        // Don't immediately sign in user - they need to confirm email first
+        dispatch({ type: 'AUTH_LOADING', payload: false });
+        return data;
+      } catch (error) {
+        dispatch({
+          type: 'AUTH_ERROR',
+          payload: error instanceof Error ? error.message : 'Failed to sign up',
+        });
+        throw error;
+      }
+    },
+
+    resetPassword: async (email: string) => {
+      try {
+        dispatch({ type: 'AUTH_LOADING', payload: true });
+        dispatch({ type: 'CLEAR_ERROR' });
+
+        await auth.resetPassword(email);
+        dispatch({ type: 'AUTH_LOADING', payload: false });
+      } catch (error) {
+        dispatch({
+          type: 'AUTH_ERROR',
+          payload: error instanceof Error ? error.message : 'Failed to reset password',
+        });
+        throw error;
+      }
+    },
+
     signOut: async () => {
       try {
         await auth.signOut();

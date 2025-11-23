@@ -35,6 +35,41 @@ export const auth = {
     return data
   },
 
+  // Sign in with email and password
+  async signInWithEmail(email: string, password: string) {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
+
+    if (error) throw error
+    return data
+  },
+
+  // Sign up with email and password
+  async signUpWithEmail(email: string, password: string) {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}`,
+      },
+    })
+
+    if (error) throw error
+    return data
+  },
+
+  // Reset password
+  async resetPassword(email: string) {
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+
+    if (error) throw error
+    return data
+  },
+
   // Sign out
   async signOut() {
     const { error } = await supabase.auth.signOut()
