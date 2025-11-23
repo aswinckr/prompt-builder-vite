@@ -2,10 +2,17 @@ import React, { useRef } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Library, Sparkles } from 'lucide-react';
 import { ROUTES } from '../routes/AppRoutes';
+import { useLibraryState } from '../contexts/LibraryContext';
 
 export function BottomTabNavigation() {
   const location = useLocation();
   const tabListRef = useRef<HTMLDivElement>(null);
+  const { contextSelection } = useLibraryState();
+
+  // Hide tabs when multiple blocks are selected
+  if (contextSelection.selectedBlockIds.length > 0) {
+    return null;
+  }
 
   // Determine active tab based on current route
   const isKnowledgeActive = location.pathname === ROUTES.KNOWLEDGE;

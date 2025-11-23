@@ -2,13 +2,15 @@ import React, { useMemo, useCallback, useRef } from 'react';
 import { ContextBlock } from './ContextBlock';
 import { SelectionActionBar } from './SelectionActionBar';
 import { mockContextBlocks } from '../data/mockData';
+import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 
 interface ContextBlocksGridProps {
   selectedProject: string;
 }
 
 export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
-  const [selectedBlocks, setSelectedBlocks] = React.useState<number[]>([]);
+  const { contextSelection } = useLibraryState();
+  const { toggleBlockSelection, clearBlockSelection, setSelectedBlocks } = useLibraryActions();
   const [searchQuery] = React.useState('');
   const gridRef = useRef<HTMLDivElement>(null);
 
@@ -30,24 +32,10 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
     return blocks;
   }, [selectedProject, searchQuery]);
 
-  // Toggle block selection
-  const toggleBlockSelection = useCallback((blockId: number) => {
-    setSelectedBlocks(prev =>
-      prev.includes(blockId)
-        ? prev.filter(id => id !== blockId)
-        : [...prev, blockId]
-    );
-  }, []);
-
-  // Clear all selections
-  const clearSelection = useCallback(() => {
-    setSelectedBlocks([]);
-  }, []);
-
   // Select all visible blocks
   const selectAllVisible = useCallback(() => {
     setSelectedBlocks(filteredBlocks.map(block => block.id));
-  }, [filteredBlocks]);
+  }, [filteredBlocks, setSelectedBlocks]);
 
   // Grid keyboard navigation
   const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLButtonElement>, blockId: number) => {
@@ -106,7 +94,7 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
               <ContextBlock
                 key={block.id}
                 block={block}
-                isSelected={selectedBlocks.includes(block.id)}
+                isSelected={contextSelection.selectedBlockIds.includes(block.id)}
                 onSelect={() => toggleBlockSelection(block.id)}
                 onKeyDown={(e) => handleKeyDown(e, block.id)}
               />
@@ -116,11 +104,11 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
       </div>
 
       {/* Selection Action Bar */}
-      {selectedBlocks.length > 0 && (
+      {contextSelection.selectedBlockIds.length > 0 && (
         <SelectionActionBar
-          selectedCount={selectedBlocks.length}
-          selectedBlocks={selectedBlocks}
-          onClear={clearSelection}
+          selectedCount={contextSelection.selectedBlockIds.length}
+          selectedBlocks={contextSelection.selectedBlockIds}
+          onClear={clearBlockSelection}
           onSelectAll={selectAllVisible}
           totalVisible={filteredBlocks.length}
         />

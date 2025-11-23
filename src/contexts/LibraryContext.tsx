@@ -23,9 +23,14 @@ interface PromptBuilderState {
   blockOrder: number[];
 }
 
+interface ContextSelectionState {
+  selectedBlockIds: number[];
+}
+
 interface LibraryState {
   promptBuilder: PromptBuilderState;
   streaming: StreamingState;
+  contextSelection: ContextSelectionState;
 }
 
 type LibraryAction =
@@ -35,6 +40,10 @@ type LibraryAction =
   | { type: 'REORDER_BLOCKS_IN_BUILDER'; payload: number[] }
   | { type: 'CLEAR_PROMPT_BUILDER' }
   | { type: 'SET_EXECUTION_PANEL'; payload: boolean }
+  // Context selection actions
+  | { type: 'TOGGLE_BLOCK_SELECTION'; payload: number }
+  | { type: 'SET_SELECTED_BLOCKS'; payload: number[] }
+  | { type: 'CLEAR_BLOCK_SELECTION' }
   // Streaming actions
   | { type: 'SET_STREAMING_PANEL_OPEN'; payload: boolean }
   | { type: 'SET_SELECTED_MODEL'; payload: string }
@@ -57,6 +66,9 @@ const initialState: LibraryState = {
     streamingContent: '',
     streamingStatus: 'idle',
     conversationHistory: []
+  },
+  contextSelection: {
+    selectedBlockIds: []
   }
 };
 
@@ -108,6 +120,31 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
         streaming: {
           ...state.streaming,
           isStreamingPanelOpen: action.payload
+        }
+      };
+    case 'TOGGLE_BLOCK_SELECTION':
+      const { selectedBlockIds } = state.contextSelection;
+      const blockId = action.payload;
+      return {
+        ...state,
+        contextSelection: {
+          selectedBlockIds: selectedBlockIds.includes(blockId)
+            ? selectedBlockIds.filter(id => id !== blockId)
+            : [...selectedBlockIds, blockId]
+        }
+      };
+    case 'SET_SELECTED_BLOCKS':
+      return {
+        ...state,
+        contextSelection: {
+          selectedBlockIds: action.payload
+        }
+      };
+    case 'CLEAR_BLOCK_SELECTION':
+      return {
+        ...state,
+        contextSelection: {
+          selectedBlockIds: []
         }
       };
     case 'SET_STREAMING_PANEL_OPEN':
@@ -233,6 +270,11 @@ export function useLibraryActions() {
     reorderBlocksInBuilder: (order: number[]) => dispatch({ type: 'REORDER_BLOCKS_IN_BUILDER', payload: order }),
     clearPromptBuilder: () => dispatch({ type: 'CLEAR_PROMPT_BUILDER' }),
     setExecutionPanel: (open: boolean) => dispatch({ type: 'SET_EXECUTION_PANEL', payload: open }),
+
+    // Context selection actions
+    toggleBlockSelection: (blockId: number) => dispatch({ type: 'TOGGLE_BLOCK_SELECTION', payload: blockId }),
+    setSelectedBlocks: (blockIds: number[]) => dispatch({ type: 'SET_SELECTED_BLOCKS', payload: blockIds }),
+    clearBlockSelection: () => dispatch({ type: 'CLEAR_BLOCK_SELECTION' }),
 
     // Streaming actions
     setStreamingPanelOpen: (open: boolean) => dispatch({ type: 'SET_STREAMING_PANEL_OPEN', payload: open }),
