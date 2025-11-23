@@ -1,10 +1,10 @@
-import React, { useRef, useState } from 'react';
-import { useDrag, useDrop } from 'react-dnd';
-import type { Identifier } from 'dnd-core';
-import type { XYCoord } from 'react-dnd';
-import { X, GripVertical, Hash, ChevronDown, ChevronRight } from 'lucide-react';
-import { ContextBlock as ContextBlockType } from '../types/ContextBlock';
-import { useLibraryActions } from '../contexts/LibraryContext';
+import React, { useRef, useState } from "react";
+import { useDrag, useDrop } from "react-dnd";
+import type { Identifier } from "dnd-core";
+import type { XYCoord } from "react-dnd";
+import { X, GripVertical, Hash, ChevronDown, ChevronRight } from "lucide-react";
+import { ContextBlock as ContextBlockType } from "../types/ContextBlock";
+import { useLibraryActions } from "../contexts/LibraryContext";
 
 interface PromptBuilderBlockProps {
   block: ContextBlockType;
@@ -14,7 +14,7 @@ interface PromptBuilderBlockProps {
 
 // Define the drag item type
 const ItemTypes = {
-  BLOCK: 'block',
+  BLOCK: "block",
 } as const;
 
 interface DragItem {
@@ -26,7 +26,7 @@ interface DragItem {
 export function PromptBuilderBlock({
   block,
   index,
-  moveBlock
+  moveBlock,
 }: PromptBuilderBlockProps) {
   const { removeBlockFromBuilder } = useLibraryActions();
   const ref = useRef<HTMLDivElement>(null);
@@ -119,7 +119,7 @@ export function PromptBuilderBlock({
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' || e.key === ' ') {
+    if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
       handleToggleExpand(e as any);
     }
@@ -133,105 +133,90 @@ export function PromptBuilderBlock({
       className="mb-4"
     >
       <div
-        className={`relative bg-neutral-800/70 backdrop-blur-sm border border-neutral-700/50 rounded-2xl transition-all duration-300 hover:border-neutral-600/50 hover:bg-neutral-800/90 hover:shadow-lg hover:shadow-black/20 ${
-          isDragging ? 'cursor-grabbing scale-105 rotate-1 shadow-xl' : 'cursor-grab'
-        } ${isExpanded ? 'ring-2 ring-blue-500/30 shadow-lg shadow-black/10' : ''}`}
+        className={`relative rounded-2xl border border-neutral-700/50 bg-neutral-800/70 backdrop-blur-sm transition-all duration-300 hover:border-neutral-600/50 hover:bg-neutral-800/90 hover:shadow-lg hover:shadow-black/20 ${
+          isDragging
+            ? "rotate-1 scale-105 cursor-grabbing shadow-xl"
+            : "cursor-grab"
+        } ${
+          isExpanded ? "shadow-lg shadow-black/10 ring-2 ring-blue-500/30" : ""
+        }`}
         data-block-id={block.id}
       >
         {/* Gradient overlay for depth */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 rounded-2xl pointer-events-none" />
+        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5" />
 
         {/* Drag Handle */}
-        <div className="absolute left-4 top-4 text-neutral-500 hover:text-neutral-400 cursor-grab active:cursor-grabbing transition-colors duration-200 p-1.5 rounded-lg hover:bg-neutral-700/50">
-          <GripVertical className="w-4 h-4" data-testid="grip-vertical" />
+        <div className="absolute left-4 top-4 cursor-grab rounded-lg p-1.5 text-neutral-500 transition-colors duration-200 hover:bg-neutral-700/50 hover:text-neutral-400 active:cursor-grabbing">
+          <GripVertical className="h-4 w-4" data-testid="grip-vertical" />
         </div>
 
         {/* Remove Button */}
         <button
           onClick={handleRemove}
-          className="absolute top-3 right-3 text-neutral-500 hover:text-red-400 hover:bg-red-500/10 p-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+          className="absolute right-3 top-3 rounded-xl p-2 text-neutral-500 transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/50"
           aria-label={`Remove ${block.title} from prompt`}
         >
-          <X className="w-4 h-4" />
+          <X className="h-4 w-4" />
         </button>
 
         {/* Expand/Collapse Button */}
         <button
           onClick={handleToggleExpand}
           onKeyDown={handleKeyDown}
-          className="absolute left-4 bottom-4 text-neutral-500 hover:text-blue-400 hover:bg-blue-500/10 p-2 rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-          aria-label={`${isExpanded ? 'Collapse' : 'Expand'} ${block.title}`}
+          className="absolute bottom-4 left-4 rounded-xl p-2 text-neutral-500 transition-all duration-200 hover:bg-blue-500/10 hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          aria-label={`${isExpanded ? "Collapse" : "Expand"} ${block.title}`}
           aria-expanded={isExpanded}
         >
           {isExpanded ? (
-            <ChevronDown className="w-4 h-4 transition-transform duration-300" />
+            <ChevronDown className="h-4 w-4 transition-transform duration-300" />
           ) : (
-            <ChevronRight className="w-4 h-4 transition-transform duration-300" />
+            <ChevronRight className="h-4 w-4 transition-transform duration-300" />
           )}
         </button>
 
         {/* Context Block Content */}
         <div className="flex items-start gap-4 pl-14 pr-12 pt-6">
-          <div className="flex-shrink-0 w-8 h-8 bg-gradient-to-br from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-xl flex items-center justify-center">
-            <Hash className="w-4 h-4 text-blue-400" />
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-blue-500/30 bg-gradient-to-br from-blue-500/20 to-purple-500/20">
+            <Hash className="h-4 w-4 text-blue-400" />
           </div>
 
-          <div className="flex-1 min-w-0">
+          <div className="min-w-0 flex-1">
             {/* Title and Badge */}
-            <div className="flex items-center gap-3 mb-3">
-              <div className="px-3 py-1 bg-gradient-to-r from-blue-500/20 to-purple-500/20 border border-blue-500/30 rounded-lg">
+            <div className="mb-3 flex items-center gap-3">
+              <div className="rounded-lg border border-blue-500/30 bg-gradient-to-r from-blue-500/20 to-purple-500/20 px-3 py-1">
                 <span className="text-xs font-medium text-blue-300">
                   Context Block
                 </span>
               </div>
-              <h3 className="text-sm font-semibold text-neutral-100 truncate">
+              <h3 className="truncate text-sm font-semibold text-neutral-100">
                 {block.title}
               </h3>
             </div>
 
             {/* Content Preview - Always visible but truncated when collapsed */}
-            <div className="text-sm text-neutral-300 leading-relaxed mb-4">
+            <div className="mb-4 text-sm leading-relaxed text-neutral-300">
               {isExpanded ? (
-                <div className="max-h-96 overflow-y-auto pr-2 scrollbar-thin scrollbar-thumb-neutral-600 scrollbar-track-neutral-800/50">
-                  <div className="whitespace-pre-wrap">
-                    {block.content}
-                  </div>
+                <div className="scrollbar-thin scrollbar-thumb-neutral-600 scrollbar-track-neutral-800/50 max-h-96 overflow-y-auto pr-2">
+                  <div className="whitespace-pre-wrap">{block.content}</div>
                 </div>
               ) : (
-                <div className="line-clamp-2">
-                  {block.content}
-                </div>
+                <div className="line-clamp-2">{block.content}</div>
               )}
             </div>
 
             {/* Tags - Always visible */}
             {block.tags.length > 0 && (
-              <div className="flex flex-wrap gap-2 mb-4">
-                {block.tags.map(tag => (
+              <div className="mb-4 flex flex-wrap gap-2">
+                {block.tags.map((tag) => (
                   <span
                     key={tag}
-                    className="text-xs px-2.5 py-1 bg-neutral-700/50 border border-neutral-600/50 rounded-full text-neutral-300 backdrop-blur-sm"
+                    className="rounded-full border border-neutral-600/50 bg-neutral-700/50 px-2.5 py-1 text-xs text-neutral-300 backdrop-blur-sm"
                   >
                     #{tag}
                   </span>
                 ))}
               </div>
             )}
-
-            {/* Expand/Collapse Hint */}
-            <div className="text-xs text-neutral-500">
-              {isExpanded ? (
-                <span className="flex items-center gap-1">
-                  <ChevronDown className="w-3 h-3" />
-                  Click chevron to collapse
-                </span>
-              ) : (
-                <span className="flex items-center gap-1">
-                  <ChevronRight className="w-3 h-3" />
-                  Click chevron to expand full content
-                </span>
-              )}
-            </div>
           </div>
         </div>
       </div>
