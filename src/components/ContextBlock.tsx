@@ -1,18 +1,12 @@
 import React from 'react';
 import { Hash, Edit } from 'lucide-react';
+import { ContextBlock as ContextBlockType } from '../types/ContextBlock';
 
 interface ContextBlockProps {
-  block: {
-    id: number;
-    title: string;
-    content: string;
-    tags: string[];
-    project: string;
-    lastUpdated: Date;
-  };
+  block: ContextBlockType;
   isSelected: boolean;
   onSelect: () => void;
-  onEdit?: (block: ContextBlockProps['block']) => void;
+  onEdit?: (block: ContextBlockType) => void;
   onKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>) => void;
 }
 

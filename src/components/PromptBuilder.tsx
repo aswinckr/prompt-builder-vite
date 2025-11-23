@@ -50,9 +50,9 @@ export function PromptBuilder() {
       ""
     ];
 
-    // Add all context blocks
+    // Add all context blocks from the current context
     const blocks = promptBuilder.blockOrder
-      .map(blockId => mockContextBlocks.find(block => block.id === blockId))
+      .map(blockId => contextBlocks.find(block => block.id === blockId))
       .filter((block): block is NonNullable<typeof block> => block !== undefined);
 
     blocks.forEach(block => {

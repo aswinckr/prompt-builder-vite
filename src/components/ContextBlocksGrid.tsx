@@ -13,12 +13,13 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
   const { toggleBlockSelection, clearBlockSelection, setSelectedBlocks } = useLibraryActions();
   const [searchQuery] = React.useState('');
   const gridRef = useRef<HTMLDivElement>(null);
-  const [editingBlockId, setEditingBlockId] = React.useState<number | null>(null);
+  const [editingBlockId, setEditingBlockId] = React.useState<string | null>(null);
 
   // Filter blocks based on project and search query
   const filteredBlocks = useMemo(() => {
     let blocks = contextBlocks.filter(block => {
-      const matchesProject = block.project === selectedProject;
+      // Show all blocks if no project is selected, or filter by project_id
+      const matchesProject = !selectedProject || block.project_id === selectedProject;
       return matchesProject;
     });
 

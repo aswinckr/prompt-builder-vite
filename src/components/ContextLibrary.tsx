@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertCircle, Loader2 } from 'lucide-react';
 import { AppLogo } from './AppLogo';
 import { ProjectSidebar } from './ProjectSidebar';
 import { ProfileButton } from './ProfileButton';
@@ -9,10 +9,8 @@ import { CollapsibleTagSection } from './CollapsibleTagSection';
 import { ContextBlocksGrid } from './ContextBlocksGrid';
 import { SavedPromptList } from './SavedPromptList';
 import { CreateContextModal } from './CreateContextModal';
-import { mockProjects } from '../data/mockData';
-import { mockSavedPrompts } from '../data/mockData';
-import { loadPrompts, savePrompt, deletePrompt } from '../utils/promptStorage';
-import { SavedPrompt } from '../types/SavedPrompt';
+import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
+import { Project } from '../types/Project';
 
 export function ContextLibrary() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -20,29 +18,26 @@ export function ContextLibrary() {
   const [contextLibrarySidebarExpanded, setContextLibrarySidebarExpanded] = useState(
     window.innerWidth >= 768 // Auto-collapse on mobile
   );
-  const [selectedProject, setSelectedProject] = useState('notes');
-  const [savedPrompts, setSavedPrompts] = useState<SavedPrompt[]>([]);
+  const [selectedProject, setSelectedProject] = useState<string>('');
 
-  // Load prompts from localStorage on component mount
+  // Get data from LibraryContext
+  const { savedPrompts, promptProjects, datasetProjects, loading, error } = useLibraryState();
+  const { updateSavedPrompt, deleteSavedPrompt } = useLibraryActions();
+
+  // Combine all projects for sidebar
+  const allProjects: Project[] = [
+    ...(promptProjects || []),
+    ...(datasetProjects || [])
+  ];
+
+  // Set default project if none selected
   useEffect(() => {
-    const loadSavedPrompts = () => {
-      try {
-        const prompts = loadPrompts();
-        if (prompts.length === 0) {
-          // If no prompts in localStorage, use mock data for demo
-          setSavedPrompts(mockSavedPrompts);
-        } else {
-          setSavedPrompts(prompts);
-        }
-      } catch (error) {
-        console.error('Failed to load prompts:', error);
-        // Fallback to mock data
-        setSavedPrompts(mockSavedPrompts);
-      }
-    };
+    if (!selectedProject && allProjects.length > 0) {
+      setSelectedProject(allProjects[0].id);
+    }
+  }, [selectedProject, allProjects]);
 
-    loadSavedPrompts();
-  }, []);
+  // Remove blocking empty state - let users access the interface even with no projects
 
   const toggleContextLibrarySidebar = () => {
     setContextLibrarySidebarExpanded(!contextLibrarySidebarExpanded);
@@ -64,17 +59,10 @@ export function ContextLibrary() {
     setIsCreateContextModalOpen(false);
   };
 
-  // Handle prompt updates
-  const handlePromptUpdate = async (updatedPrompt: SavedPrompt) => {
+  // Handle prompt updates with database
+  const handlePromptUpdate = async (updatedPrompt: any) => {
     try {
-      // Save to localStorage
-      savePrompt(updatedPrompt);
-
-      // Update local state
-      setSavedPrompts(prev =>
-        prev.map(p => p.id === updatedPrompt.id ? updatedPrompt : p)
-      );
-
+      await updateSavedPrompt(updatedPrompt.id, updatedPrompt);
       console.log('Prompt updated successfully:', updatedPrompt);
     } catch (error) {
       console.error('Failed to update prompt:', error);
@@ -82,15 +70,10 @@ export function ContextLibrary() {
     }
   };
 
-  // Handle prompt deletion
-  const handlePromptDelete = async (promptId: number) => {
+  // Handle prompt deletion with database
+  const handlePromptDelete = async (promptId: string) => {
     try {
-      // Delete from localStorage
-      deletePrompt(promptId);
-
-      // Update local state
-      setSavedPrompts(prev => prev.filter(p => p.id !== promptId));
-
+      await deleteSavedPrompt(promptId);
       console.log('Prompt deleted successfully:', promptId);
     } catch (error) {
       console.error('Failed to delete prompt:', error);
@@ -99,8 +82,8 @@ export function ContextLibrary() {
   };
 
   // Handle prompt loading
-  const handlePromptLoad = (promptId: number) => {
-    const prompt = savedPrompts.find(p => p.id === promptId);
+  const handlePromptLoad = (promptId: string) => {
+    const prompt = savedPrompts?.find(p => p.id === promptId);
     if (prompt) {
       console.log('Loading prompt:', prompt);
       // Here you could implement logic to load the prompt into the main editor
@@ -109,11 +92,37 @@ export function ContextLibrary() {
   };
 
   // Find the current project to determine its type
-  const currentProject = mockProjects.find(p => p.id === selectedProject);
+  const currentProject = allProjects.find(p => p.id === selectedProject);
+  // Default to context blocks view if no project or if project is a dataset
   const isPromptProject = currentProject?.type === 'prompts';
 
   // Debug logging
   console.log('Selected Project:', selectedProject, 'Type:', currentProject?.type, 'Is Prompt Project:', isPromptProject);
+
+  // Show loading state only on initial load
+  if (loading && !error && allProjects.length === 0) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-neutral-400" />
+          <p className="text-neutral-400">Loading your data...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error) {
+    return (
+      <div className="h-full flex items-center justify-center">
+        <div className="text-center max-w-md">
+          <AlertCircle className="w-8 h-8 mx-auto mb-4 text-red-400" />
+          <p className="text-red-400 mb-2">Failed to load data</p>
+          <p className="text-neutral-400 text-sm">{error}</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="h-full flex overflow-hidden">
@@ -158,8 +167,10 @@ export function ContextLibrary() {
         {contextLibrarySidebarExpanded && (
           <div className="flex-1 overflow-hidden">
             <ProjectSidebar
+              projects={allProjects}
               selectedProject={selectedProject}
               setSelectedProject={setSelectedProject}
+              loading={loading}
             />
           </div>
         )}
@@ -205,17 +216,19 @@ export function ContextLibrary() {
           {!isPromptProject && <CollapsibleTagSection />}
         </div>
 
-        {/* Scrollable Content - Conditional rendering based on project type */}
+        {/* Scrollable Content - Always show interface, default to context blocks */}
         <div className="flex-1 overflow-hidden">
-          {isPromptProject ? (
+          {/* Show prompts list only when we have a prompt project selected */}
+          {isPromptProject && currentProject ? (
             <SavedPromptList
               selectedProject={selectedProject}
-              prompts={savedPrompts}
+              prompts={savedPrompts || []}
               onPromptUpdate={handlePromptUpdate}
               onPromptDelete={handlePromptDelete}
               onPromptLoad={handlePromptLoad}
             />
           ) : (
+            // Always show context blocks grid (for datasets or when no project)
             <ContextBlocksGrid selectedProject={selectedProject} />
           )}
         </div>

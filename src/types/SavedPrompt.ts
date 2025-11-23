@@ -1,11 +1,17 @@
 export interface SavedPrompt {
-  id: number;
+  id: string;
+  user_id: string;
+  project_id?: string | null;
   title: string;
-  description: string;
+  description?: string | null;
   content: string;
-  projectId: string;
-  createdAt: Date;
-  updatedAt: Date;
-  folder: string | null;
+  folder?: string | null;
   tags: string[];
+  created_at: Date;
+  updated_at: Date;
+  project?: {
+    id: string;
+    name: string;
+    icon: string;
+  } | null;
 }

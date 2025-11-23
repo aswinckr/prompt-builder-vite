@@ -1,14 +1,17 @@
 import React, { useState, useCallback } from 'react';
-import { Plus } from 'lucide-react';
-import { mockProjects } from '../data/mockData';
+import { Plus, Loader2 } from 'lucide-react';
+import { useLibraryActions } from '../contexts/LibraryContext';
+import { Project } from '../types/Project';
 
 interface ProjectSidebarProps {
+  projects: Project[];
   selectedProject: string;
   setSelectedProject: (id: string) => void;
+  loading?: boolean;
 }
 
-export function ProjectSidebar({ selectedProject, setSelectedProject }: ProjectSidebarProps) {
-  const [projects, setProjects] = useState(mockProjects);
+export function ProjectSidebar({ projects, selectedProject, setSelectedProject, loading = false }: ProjectSidebarProps) {
+  const { createPromptProject, createDatasetProject } = useLibraryActions();
 
   // Organize projects by type
   const promptProjects = projects.filter(p => p.type === 'prompts');
@@ -19,21 +22,19 @@ export function ProjectSidebar({ selectedProject, setSelectedProject }: ProjectS
     const count = type === 'prompts' ? promptProjects.length + 1 : datasetProjects.length + 1;
     const name = type === 'prompts' ? `Prompt Project ${count}` : `Dataset Project ${count}`;
 
-    const now = new Date();
-    const newProject = {
-      id: `project${Date.now()}`,
-      name,
-      type,
-      icon: type === 'prompts' ? '📁' : '📊',
-      promptCount: type === 'prompts' ? 0 : 0,
-      isSystem: false,
-      createdAt: now,
-      updatedAt: now
-    };
+    try {
+      const result = type === 'prompts'
+        ? await createPromptProject({ name, icon: type === 'prompts' ? '📁' : '📊' })
+        : await createDatasetProject({ name, icon: type === 'prompts' ? '📁' : '📊' });
 
-    setProjects(prev => [...prev, newProject]);
-    setSelectedProject(newProject.id);
-  }, [promptProjects.length, datasetProjects.length]);
+      if (result.data) {
+        setSelectedProject(result.data.id);
+      }
+    } catch (error) {
+      console.error('Failed to create project:', error);
+      // Handle error - could show toast notification
+    }
+  }, [promptProjects.length, datasetProjects.length, createPromptProject, createDatasetProject, setSelectedProject]);
 
   // Handle keyboard navigation
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
@@ -84,13 +85,13 @@ export function ProjectSidebar({ selectedProject, setSelectedProject }: ProjectS
     type
   }: {
     title: string;
-    projects: any[];
+    projects: Project[];
     type: 'prompts' | 'datasets';
   }) => {
-    // Sort projects: Notes first, then alphabetically
+    // Sort projects: system projects first, then alphabetically
     const sortedProjects = [...projects].sort((a, b) => {
-      if (a.id === 'notes') return -1;
-      if (b.id === 'notes') return 1;
+      if (a.isSystem && !b.isSystem) return -1;
+      if (!a.isSystem && b.isSystem) return 1;
       return a.name.localeCompare(b.name);
     });
 
@@ -102,18 +103,19 @@ export function ProjectSidebar({ selectedProject, setSelectedProject }: ProjectS
           </h3>
           <button
             onClick={() => handleCreateProject(type)}
+            disabled={loading}
             onKeyDown={(e) => {
               if (e.key === 'Enter' || e.key === ' ') {
                 e.preventDefault();
                 handleCreateProject(type);
               }
             }}
-            className="p-1 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-700 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-800"
+            className="p-1 text-neutral-500 hover:text-neutral-300 hover:bg-neutral-700 rounded transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-800 disabled:opacity-50 disabled:cursor-not-allowed"
             aria-label={`Add new ${type.slice(0, -1)} project`}
             data-add-button={type}
             data-testid={`add-${type}-project`}
           >
-            <Plus size={16} />
+            {loading ? <Loader2 size={16} className="animate-spin" /> : <Plus size={16} />}
           </button>
         </div>
 
@@ -148,7 +150,7 @@ export function ProjectSidebar({ selectedProject, setSelectedProject }: ProjectS
                     ({project.promptCount})
                   </span>
                 )}
-                {project.id === 'notes' && (
+                {project.isSystem && (
                   <span className="text-xs text-neutral-500 ml-1">
                     System
                   </span>
