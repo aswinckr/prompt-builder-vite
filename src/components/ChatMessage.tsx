@@ -34,7 +34,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
             {formatTime(message.createdAt || Date.now())}
           </span>
         </div>
-        <div className="text-sm prose prose-invert prose-neutral max-w-none">
+        <div className="text-base prose prose-invert prose-neutral max-w-none leading-relaxed">
           {isUser ? (
             <div className="whitespace-pre-wrap">{message.content}</div>
           ) : (
