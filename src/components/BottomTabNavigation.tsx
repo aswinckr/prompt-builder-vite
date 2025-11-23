@@ -40,10 +40,10 @@ export function BottomTabNavigation() {
   };
 
   return (
-    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-40">
+    <div className="fixed bottom-4 md:bottom-6 left-1/2 transform -translate-x-1/2 z-40">
       <div
         ref={tabListRef}
-        className="flex items-center bg-neutral-200 rounded-full p-1 shadow-lg"
+        className="flex items-center bg-neutral-200 rounded-full p-1 shadow-lg max-w-[90vw] md:max-w-none"
         role="tablist"
         aria-label="Navigation tabs"
       >
@@ -53,7 +53,7 @@ export function BottomTabNavigation() {
           aria-selected={isBuilderActive}
           aria-controls="prompt-builder-panel"
           onKeyDown={(e) => handleKeyDown(e, ROUTES.PROMPT)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 no-underline ${
+          className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-full text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 no-underline ${
             isBuilderActive
               ? 'bg-neutral-900 text-white shadow-sm'
               : 'bg-white text-neutral-900 hover:bg-neutral-50'
@@ -70,7 +70,7 @@ export function BottomTabNavigation() {
           aria-selected={isKnowledgeActive}
           aria-controls="context-library-panel"
           onKeyDown={(e) => handleKeyDown(e, ROUTES.KNOWLEDGE)}
-          className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 no-underline ${
+          className={`flex items-center gap-2 px-3 md:px-4 py-2 rounded-full text-sm font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 no-underline ${
             isKnowledgeActive
               ? 'bg-neutral-900 text-white shadow-sm'
               : 'bg-white text-neutral-900 hover:bg-neutral-50'

@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Set body background color */
+body {
+  @apply bg-neutral-900;
+}
+
 /* Custom utilities for line clamping */
 .line-clamp-2 {
   display: -webkit-box;

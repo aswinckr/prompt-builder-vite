@@ -12,7 +12,9 @@ import { mockProjects } from '../data/mockData';
 
 export function ContextLibrary() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
-  const [contextLibrarySidebarExpanded, setContextLibrarySidebarExpanded] = useState(true);
+  const [contextLibrarySidebarExpanded, setContextLibrarySidebarExpanded] = useState(
+    window.innerWidth >= 768 // Auto-collapse on mobile
+  );
   const [selectedProject, setSelectedProject] = useState('notes');
 
   const toggleContextLibrarySidebar = () => {
@@ -37,11 +39,21 @@ export function ContextLibrary() {
 
   return (
     <div className="h-full flex overflow-hidden">
+      {/* Mobile Overlay - Only visible on mobile when sidebar is expanded */}
+      {contextLibrarySidebarExpanded && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-40 md:hidden"
+          onClick={toggleContextLibrarySidebar}
+        />
+      )}
+
       {/* Project Sidebar - Fixed height, no scrolling */}
       <div
         className={`${
-          contextLibrarySidebarExpanded ? 'w-64' : 'w-16'
-        } bg-neutral-800 border-r border-neutral-700 flex flex-col transition-all duration-300 ease-out h-full`}
+          contextLibrarySidebarExpanded ? 'w-64 md:w-64' : 'w-16'
+        } bg-neutral-800 border-r border-neutral-700 flex-col transition-all duration-300 ease-out h-full z-50 fixed md:relative h-full ${
+          contextLibrarySidebarExpanded ? 'flex' : 'hidden md:flex'
+        }`}
       >
         {/* Sidebar Header */}
         <div className="flex items-center justify-between p-4 min-h-[73px]">
@@ -83,11 +95,34 @@ export function ContextLibrary() {
       </div>
 
       {/* Main Content Area - Fixed header elements, scrollable content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden w-full">
         {/* Fixed Header Section */}
         <div className="flex-shrink-0">
-          {/* Search Bar - Only for context blocks */}
-          {!isPromptProject && <SearchBar />}
+          {/* Mobile Sidebar Toggle and Search Bar */}
+          {!isPromptProject && (
+            <div className="flex items-center gap-3 p-4 md:p-6 border-b border-neutral-700">
+              {/* Mobile Sidebar Toggle - Only visible on mobile when sidebar is collapsed */}
+              <button
+                onClick={toggleContextLibrarySidebar}
+                className="md:hidden p-2 rounded-md hover:bg-neutral-700 text-neutral-400 hover:text-neutral-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                aria-label="Expand sidebar"
+                data-testid="mobile-sidebar-toggle"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+
+              <div className="flex-1">
+                <SearchBar showFullWidth={false} />
+              </div>
+            </div>
+          )}
+
+          {/* Desktop Search Bar - Only visible on desktop */}
+          {!isPromptProject && (
+            <div className="hidden md:block">
+              <SearchBar />
+            </div>
+          )}
 
           {/* Collapsible Tag Filter Section - Only for context blocks */}
           {!isPromptProject && <CollapsibleTagSection />}

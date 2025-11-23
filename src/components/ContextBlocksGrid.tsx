@@ -91,17 +91,17 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
       {/* Context Blocks Grid */}
       <div
         ref={gridRef}
-        className="flex-1 p-6 overflow-y-auto"
+        className="flex-1 p-4 md:p-6 overflow-y-auto"
         role="grid"
         aria-label="Context blocks grid"
       >
         {filteredBlocks.length === 0 ? (
-          <div className="text-center text-neutral-400 mt-8">
+          <div className="text-center text-neutral-400 mt-8 px-4">
             <div className="text-lg mb-2">No context blocks found</div>
             <div className="text-sm">Try adjusting your search or filters</div>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 md:gap-4">
             {filteredBlocks.map((block) => (
               <ContextBlock
                 key={block.id}
