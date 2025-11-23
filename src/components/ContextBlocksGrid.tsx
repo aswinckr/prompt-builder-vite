@@ -1,6 +1,7 @@
 import React, { useMemo, useCallback, useRef } from 'react';
 import { ContextBlock } from './ContextBlock';
 import { SelectionActionBar } from './SelectionActionBar';
+import { EditContextModal } from './EditContextModal';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 
 interface ContextBlocksGridProps {
@@ -12,6 +13,7 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
   const { toggleBlockSelection, clearBlockSelection, setSelectedBlocks } = useLibraryActions();
   const [searchQuery] = React.useState('');
   const gridRef = useRef<HTMLDivElement>(null);
+  const [editingBlockId, setEditingBlockId] = React.useState<number | null>(null);
 
   // Filter blocks based on project and search query
   const filteredBlocks = useMemo(() => {
@@ -35,6 +37,11 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
   const selectAllVisible = useCallback(() => {
     setSelectedBlocks(filteredBlocks.map(block => block.id));
   }, [filteredBlocks, setSelectedBlocks]);
+
+  // Handle block editing
+  const handleEditBlock = useCallback((block: any) => {
+    setEditingBlockId(block.id);
+  }, []);
 
   // Grid keyboard navigation
   const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLButtonElement>, blockId: number) => {
@@ -95,6 +102,7 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
                 block={block}
                 isSelected={contextSelection.selectedBlockIds.includes(block.id)}
                 onSelect={() => toggleBlockSelection(block.id)}
+                onEdit={handleEditBlock}
                 onKeyDown={(e) => handleKeyDown(e, block.id)}
               />
             ))}
@@ -112,6 +120,13 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
           totalVisible={filteredBlocks.length}
         />
       )}
+
+      {/* Edit Modal */}
+      <EditContextModal
+        isOpen={editingBlockId !== null}
+        onClose={() => setEditingBlockId(null)}
+        blockId={editingBlockId}
+      />
     </div>
   );
 }

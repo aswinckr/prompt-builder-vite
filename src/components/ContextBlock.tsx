@@ -1,5 +1,5 @@
 import React from 'react';
-import { Hash } from 'lucide-react';
+import { Hash, Edit } from 'lucide-react';
 
 interface ContextBlockProps {
   block: {
@@ -12,23 +12,32 @@ interface ContextBlockProps {
   };
   isSelected: boolean;
   onSelect: () => void;
+  onEdit?: (block: ContextBlockProps['block']) => void;
   onKeyDown?: (event: React.KeyboardEvent<HTMLButtonElement>) => void;
 }
 
 /**
  * ContextBlock component displays a single context block in the grid
  */
-export function ContextBlock({ block, isSelected, onSelect, onKeyDown }: ContextBlockProps) {
+export function ContextBlock({ block, isSelected, onSelect, onEdit, onKeyDown }: ContextBlockProps) {
   const handleClick = () => {
     onSelect();
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
-    if (event.key === 'Enter' || event.key === ' ') {
+    if (event.key === 'e' || event.key === 'E') {
+      event.preventDefault();
+      onEdit?.(block);
+    } else if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       onSelect();
     }
     onKeyDown?.(event);
+  };
+
+  const handleEditClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onEdit?.(block);
   };
 
   return (
@@ -51,11 +60,24 @@ export function ContextBlock({ block, isSelected, onSelect, onKeyDown }: Context
         <h3 className="font-medium text-white line-clamp-2 leading-tight flex-1">
           {block.title}
         </h3>
-        {isSelected && (
-          <div className="flex-shrink-0 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center ml-2">
-            <span className="text-white text-xs">✓</span>
-          </div>
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+          {/* Edit Icon */}
+          {onEdit && (
+            <button
+              onClick={handleEditClick}
+              className="p-1 text-neutral-400 hover:text-blue-400 transition-colors rounded hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              aria-label={`Edit ${block.title}`}
+            >
+              <Edit size={14} />
+            </button>
+          )}
+          {/* Selection Indicator */}
+          {isSelected && (
+            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs">✓</span>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Content Preview - takes up remaining space */}

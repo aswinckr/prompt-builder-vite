@@ -48,6 +48,7 @@ type LibraryAction =
   | { type: 'CLEAR_BLOCK_SELECTION' }
   // Context creation actions
   | { type: 'CREATE_CONTEXT_BLOCK'; payload: Omit<ContextBlock, 'id'> }
+  | { type: 'UPDATE_CONTEXT_BLOCK'; payload: { id: number; blockData: Partial<ContextBlock> } }
   // Streaming actions
   | { type: 'SET_STREAMING_PANEL_OPEN'; payload: boolean }
   | { type: 'SET_SELECTED_MODEL'; payload: string }
@@ -241,6 +242,15 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
         ...state,
         contextBlocks: [newBlock, ...state.contextBlocks]
       };
+    case 'UPDATE_CONTEXT_BLOCK':
+      return {
+        ...state,
+        contextBlocks: state.contextBlocks.map(block =>
+          block.id === action.payload.id
+            ? { ...block, ...action.payload.blockData }
+            : block
+        )
+      };
     default:
       return state;
   }
@@ -292,6 +302,7 @@ export function useLibraryActions() {
 
     // Context creation actions
     createContextBlock: (blockData: Omit<ContextBlock, 'id'>) => dispatch({ type: 'CREATE_CONTEXT_BLOCK', payload: blockData }),
+    updateContextBlock: (id: number, blockData: Partial<ContextBlock>) => dispatch({ type: 'UPDATE_CONTEXT_BLOCK', payload: { id, blockData } }),
 
     // Streaming actions
     setStreamingPanelOpen: (open: boolean) => dispatch({ type: 'SET_STREAMING_PANEL_OPEN', payload: open }),
