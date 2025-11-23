@@ -8,6 +8,7 @@ import { SearchBar } from './SearchBar';
 import { CollapsibleTagSection } from './CollapsibleTagSection';
 import { ContextBlocksGrid } from './ContextBlocksGrid';
 import { SavedPromptList } from './SavedPromptList';
+import { CreateContextModal } from './CreateContextModal';
 import { mockProjects } from '../data/mockData';
 import { mockSavedPrompts } from '../data/mockData';
 import { loadPrompts, savePrompt, deletePrompt } from '../utils/promptStorage';
@@ -15,6 +16,7 @@ import { SavedPrompt } from '../types/SavedPrompt';
 
 export function ContextLibrary() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [isCreateContextModalOpen, setIsCreateContextModalOpen] = useState(false);
   const [contextLibrarySidebarExpanded, setContextLibrarySidebarExpanded] = useState(
     window.innerWidth >= 768 // Auto-collapse on mobile
   );
@@ -52,6 +54,14 @@ export function ContextLibrary() {
 
   const handleCloseProfileModal = () => {
     setIsProfileModalOpen(false);
+  };
+
+  const handleOpenCreateContextModal = () => {
+    setIsCreateContextModalOpen(true);
+  };
+
+  const handleCloseCreateContextModal = () => {
+    setIsCreateContextModalOpen(false);
   };
 
   // Handle prompt updates
@@ -182,7 +192,10 @@ export function ContextLibrary() {
 
                 {/* Search Bar - Responsive across all screen sizes */}
                 <div className="flex-1 min-w-0">
-                  <SearchBar showFullWidth={false} />
+                  <SearchBar
+                    showFullWidth={false}
+                    onAddKnowledge={handleOpenCreateContextModal}
+                  />
                 </div>
               </div>
             </div>
@@ -212,6 +225,12 @@ export function ContextLibrary() {
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={handleCloseProfileModal}
+      />
+
+      {/* Create Context Modal */}
+      <CreateContextModal
+        isOpen={isCreateContextModalOpen}
+        onClose={handleCloseCreateContextModal}
       />
     </div>
   );

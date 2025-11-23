@@ -1,7 +1,6 @@
 import React, { useMemo, useCallback, useRef } from 'react';
 import { ContextBlock } from './ContextBlock';
 import { SelectionActionBar } from './SelectionActionBar';
-import { mockContextBlocks } from '../data/mockData';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 
 interface ContextBlocksGridProps {
@@ -9,14 +8,14 @@ interface ContextBlocksGridProps {
 }
 
 export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
-  const { contextSelection } = useLibraryState();
+  const { contextSelection, contextBlocks } = useLibraryState();
   const { toggleBlockSelection, clearBlockSelection, setSelectedBlocks } = useLibraryActions();
   const [searchQuery] = React.useState('');
   const gridRef = useRef<HTMLDivElement>(null);
 
   // Filter blocks based on project and search query
   const filteredBlocks = useMemo(() => {
-    let blocks = mockContextBlocks.filter(block => {
+    let blocks = contextBlocks.filter(block => {
       const matchesProject = block.project === selectedProject;
       return matchesProject;
     });
@@ -30,7 +29,7 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
     }
 
     return blocks;
-  }, [selectedProject, searchQuery]);
+  }, [contextBlocks, selectedProject, searchQuery]);
 
   // Select all visible blocks
   const selectAllVisible = useCallback(() => {

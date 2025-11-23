@@ -1,17 +1,16 @@
 import React, { useState } from 'react';
 import { Copy, Download, Save, Trash2 } from 'lucide-react';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
-import { mockContextBlocks } from '../data/mockData';
 
 export function PromptBuilderActions() {
-  const { promptBuilder } = useLibraryState();
+  const { promptBuilder, contextBlocks } = useLibraryState();
   const { clearPromptBuilder, savePromptAsTemplate, createFolder, movePromptToFolder } = useLibraryActions();
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
 
   // Assemble the complete prompt for export
   const assemblePrompt = (): string => {
     const selectedBlocks = promptBuilder.blockOrder
-      .map(blockId => mockContextBlocks.find(block => block.id === blockId))
+      .map(blockId => contextBlocks.find(block => block.id === blockId))
       .filter(block => block !== undefined);
 
     let assembledText = '';

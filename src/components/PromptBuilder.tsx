@@ -9,10 +9,9 @@ import { StreamingSidePanel } from './StreamingSidePanel';
 import { ProfileModal } from './ProfileModal';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 import { useAuthState } from '../contexts/AuthContext';
-import { mockContextBlocks } from '../data/mockData';
 
 export function PromptBuilder() {
-  const { promptBuilder, streaming } = useLibraryState();
+  const { promptBuilder, streaming, contextBlocks } = useLibraryState();
   const { user, isAuthenticated, isLoading } = useAuthState();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
@@ -25,7 +24,7 @@ export function PromptBuilder() {
   // Assemble the full prompt from blocks and custom text
   const assembledPrompt = useMemo(() => {
     const blocks = promptBuilder.blockOrder
-      .map(blockId => mockContextBlocks.find(block => block.id === blockId))
+      .map(blockId => contextBlocks.find(block => block.id === blockId))
       .filter((block): block is NonNullable<typeof block> => block !== undefined);
 
     const blockTexts = blocks.map(block => block.content);

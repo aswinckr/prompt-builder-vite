@@ -3,16 +3,15 @@ import { useHistory } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { PromptBuilderBlock } from './PromptBuilderBlock';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
-import { mockContextBlocks } from '../data/mockData';
 
 export function PromptBuilderBlockList() {
   const history = useHistory();
-  const { promptBuilder } = useLibraryState();
+  const { promptBuilder, contextBlocks } = useLibraryState();
   const { reorderBlocksInBuilder, addBlockToBuilder } = useLibraryActions();
 
   // Get block data for selected blocks in the correct order
   const orderedBlocks = promptBuilder.blockOrder
-    .map(blockId => mockContextBlocks.find(block => block.id === blockId))
+    .map(blockId => contextBlocks.find(block => block.id === blockId))
     .filter((block): block is NonNullable<typeof block> => block !== undefined);
 
   const handleAddBlock = () => {

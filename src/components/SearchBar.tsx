@@ -1,11 +1,12 @@
 import React, { useRef, useCallback } from 'react';
-import { Search } from 'lucide-react';
+import { Search, Plus } from 'lucide-react';
 
 interface SearchBarProps {
   showFullWidth?: boolean;
+  onAddKnowledge?: () => void;
 }
 
-export function SearchBar({ showFullWidth = true }: SearchBarProps) {
+export function SearchBar({ showFullWidth = true, onAddKnowledge }: SearchBarProps) {
   const [searchQuery, setSearchQuery] = React.useState('');
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -50,6 +51,19 @@ export function SearchBar({ showFullWidth = true }: SearchBarProps) {
             Use Cmd+F to focus this search field. Press Escape to clear search.
           </div>
         </div>
+
+        {/* Add Knowledge Button */}
+        {onAddKnowledge && (
+          <button
+            onClick={onAddKnowledge}
+            className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 whitespace-nowrap"
+            aria-label="Add new knowledge context block"
+          >
+            <Plus size={16} />
+            <span className="hidden sm:inline">Add Knowledge</span>
+            <span className="sm:hidden">Add</span>
+          </button>
+        )}
       </div>
     </div>
   );

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useReducer, ReactNode } from 'react';
 import { ContextBlock } from '../types/ContextBlock';
+import { mockContextBlocks } from '../data/mockData';
 
 interface StreamingMessage {
   id: string;
@@ -31,6 +32,7 @@ interface LibraryState {
   promptBuilder: PromptBuilderState;
   streaming: StreamingState;
   contextSelection: ContextSelectionState;
+  contextBlocks: ContextBlock[];
 }
 
 type LibraryAction =
@@ -44,6 +46,8 @@ type LibraryAction =
   | { type: 'TOGGLE_BLOCK_SELECTION'; payload: number }
   | { type: 'SET_SELECTED_BLOCKS'; payload: number[] }
   | { type: 'CLEAR_BLOCK_SELECTION' }
+  // Context creation actions
+  | { type: 'CREATE_CONTEXT_BLOCK'; payload: Omit<ContextBlock, 'id'> }
   // Streaming actions
   | { type: 'SET_STREAMING_PANEL_OPEN'; payload: boolean }
   | { type: 'SET_SELECTED_MODEL'; payload: string }
@@ -69,7 +73,8 @@ const initialState: LibraryState = {
   },
   contextSelection: {
     selectedBlockIds: []
-  }
+  },
+  contextBlocks: mockContextBlocks
 };
 
 function libraryReducer(state: LibraryState, action: LibraryAction): LibraryState {
@@ -227,6 +232,15 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
           currentAbortController: undefined
         }
       };
+    case 'CREATE_CONTEXT_BLOCK':
+      const newBlock: ContextBlock = {
+        id: Date.now(), // Simple ID generation
+        ...action.payload
+      };
+      return {
+        ...state,
+        contextBlocks: [newBlock, ...state.contextBlocks]
+      };
     default:
       return state;
   }
@@ -275,6 +289,9 @@ export function useLibraryActions() {
     toggleBlockSelection: (blockId: number) => dispatch({ type: 'TOGGLE_BLOCK_SELECTION', payload: blockId }),
     setSelectedBlocks: (blockIds: number[]) => dispatch({ type: 'SET_SELECTED_BLOCKS', payload: blockIds }),
     clearBlockSelection: () => dispatch({ type: 'CLEAR_BLOCK_SELECTION' }),
+
+    // Context creation actions
+    createContextBlock: (blockData: Omit<ContextBlock, 'id'>) => dispatch({ type: 'CREATE_CONTEXT_BLOCK', payload: blockData }),
 
     // Streaming actions
     setStreamingPanelOpen: (open: boolean) => dispatch({ type: 'SET_STREAMING_PANEL_OPEN', payload: open }),

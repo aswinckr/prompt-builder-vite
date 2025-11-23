@@ -201,3 +201,11 @@ export const mockSavedPrompts: SavedPrompt[] = [
     tags: ['authentication', 'jwt', 'middleware', 'security']
   }
 ];
+
+// Utility function to generate new context blocks
+export function createNewContextBlock(data: Omit<ContextBlock, 'id'>): ContextBlock {
+  return {
+    id: Date.now(), // Simple ID generation based on timestamp
+    ...data
+  };
+}
