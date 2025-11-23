@@ -1,0 +1,425 @@
+import React, { useRef, useEffect, useState } from "react";
+import { createPortal } from "react-dom";
+import { ChatMessage } from "./ChatMessage";
+import { TypingIndicator } from "./TypingIndicator";
+import {
+  X,
+  Square,
+  Copy,
+  RotateCcw,
+  Save,
+  Loader2,
+  AlertCircle,
+  Send,
+} from "lucide-react";
+import { generateUUID } from "../utils/chat";
+import { streamText } from "ai";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+
+interface ChatMessageData {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  createdAt?: Date;
+}
+
+interface ChatInterfaceProps {
+  formattedPrompt: string;
+  selectedModel: string;
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (conversation: any) => void;
+}
+
+export function ChatInterface({
+  formattedPrompt,
+  selectedModel,
+  isOpen,
+  onClose,
+  onSave,
+}: ChatInterfaceProps) {
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [messages, setMessages] = useState<ChatMessageData[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [abortController, setAbortController] =
+    useState<AbortController | null>(null);
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  // Initialize OpenRouter client
+  const openrouter = createOpenRouter({
+    apiKey: import.meta.env.VITE_OPENROUTER_API_KEY,
+  });
+
+  // Map model names to provider format
+  const modelMap: Record<string, string> = {
+    "gemini-3-pro": "google/gemini-3-pro-preview",
+    "gemini-2.5-flash": "google/gemini-2.5-flash-preview-09-2025",
+    "gemini-2.5-flash-lite": "google/gemini-2.5-flash-lite-preview-09-2025",
+    "claude-sonnet": "anthropic/claude-3-sonnet",
+    "claude-haiku": "anthropic/claude-3-haiku-20240307",
+    "claude-opus": "anthropic/claude-3-opus-20240229",
+    "gpt-4o": "openai/gpt-4o-2024-08-06",
+    "gpt-4o-mini": "openai/gpt-4o-mini",
+  };
+
+  // Initialize with welcome message if formattedPrompt exists
+  useEffect(() => {
+    if (formattedPrompt && messages.length === 0) {
+      setMessages([
+        {
+          id: generateUUID(),
+          role: "user",
+          content: `You are a helpful assistant. Here's my prompt:\n\n${formattedPrompt}`,
+          createdAt: new Date(),
+        },
+      ]);
+    }
+  }, [formattedPrompt]);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, isLoading]);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInput(e.target.value);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || isLoading) return;
+
+    const userMessage: ChatMessageData = {
+      id: generateUUID(),
+      role: "user",
+      content: input.trim(),
+      createdAt: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    setInput("");
+    setError(null);
+    setIsLoading(true);
+
+    try {
+      // Prepare messages with context
+      let conversationMessages = messages.map((msg) => ({
+        role: msg.role as "user" | "assistant" | "system",
+        content: msg.content,
+      }));
+
+      // Add system message with context if available and not already present
+      if (
+        formattedPrompt &&
+        (conversationMessages.length === 0 ||
+          conversationMessages[0].role !== "system")
+      ) {
+        conversationMessages = [
+          {
+            role: "system" as const,
+            content: `You are an AI assistant helping with a prompt builder. The user has built a prompt with the following context:\n\n${formattedPrompt}\n\nPlease help them with their request while considering this context.`,
+          },
+          ...conversationMessages,
+        ];
+      }
+
+      // Add the new user message
+      conversationMessages.push({
+        role: "user" as const,
+        content: userMessage.content,
+      });
+
+      const controller = new AbortController();
+      setAbortController(controller);
+
+      const mappedModel = modelMap[selectedModel] || selectedModel;
+
+      const result = await streamText({
+        model: openrouter(mappedModel),
+        messages: conversationMessages,
+        temperature: 0.7,
+        abortSignal: controller.signal,
+      });
+
+      let accumulatedContent = "";
+      const assistantId = generateUUID();
+
+      // Add initial assistant message
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: assistantId,
+          role: "assistant",
+          content: "",
+          createdAt: new Date(),
+        },
+      ]);
+
+      for await (const delta of result.textStream) {
+        if (controller.signal.aborted) {
+          break;
+        }
+        accumulatedContent += delta;
+
+        // Update the assistant message
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantId
+              ? { ...msg, content: accumulatedContent }
+              : msg
+          )
+        );
+      }
+
+      if (!controller.signal.aborted) {
+        // Final update to ensure the message is complete
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantId
+              ? { ...msg, content: accumulatedContent }
+              : msg
+          )
+        );
+      }
+    } catch (error: any) {
+      console.error("Chat error:", error);
+      setError(error.message || "Failed to generate response");
+
+      // Remove the empty assistant message if error occurred
+      setMessages((prev) => prev.filter((msg) => msg.content !== ""));
+    } finally {
+      setIsLoading(false);
+      setAbortController(null);
+    }
+  };
+
+  const stop = () => {
+    if (abortController) {
+      abortController.abort();
+    }
+    setIsLoading(false);
+    setAbortController(null);
+  };
+
+  const reload = async () => {
+    if (messages.length === 0) return;
+
+    // Remove the last assistant message and regenerate
+    const lastMessage = messages[messages.length - 1];
+    if (lastMessage.role === "assistant") {
+      setMessages((prev) => prev.slice(0, -1));
+
+      // Trigger regeneration by resubmitting the user's last message
+      const userMessages = messages.filter((msg) => msg.role === "user");
+      if (userMessages.length > 0) {
+        const lastUserMessage = userMessages[userMessages.length - 1];
+        setInput(lastUserMessage.content);
+        // Use setTimeout to avoid React state conflicts
+        setTimeout(() => {
+          const formEvent = new Event("submit", { cancelable: true }) as any;
+          formEvent.preventDefault = () => {};
+          handleSubmit(formEvent);
+        }, 100);
+      }
+    }
+  };
+
+  const handleCopy = async () => {
+    try {
+      const textToCopy = messages
+        .filter((msg) => msg.role === "assistant")
+        .map((msg) => msg.content)
+        .join("\n\n");
+
+      await navigator.clipboard.writeText(textToCopy);
+    } catch (error) {
+      console.error("Failed to copy text:", error);
+    }
+  };
+
+  const handleSave = () => {
+    const conversationData = {
+      id: generateUUID(),
+      messages: messages.map((msg) => ({
+        role: msg.role,
+        content: msg.content,
+        timestamp: msg.createdAt || new Date(),
+      })),
+      model: selectedModel,
+      context: formattedPrompt,
+      timestamp: new Date().toISOString(),
+    };
+
+    onSave(conversationData);
+  };
+
+  const handleRetry = () => {
+    if (messages.length > 0) {
+      reload();
+    }
+  };
+
+  const handleClose = () => {
+    if (isLoading) {
+      stop();
+    }
+    onClose();
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === "Escape") {
+      handleClose();
+    }
+  };
+
+  const content = (
+    <>
+      {/* Overlay backdrop */}
+      <div
+        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+        onClick={handleClose}
+        aria-hidden="true"
+      />
+
+      {/* Side panel */}
+      <div
+        className={`fixed right-0 top-0 z-50 h-full w-full transform bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 text-neutral-100 shadow-2xl transition-transform duration-300 ease-in-out md:w-2/5 lg:w-2/5 xl:w-2/5 ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        }`}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="chat-panel-title"
+        onKeyDown={handleKeyDown}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between border-b border-neutral-800/50 p-4">
+          <h2 id="chat-panel-title" className="text-lg font-medium">
+            AI Chat
+          </h2>
+          <div className="flex items-center gap-2">
+            {/* Control buttons */}
+            {isLoading ? (
+              <button
+                onClick={stop}
+                className="rounded-lg bg-red-500/10 p-2 text-red-400 transition-colors hover:bg-red-500/20"
+                aria-label="Stop generation"
+              >
+                <Square className="h-4 w-4" />
+              </button>
+            ) : (
+              messages.length > 0 && (
+                <button
+                  onClick={handleRetry}
+                  className="rounded-lg bg-blue-500/10 p-2 text-blue-400 transition-colors hover:bg-blue-500/20"
+                  aria-label="Regenerate last response"
+                >
+                  <RotateCcw className="h-4 w-4" />
+                </button>
+              )
+            )}
+
+            {messages.length > 0 && (
+              <>
+                <button
+                  onClick={handleCopy}
+                  className="rounded-lg bg-neutral-800/50 p-2 text-neutral-400 transition-colors hover:bg-neutral-800/70"
+                  aria-label="Copy conversation"
+                >
+                  <Copy className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handleSave}
+                  className="rounded-lg bg-green-500/10 p-2 text-green-400 transition-colors hover:bg-green-500/20"
+                  aria-label="Save conversation"
+                >
+                  <Save className="h-4 w-4" />
+                </button>
+              </>
+            )}
+
+            <button
+              onClick={handleClose}
+              className="rounded-lg bg-neutral-800/50 p-2 text-neutral-400 transition-colors hover:bg-neutral-800/70"
+              aria-label="Close panel"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+        </div>
+
+        {/* Status indicator */}
+        <div className="border-b border-neutral-800/30 px-4 py-2">
+          {error && (
+            <div className="flex items-center gap-2 text-red-400">
+              <AlertCircle className="h-4 w-4" />
+              <span className="text-sm">{error}</span>
+            </div>
+          )}
+          {isLoading && !error && (
+            <div className="flex items-center gap-2 text-green-400">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span className="text-sm">AI is thinking...</span>
+            </div>
+          )}
+        </div>
+
+        {/* Messages area */}
+        <div
+          className="flex-1 overflow-y-auto p-4"
+          style={{ height: "calc(100% - 180px)" }}
+        >
+          {messages.map((message) => (
+            <ChatMessage key={message.id} message={message} />
+          ))}
+
+          {isLoading && <TypingIndicator />}
+
+          {/* Empty state */}
+          {messages.length === 0 && !isLoading && (
+            <div className="py-8 text-center text-neutral-500">
+              <div className="mb-4">
+                <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-neutral-800/50">
+                  <Send className="h-8 w-8" />
+                </div>
+              </div>
+              <p>
+                Start a conversation with the AI assistant about your prompt!
+              </p>
+            </div>
+          )}
+
+          <div ref={messagesEndRef} />
+        </div>
+
+        {/* Input form */}
+        <form
+          onSubmit={handleSubmit}
+          className="border-t border-neutral-800/50 p-4"
+        >
+          <div className="flex gap-2">
+            <input
+              value={input}
+              onChange={handleInputChange}
+              placeholder="Type your message..."
+              className="flex-1 rounded-lg border border-neutral-700/30 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+              disabled={isLoading}
+            />
+            <button
+              type="submit"
+              disabled={isLoading || !input.trim()}
+              className="rounded-lg border border-blue-500/30 bg-blue-500/20 px-4 py-2 text-sm font-medium text-blue-400 transition-colors hover:bg-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {isLoading ? "Stop" : "Send"}
+            </button>
+          </div>
+        </form>
+      </div>
+    </>
+  );
+
+  return createPortal(content, document.body);
+}

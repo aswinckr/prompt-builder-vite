@@ -1,11 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Play, ChevronDown, User } from 'lucide-react';
+import { Play, ChevronDown, User, MessageCircle } from 'lucide-react';
 import { DndProvider } from 'react-dnd';
 import { HTML5Backend } from 'react-dnd-html5-backend';
 import { CustomTextInput } from './CustomTextInput';
 import { PromptBuilderBlockList } from './PromptBuilderBlockList';
 import { PromptBuilderActions } from './PromptBuilderActions';
 import { StreamingSidePanel } from './StreamingSidePanel';
+import { ChatInterface } from './ChatInterface';
 import { ProfileModal } from './ProfileModal';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 import { useAuthState } from '../contexts/AuthContext';
@@ -14,10 +15,12 @@ export function PromptBuilder() {
   const { promptBuilder, streaming, contextBlocks } = useLibraryState();
   const { user, isAuthenticated, isLoading } = useAuthState();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [executionMode, setExecutionMode] = useState<'stream' | 'chat'>('stream');
 
   const {
     setCustomText,
     setStreamingPanelOpen,
+    setChatPanelOpen,
     setSelectedModel
   } = useLibraryActions();
 
@@ -65,8 +68,19 @@ export function PromptBuilder() {
     console.log(finalPrompt);
     console.log('==================');
 
-    // Open streaming panel
-    setStreamingPanelOpen(true);
+    // Open the appropriate panel based on execution mode
+    if (executionMode === 'chat') {
+      setChatPanelOpen(true);
+    } else {
+      setStreamingPanelOpen(true);
+    }
+  };
+
+  const handleSaveChat = (conversation: any) => {
+    // For now, just log the conversation. In a real implementation,
+    // you'd save this to your database or state
+    console.log('Saving conversation:', conversation);
+    alert('Chat conversation saved!');
   };
 
   const handleModelChange = (model: string) => {
@@ -119,8 +133,21 @@ export function PromptBuilder() {
             <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
           </div>
 
-          {/* Right side - Prompt Actions and Run Button */}
+          {/* Right side - Execution Mode, Prompt Actions and Run Button */}
           <div className="flex items-center gap-3">
+            {/* Execution Mode Selector */}
+            <div className="relative">
+              <select
+                value={executionMode}
+                onChange={(e) => setExecutionMode(e.target.value as 'stream' | 'chat')}
+                className="appearance-none bg-neutral-800/50 border border-neutral-700/30 text-neutral-100 px-3 py-2 pr-10 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/30 transition-all duration-200 cursor-pointer"
+              >
+                <option value="stream">Stream</option>
+                <option value="chat">Chat</option>
+              </select>
+              <ChevronDown className="absolute right-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
+            </div>
+
             {/* Prompt Builder Actions */}
             <PromptBuilderActions />
 
@@ -129,10 +156,19 @@ export function PromptBuilder() {
               onClick={handleRunPrompt}
               disabled={!promptBuilder.customText && promptBuilder.blockOrder.length === 0}
               className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 disabled:from-neutral-700 disabled:to-neutral-700 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl text-sm font-medium flex items-center gap-2 transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:ring-offset-2 focus:ring-offset-neutral-900 shadow-lg hover:shadow-xl transform hover:scale-105 disabled:transform-none"
-              aria-label="Run prompt with selected AI model"
+              aria-label={`Run prompt with ${executionMode} mode`}
             >
-              <Play className="w-4 h-4" />
-              Run Prompt
+              {executionMode === 'chat' ? (
+                <>
+                  <MessageCircle className="w-4 h-4" />
+                  Chat with Prompt
+                </>
+              ) : (
+                <>
+                  <Play className="w-4 h-4" />
+                  Run Prompt
+                </>
+              )}
             </button>
           </div>
         </div>
@@ -206,6 +242,17 @@ export function PromptBuilder() {
         {/* Streaming Side Panel */}
         {streaming.isStreamingPanelOpen && (
           <StreamingSidePanel formattedPrompt={assembledPrompt} />
+        )}
+
+        {/* Chat Interface */}
+        {streaming.isChatPanelOpen && (
+          <ChatInterface
+            formattedPrompt={assembledPrompt}
+            selectedModel={streaming.selectedModel}
+            isOpen={streaming.isChatPanelOpen}
+            onClose={() => setChatPanelOpen(false)}
+            onSave={handleSaveChat}
+          />
         )}
 
         {/* Profile Modal */}

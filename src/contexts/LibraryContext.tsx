@@ -15,6 +15,7 @@ interface StreamingMessage {
 
 interface StreamingState {
   isStreamingPanelOpen: boolean;
+  isChatPanelOpen: boolean;
   selectedModel: string;
   streamingContent: string;
   streamingStatus: 'idle' | 'connecting' | 'streaming' | 'error' | 'stopped';
@@ -88,6 +89,7 @@ type LibraryAction =
   | { type: 'SET_FOLDER_MODAL_LOADING'; payload: boolean }
   // Streaming actions
   | { type: 'SET_STREAMING_PANEL_OPEN'; payload: boolean }
+  | { type: 'SET_CHAT_PANEL_OPEN'; payload: boolean }
   | { type: 'SET_SELECTED_MODEL'; payload: string }
   | { type: 'UPDATE_STREAMING_CONTENT'; payload: string }
   | { type: 'SET_STREAMING_STATUS'; payload: StreamingState['streamingStatus'] }
@@ -104,6 +106,7 @@ const initialState: LibraryState = {
   },
   streaming: {
     isStreamingPanelOpen: false,
+    isChatPanelOpen: false,
     selectedModel: 'gemini-3-pro',
     streamingContent: '',
     streamingStatus: 'idle',
@@ -320,6 +323,14 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
         streaming: {
           ...state.streaming,
           isStreamingPanelOpen: action.payload
+        }
+      };
+    case 'SET_CHAT_PANEL_OPEN':
+      return {
+        ...state,
+        streaming: {
+          ...state.streaming,
+          isChatPanelOpen: action.payload
         }
       };
     case 'SET_SELECTED_MODEL':
@@ -570,6 +581,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
     // Streaming actions
     setStreamingPanelOpen: (open: boolean) => dispatch({ type: 'SET_STREAMING_PANEL_OPEN', payload: open }),
+    setChatPanelOpen: (open: boolean) => dispatch({ type: 'SET_CHAT_PANEL_OPEN', payload: open }),
     setSelectedModel: (model: string) => dispatch({ type: 'SET_SELECTED_MODEL', payload: model }),
     updateStreamingContent: (content: string) => dispatch({ type: 'UPDATE_STREAMING_CONTENT', payload: content }),
     setStreamingStatus: (status: StreamingState['streamingStatus']) => dispatch({ type: 'SET_STREAMING_STATUS', payload: status }),
