@@ -39,6 +39,7 @@ export function ChatInterface({
   onSave,
 }: ChatInterfaceProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
   const [input, setInput] = useState("");
@@ -49,6 +50,21 @@ export function ChatInterface({
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  };
+
+  const adjustTextareaHeight = () => {
+    const textarea = textareaRef.current;
+    if (textarea) {
+      // Reset height to get the scroll height
+      textarea.style.height = 'auto';
+
+      // Calculate new height (min 40px, max 200px)
+      const scrollHeight = textarea.scrollHeight;
+      const newHeight = Math.min(Math.max(scrollHeight, 40), 200);
+
+      // Set the new height - the textarea is positioned absolutely at bottom
+      textarea.style.height = `${newHeight}px`;
+    }
   };
 
   // Initialize OpenRouter client
@@ -173,8 +189,20 @@ export function ChatInterface({
     scrollToBottom();
   }, [messages, isLoading]);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  useEffect(() => {
+    adjustTextareaHeight();
+  }, [input]);
+
+  useEffect(() => {
+    // Initialize textarea height on mount
+    if (textareaRef.current) {
+      adjustTextareaHeight();
+    }
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     setInput(e.target.value);
+    adjustTextareaHeight();
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -193,6 +221,11 @@ export function ChatInterface({
     setError(null);
     setIsLoading(true);
     setHasStreamingStarted(false); // Reset streaming state
+
+    // Reset textarea height after sending
+    setTimeout(() => {
+      adjustTextareaHeight();
+    }, 0);
 
     try {
       // Prepare messages with context
@@ -483,18 +516,33 @@ export function ChatInterface({
           className="border-t border-neutral-800/50 py-4"
         >
           <div className="max-w-3xl mx-auto px-8">
-            <div className="flex gap-2">
-              <input
-                value={input}
-                onChange={handleInputChange}
-                placeholder="Type your message..."
-                className="flex-1 rounded-lg border border-neutral-700/30 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                disabled={isLoading}
-              />
+            <div className="flex gap-2 items-end">
+              {/* Container with relative positioning to allow textarea to grow upwards */}
+              <div className="relative flex-1 min-h-[40px]" style={{ minHeight: '40px', maxHeight: '200px' }}>
+                <textarea
+                  ref={textareaRef}
+                  value={input}
+                  onChange={handleInputChange}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit(e as any);
+                    }
+                  }}
+                  placeholder="Type your message..."
+                  className="absolute bottom-0 left-0 right-0 rounded-lg border border-neutral-700/30 bg-neutral-800/50 px-3 py-2 text-sm text-neutral-100 placeholder-neutral-500 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 resize-none overflow-hidden"
+                  style={{
+                    height: '40px'
+                  }}
+                  disabled={isLoading}
+                  rows={1}
+                />
+              </div>
               <button
                 type="submit"
                 disabled={isLoading || !input.trim()}
                 className="rounded-lg border border-blue-500/30 bg-blue-500/20 px-4 py-2 text-sm font-medium text-blue-400 transition-colors hover:bg-blue-500/30 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+                style={{ height: '40px' }}
               >
                 {isLoading ? "Stop" : "Send"}
               </button>
