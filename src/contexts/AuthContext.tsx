@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
 import { User, Session } from '@supabase/supabase-js';
-import { auth } from '../lib/supabase';
+import { supabase, auth } from '../lib/supabase';
 
 interface AuthState {
   user: User | null;
@@ -74,22 +74,123 @@ const AuthContext = createContext<{
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(authReducer, initialState);
 
-  useEffect(() => {
-    // Get initial session
-    const getInitialSession = async () => {
+  // Process OAuth hash immediately on component mount (before useEffect)
+  const processOAuthHash = async () => {
+    const hashParams = new URLSearchParams(window.location.hash.substring(1));
+    const accessToken = hashParams.get('access_token');
+
+    if (accessToken) {
+      console.log('🔑 Found access token in hash! Processing...');
+      console.log('Access token first 50 chars:', accessToken.substring(0, 50) + '...');
+      console.log('All hash params:', Object.fromEntries(hashParams.entries()));
+
       try {
+        // Manually set the session from the hash parameters
+        const { data, error } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: hashParams.get('refresh_token') || '',
+        });
+
+        if (error) {
+          console.error('❌ Error setting session from hash:', error);
+          return false;
+        }
+
+        console.log('✅ Session set from hash successfully!', data);
+
+        // Clear the hash from URL to prevent processing again
+        window.history.replaceState(null, '', window.location.pathname);
+
+        return true;
+      } catch (error) {
+        console.error('❌ Error processing OAuth hash:', error);
+        return false;
+      }
+    }
+    return false;
+  };
+
+  // Log immediately on mount before useEffect
+  console.log('=== AUTH PROVIDER MOUNT ===');
+  console.log('Full URL on mount:', window.location.href);
+  console.log('Hash on mount:', window.location.hash);
+
+  const hashParams = new URLSearchParams(window.location.hash.substring(1));
+  const accessToken = hashParams.get('access_token');
+  const hasOAuthHash = !!accessToken;
+
+  console.log('Has OAuth hash:', hasOAuthHash);
+
+  useEffect(() => {
+    // Debug: Print URL hash and parameters
+    console.log('=== AUTH DEBUG ===');
+    console.log('Current URL:', window.location.href);
+    console.log('URL hash:', window.location.hash);
+    console.log('URL search:', window.location.search);
+
+    // Process OAuth hash if present
+    const processOAuthHash = async () => {
+      if (accessToken) {
+        console.log('🔑 Processing OAuth hash...');
+        try {
+          // Manually set the session from the hash parameters
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: hashParams.get('refresh_token') || '',
+          });
+
+          if (error) {
+            console.error('❌ Error setting session from hash:', error);
+          } else {
+            console.log('✅ Session set from hash successfully!', data);
+            // Clear the hash from URL to prevent processing again
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        } catch (error) {
+          console.error('❌ Error processing OAuth hash:', error);
+        }
+      }
+    };
+
+    // Process OAuth hash first if present, then get session
+    const initializeAuth = async () => {
+      try {
+        // Process OAuth hash if present
+        if (accessToken) {
+          console.log('🔑 Processing OAuth hash...');
+          const { data, error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: hashParams.get('refresh_token') || '',
+          });
+
+          if (error) {
+            console.error('❌ Error setting session from hash:', error);
+          } else {
+            console.log('✅ Session set from hash successfully!', data);
+            // Clear the hash from URL to prevent processing again
+            window.history.replaceState(null, '', window.location.pathname);
+          }
+        }
+
+        console.log('Getting initial session...');
         const session = await auth.getCurrentSession();
         const user = await auth.getCurrentUser();
 
+        console.log('Initial session result:', session);
+        console.log('Initial user result:', user);
+
         if (session && user) {
+          console.log('✅ Session found - dispatching AUTH_SUCCESS');
           dispatch({
             type: 'AUTH_SUCCESS',
             payload: { user, session },
           });
         } else {
+          console.log('❌ No session found');
           dispatch({ type: 'AUTH_LOADING', payload: false });
         }
       } catch (error) {
+        console.error('❌ Error getting initial session:', error);
         dispatch({
           type: 'AUTH_ERROR',
           payload: error instanceof Error ? error.message : 'Failed to load session',
@@ -97,19 +198,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
-    getInitialSession();
+    initializeAuth();
 
     // Listen for auth changes
     const { data: { subscription } } = auth.onAuthStateChange(
       async (event, session) => {
+        console.log('=== AUTH STATE CHANGE ===');
+        console.log('Event:', event);
+        console.log('Session:', session);
+        console.log('User:', session?.user);
+
         if (session && session.user) {
+          console.log('✅ Auth state changed - dispatching AUTH_SUCCESS');
           dispatch({
             type: 'AUTH_SUCCESS',
             payload: { user: session.user, session },
           });
         } else if (event === 'SIGNED_OUT') {
+          console.log('👋 User signed out');
           dispatch({ type: 'AUTH_SIGNOUT' });
         } else {
+          console.log('⏳ Other auth event:', event);
           dispatch({ type: 'AUTH_LOADING', payload: false });
         }
       }
