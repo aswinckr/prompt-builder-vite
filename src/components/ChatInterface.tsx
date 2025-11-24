@@ -90,7 +90,7 @@ export function ChatInterface({
         {
           role: "user" as const,
           content: formattedPrompt,
-        }
+        },
       ];
 
       // Add the user message to the UI
@@ -125,7 +125,7 @@ export function ChatInterface({
 
         // Add the assistant message only when we have content, or update existing one
         setMessages((prev) => {
-          const existingMessage = prev.find(msg => msg.id === assistantId);
+          const existingMessage = prev.find((msg) => msg.id === assistantId);
           if (existingMessage) {
             // Update existing message
             return prev.map((msg) =>
@@ -159,7 +159,6 @@ export function ChatInterface({
           )
         );
       }
-
     } catch (error: any) {
       console.error("Initial chat error:", error);
       setError(error.message || "Failed to generate response");
@@ -227,7 +226,7 @@ export function ChatInterface({
 
         // Add the assistant message only when we have content, or update existing one
         setMessages((prev) => {
-          const existingMessage = prev.find(msg => msg.id === assistantId);
+          const existingMessage = prev.find((msg) => msg.id === assistantId);
           if (existingMessage) {
             // Update existing message
             return prev.map((msg) =>
@@ -364,7 +363,7 @@ export function ChatInterface({
 
       {/* Side panel */}
       <div
-        className={`fixed right-0 top-0 z-50 h-full w-full flex flex-col transform bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 text-neutral-100 shadow-2xl transition-transform duration-300 ease-in-out ${
+        className={`fixed right-0 top-0 z-50 flex h-full w-full transform flex-col bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 text-neutral-100 shadow-2xl transition-transform duration-300 ease-in-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         role="dialog"
@@ -445,10 +444,8 @@ export function ChatInterface({
         </div>
 
         {/* Messages area */}
-        <div
-          className="flex-1 overflow-y-auto py-4"
-        >
-          <div className="max-w-3xl mx-auto px-8">
+        <div className="flex-1 overflow-y-auto py-4">
+          <div className="mx-auto max-w-3xl px-8">
             {messages.map((message) => (
               <ChatMessage key={message.id} message={message} />
             ))}
@@ -460,12 +457,9 @@ export function ChatInterface({
               <div className="py-8 text-center text-neutral-500">
                 <div className="mb-4">
                   <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-neutral-800/50">
-                    <Send className="h-8 w-8" />
+                    <Loader2 className="h-8 w-8 animate-spin" />
                   </div>
                 </div>
-                <p>
-                  Start a conversation with the AI assistant about your prompt!
-                </p>
               </div>
             )}
 
@@ -475,7 +469,7 @@ export function ChatInterface({
 
         {/* Input form */}
         <div className="border-t border-neutral-800/50 p-4">
-          <div className="max-w-3xl mx-auto">
+          <div className="mx-auto max-w-3xl">
             <AIPromptInput
               value={input}
               onChange={setInput}
