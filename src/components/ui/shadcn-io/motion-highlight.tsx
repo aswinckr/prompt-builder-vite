@@ -22,7 +22,6 @@ export function MotionHighlight({
   });
   const containerRef = useRef<HTMLDivElement>(null);
   const highlightRef = useRef<HTMLDivElement>(null);
-  const isInitialized = useRef(false);
 
   const updateHighlight = useCallback((targetElement: HTMLElement) => {
     if (!containerRef.current) return;
@@ -73,17 +72,16 @@ export function MotionHighlight({
     }
   }, [activeValue, updateHighlight]);
 
-  // Initialize the highlight position on mount
+  // Update when defaultValue changes (for programmatic navigation)
   useLayoutEffect(() => {
-    if (containerRef.current && defaultValue && !isInitialized.current) {
+    if (containerRef.current && defaultValue && defaultValue !== activeValue) {
       const defaultElement = containerRef.current.querySelector(`[data-value="${defaultValue}"]`) as HTMLElement;
       if (defaultElement) {
         setActiveValue(defaultValue);
         updateHighlight(defaultElement);
-        isInitialized.current = true;
       }
     }
-  }, [defaultValue, updateHighlight]);
+  }, [defaultValue, activeValue, updateHighlight]);
 
   // Memoize children with props to prevent unnecessary re-renders
   const childrenWithProps = React.useMemo(() => {
