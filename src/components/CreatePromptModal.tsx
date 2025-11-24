@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { Modal } from "./Modal";
 import { TipTapEditor } from "./TipTapEditor";
+import { VariablePlaceholderHelper } from "./VariablePlaceholderHelper";
 import { useLibraryActions } from "../contexts/LibraryContext";
 
 interface CreatePromptModalProps {
@@ -149,12 +150,7 @@ export function CreatePromptModal({
                 editable={true}
               />
             </div>
-            <div className="mt-2 p-3 rounded-lg bg-blue-500/5 border border-blue-500/10">
-              <p className="text-xs text-blue-400 font-medium mb-1">💡 Variable Placeholder Syntax:</p>
-              <p className="text-xs text-neutral-400">
-                Use double curly braces for variables: <code className="bg-neutral-700 px-1 py-0.5 rounded text-blue-300">{"{{user_name}}"}</code>, <code className="bg-neutral-700 px-1 py-0.5 rounded text-blue-300">{"{{topic}}"}</code>, etc.
-              </p>
-            </div>
+            <VariablePlaceholderHelper />
           </div>
         </div>
 
