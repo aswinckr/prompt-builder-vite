@@ -1,6 +1,6 @@
-import React from 'react';
-import { X, CheckSquare, Square, Play } from 'lucide-react';
-import { useLibraryActions } from '../contexts/LibraryContext';
+import React, { useState } from 'react';
+import { X, CheckSquare, Square, Play, Copy } from 'lucide-react';
+import { useLibraryActions, useLibraryState } from '../contexts/LibraryContext';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../routes/AppRoutes';
 
@@ -17,7 +17,9 @@ interface SelectionActionBarProps {
  */
 export function SelectionActionBar({ selectedCount, selectedBlocks, onClear, onSelectAll, totalVisible }: SelectionActionBarProps) {
   const { addBlockToBuilder } = useLibraryActions();
+  const { contextBlocks } = useLibraryState();
   const navigate = useNavigate();
+  const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
 
   const handleInsertIntoPrompt = () => {
     // Add each selected block to the prompt builder in order
@@ -30,6 +32,35 @@ export function SelectionActionBar({ selectedCount, selectedBlocks, onClear, onS
 
     // Clear selection after insertion (will be handled by parent component)
     onClear();
+  };
+
+  const handleCopyToClipboard = async () => {
+    try {
+      // Get the actual context block objects for the selected IDs
+      const selectedBlockObjects = selectedBlocks
+        .map(blockId => contextBlocks.find(block => block.id === blockId))
+        .filter(block => block !== undefined);
+
+      // Format the content for copying
+      let copiedText = selectedBlockObjects.map((block, index) => {
+        let blockText = `### ${block.title}`;
+
+        // Add tags if available
+        if (block.tags && block.tags.length > 0) {
+          blockText += ` [${block.tags.join(', ')}]`;
+        }
+
+        blockText += `\n\n${block.content}`;
+        return blockText;
+      }).join('\n\n---\n\n');
+
+      await navigator.clipboard.writeText(copiedText);
+      setCopyStatus('copied');
+      setTimeout(() => setCopyStatus('idle'), 2000);
+    } catch (error) {
+      setCopyStatus('error');
+      setTimeout(() => setCopyStatus('idle'), 2000);
+    }
   };
 
   return (
@@ -65,6 +96,22 @@ export function SelectionActionBar({ selectedCount, selectedBlocks, onClear, onS
 
         {/* Action buttons */}
         <div className="flex items-center gap-2">
+          <button
+            onClick={handleCopyToClipboard}
+            className="flex items-center gap-2 px-3 py-2 text-sm text-neutral-300 bg-neutral-700 hover:bg-neutral-600 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-800"
+            aria-label={`Copy ${selectedCount} selected ${selectedCount === 1 ? 'item' : 'items'} to clipboard`}
+            title={
+              copyStatus === 'copied'
+                ? 'Copied to clipboard!'
+                : copyStatus === 'error'
+                ? 'Copy failed'
+                : `Copy ${selectedCount} selected ${selectedCount === 1 ? 'item' : 'items'} to clipboard`
+            }
+          >
+            <Copy size={16} />
+            {copyStatus === 'copied' ? 'Copied!' : 'Copy'}
+          </button>
+
           <button
             onClick={handleInsertIntoPrompt}
             className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded-lg hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-800"
