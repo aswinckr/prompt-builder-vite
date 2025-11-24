@@ -2,6 +2,7 @@ import { useEditor } from '@tiptap/react';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import { useEffect } from 'react';
+import { VariableHighlightExtension } from './useVariableHighlightExtension';
 
 export interface EditorContent {
   html: string;
@@ -44,6 +45,7 @@ export function useTiptapEditor({
       Placeholder.configure({
         placeholder: placeholder || 'Start writing...',
       }),
+      VariableHighlightExtension,
     ],
     content,
     editable,

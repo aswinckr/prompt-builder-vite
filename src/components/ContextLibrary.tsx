@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, AlertCircle, Loader2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertCircle, Loader2, Plus } from 'lucide-react';
 import { AppLogo } from './AppLogo';
 import { ProjectSidebar } from './ProjectSidebar';
 import { ProfileButton } from './ProfileButton';
@@ -9,6 +9,7 @@ import { CollapsibleTagSection } from './CollapsibleTagSection';
 import { ContextBlocksGrid } from './ContextBlocksGrid';
 import { SavedPromptList } from './SavedPromptList';
 import { CreateContextModal } from './CreateContextModal';
+import { CreatePromptModal } from './CreatePromptModal';
 import { CreateFolderModal } from './CreateFolderModal';
 import { SynchronizedLoading } from './ui/SynchronizedLoading';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
@@ -22,6 +23,7 @@ interface ProjectWithType extends Project {
 export function ContextLibrary() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isCreateContextModalOpen, setIsCreateContextModalOpen] = useState(false);
+  const [isCreatePromptModalOpen, setIsCreatePromptModalOpen] = useState(false);
   const [contextLibrarySidebarExpanded, setContextLibrarySidebarExpanded] = useState(
     window.innerWidth >= 768 // Auto-collapse on mobile
   );
@@ -66,6 +68,20 @@ export function ContextLibrary() {
 
   const handleCloseCreateContextModal = () => {
     setIsCreateContextModalOpen(false);
+  };
+
+  const handleOpenCreatePromptModal = () => {
+    setIsCreatePromptModalOpen(true);
+  };
+
+  const handleCloseCreatePromptModal = () => {
+    setIsCreatePromptModalOpen(false);
+  };
+
+  // Helper function to get the type of the current selected project
+  const getCurrentProjectType = (): 'prompts' | 'datasets' => {
+    const currentProject = allProjects.find(p => p.id === selectedProject);
+    return currentProject?.type || 'datasets'; // Default to datasets for backward compatibility
   };
 
   // Handle prompt updates with database
@@ -174,9 +190,8 @@ export function ContextLibrary() {
         {/* Fixed Header Section */}
         <div className="flex-shrink-0">
           {/* Unified Search Bar with Mobile Sidebar Toggle */}
-          {!isPromptProject && (
-            <div className="border-b border-neutral-700">
-              <div className="flex items-center gap-3 p-4 md:p-6">
+          <div className="border-b border-neutral-700">
+            <div className="flex items-center gap-3 p-4 md:p-6">
                 {/* Mobile Sidebar Toggle - Only visible on mobile when sidebar is collapsed */}
                 <button
                   onClick={toggleContextLibrarySidebar}
@@ -191,12 +206,23 @@ export function ContextLibrary() {
                 <div className="flex-1 min-w-0">
                   <SearchBar
                     showFullWidth={false}
-                    onAddKnowledge={handleOpenCreateContextModal}
+                    onAddKnowledge={getCurrentProjectType() === 'datasets' ? handleOpenCreateContextModal : undefined}
+                    onAddPrompt={handleOpenCreatePromptModal}
+                    searchType={getCurrentProjectType() === 'prompts' ? 'prompts' : 'context'}
                   />
                 </div>
+
+                {/* TEST BUTTON - Add Prompt Button (always visible for testing) */}
+                <button
+                  onClick={handleOpenCreatePromptModal}
+                  className="bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white px-3 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-green-500/20"
+                >
+                  <Plus size={16} />
+                  <span className="hidden sm:inline">Test Add Prompt</span>
+                  <span className="sm:hidden">+</span>
+                </button>
               </div>
             </div>
-          )}
 
           {/* Collapsible Tag Filter Section - Only for context blocks */}
           {!isPromptProject && <CollapsibleTagSection />}
@@ -231,6 +257,13 @@ export function ContextLibrary() {
         isOpen={isCreateContextModalOpen}
         onClose={handleCloseCreateContextModal}
         selectedProjectId={isPromptProject ? null : selectedProject}
+      />
+
+      {/* Create Prompt Modal */}
+      <CreatePromptModal
+        isOpen={isCreatePromptModalOpen}
+        onClose={handleCloseCreatePromptModal}
+        selectedProjectId={isPromptProject ? selectedProject : null}
       />
 
       {/* Create Folder Modal */}
