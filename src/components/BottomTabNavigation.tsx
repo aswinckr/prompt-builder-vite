@@ -1,5 +1,5 @@
 import React from 'react';
-import { NavLink, useLocation, useHistory } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Library, Sparkles } from 'lucide-react';
 import { ROUTES } from '../routes/AppRoutes';
 import { useLibraryState } from '../contexts/LibraryContext';
@@ -7,7 +7,7 @@ import { MotionHighlight } from './ui/shadcn-io/motion-highlight';
 
 export function BottomTabNavigation() {
   const location = useLocation();
-  const history = useHistory();
+  const navigate = useNavigate();
   const { contextSelection } = useLibraryState();
 
   // Add custom CSS to remove all outlines
@@ -56,7 +56,7 @@ export function BottomTabNavigation() {
           className="flex items-center gap-1"
           onValueChange={(value) => {
             // Navigate to the selected route
-            history.push(value);
+            navigate(value);
           }}
         >
           <NavLink
