@@ -4,6 +4,7 @@ import { Plus } from 'lucide-react';
 import { PromptBuilderBlock } from './PromptBuilderBlock';
 import { TemporaryContextBlock } from './TemporaryContextBlock';
 import { ContextDropdown } from './ContextDropdown';
+import { ErrorBoundary } from './ErrorBoundary';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 
 export function PromptBuilderBlockList() {
@@ -80,26 +81,24 @@ export function PromptBuilderBlockList() {
         {orderedBlocks.map((block, index) => {
           const isLastCreatedTemporaryBlock = block.id === lastCreatedBlockId && block.isTemporary;
 
-          if (block.isTemporary) {
-            return (
-              <TemporaryContextBlock
-                key={block.id}
-                block={block}
-                index={index}
-                moveBlock={moveBlock}
-                autoFocus={isLastCreatedTemporaryBlock}
-              />
-            );
-          } else {
-            return (
-              <PromptBuilderBlock
-                key={block.id}
-                block={block}
-                index={index}
-                moveBlock={moveBlock}
-              />
-            );
-          }
+          return (
+            <ErrorBoundary key={block.id}>
+              {block.isTemporary ? (
+                <TemporaryContextBlock
+                  block={block}
+                  index={index}
+                  moveBlock={moveBlock}
+                  autoFocus={isLastCreatedTemporaryBlock}
+                />
+              ) : (
+                <PromptBuilderBlock
+                  block={block}
+                  index={index}
+                  moveBlock={moveBlock}
+                />
+              )}
+            </ErrorBoundary>
+          );
         })}
       </div>
 

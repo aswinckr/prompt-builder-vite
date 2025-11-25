@@ -52,35 +52,26 @@ export function CreateFolderModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🚀 Form submitted!');
-    console.log('📝 Form data:', { folderName, selectedIcon, folderType });
 
     // Validation
     if (!folderName.trim()) {
-      console.log('❌ Validation failed: Empty folder name');
       setError('Folder name is required');
       return;
     }
 
     if (folderName.trim().length > 50) {
-      console.log('❌ Validation failed: Name too long');
       setError('Folder name must be 50 characters or less');
       return;
     }
 
-    console.log('✅ Validation passed, calling onCreateFolder');
-    console.log('🔍 onCreateFolder function type:', typeof onCreateFolder);
-    console.log('🔍 onCreateFolder function:', onCreateFolder);
     try {
       setError(null);
       const result = await onCreateFolder({
         name: folderName.trim(),
         icon: selectedIcon
       });
-      console.log('✅ onCreateFolder completed successfully with result:', result);
       onClose();
     } catch (err) {
-      console.error('❌ onCreateFolder failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to create folder');
     }
   };

@@ -2,6 +2,7 @@ import React, { useRef, useState } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import type { Identifier } from "dnd-core";
 import type { XYCoord } from "react-dnd";
+import type { DragSourceMonitor } from "react-dnd";
 import { X, GripVertical, Hash, ChevronDown, ChevronRight } from "lucide-react";
 import { ContextBlock as ContextBlockType } from "../types/ContextBlock";
 import { useLibraryActions } from "../contexts/LibraryContext";
@@ -38,7 +39,7 @@ export function PromptBuilderBlock({
     item: () => {
       return { id: block.id.toString(), index };
     },
-    collect: (monitor: any) => ({
+    collect: (monitor: DragSourceMonitor) => ({
       isDragging: monitor.isDragging(),
     }),
   });

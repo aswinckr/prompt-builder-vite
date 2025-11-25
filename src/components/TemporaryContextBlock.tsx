@@ -2,10 +2,12 @@ import React, { useRef, useState, useEffect } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import type { Identifier } from "dnd-core";
 import type { XYCoord } from "react-dnd";
+import type { DragSourceMonitor } from "react-dnd";
 import { X, GripVertical, Type, ChevronDown, ChevronRight } from "lucide-react";
 import { ContextBlock as ContextBlockType } from "../types/ContextBlock";
 import { useLibraryActions } from "../contexts/LibraryContext";
 import { TipTapEditor, TipTapEditorRef } from "./TipTapEditor";
+import { TIMEOUTS } from "../utils/constants";
 
 interface TemporaryContextBlockProps {
   block: ContextBlockType;
@@ -37,15 +39,24 @@ export function TemporaryContextBlock({
   const [isExpanded, setIsExpanded] = useState(true);
   const [content, setContent] = useState(block.content || '');
 
-  // Auto-focus functionality
+  // Auto-focus functionality with cleanup - fixed race condition
   useEffect(() => {
-    if (autoFocus && editorRef.current) {
-      setTimeout(() => {
-        if (editorRef.current?.focus) {
-          editorRef.current.focus();
-        }
-      }, 100);
-    }
+    if (!autoFocus) return;
+
+    let timeoutId: NodeJS.Timeout;
+
+    // Wait for component to be fully mounted and editor to be ready
+    timeoutId = setTimeout(() => {
+      if (editorRef.current?.focus) {
+        editorRef.current.focus();
+      }
+    }, TIMEOUTS.MODAL_FOCUS_DELAY);
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
   }, [autoFocus]);
 
   // Set up drag functionality
@@ -54,7 +65,7 @@ export function TemporaryContextBlock({
     item: () => {
       return { id: block.id.toString(), index };
     },
-    collect: (monitor: any) => ({
+    collect: (monitor: DragSourceMonitor) => ({
       isDragging: monitor.isDragging(),
     }),
   });
