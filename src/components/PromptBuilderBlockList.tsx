@@ -1,18 +1,28 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { PromptBuilderBlock } from './PromptBuilderBlock';
+import { TemporaryContextBlock } from './TemporaryContextBlock';
+import { ContextDropdown } from './ContextDropdown';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 
 export function PromptBuilderBlockList() {
   const navigate = useNavigate();
   const { promptBuilder, contextBlocks } = useLibraryState();
   const { reorderBlocksInBuilder, addBlockToBuilder } = useLibraryActions();
+  const [lastCreatedBlockId, setLastCreatedBlockId] = useState<string | null>(null);
 
   // Get block data for selected blocks in the correct order
   const orderedBlocks = promptBuilder.blockOrder
     .map(blockId => contextBlocks.find(block => block.id === blockId))
     .filter((block): block is NonNullable<typeof block> => block !== undefined);
+
+  // Reset last created block ID when blocks are reordered
+  useEffect(() => {
+    if (lastCreatedBlockId && !orderedBlocks.find(block => block.id === lastCreatedBlockId)) {
+      setLastCreatedBlockId(null);
+    }
+  }, [orderedBlocks, lastCreatedBlockId]);
 
   const handleAddBlock = () => {
     // Navigate to knowledge tab to add context blocks
@@ -33,19 +43,17 @@ export function PromptBuilderBlockList() {
     reorderBlocksInBuilder(newOrder);
   }, [promptBuilder.blockOrder, reorderBlocksInBuilder]);
 
+  // Count temporary and permanent blocks
+  const temporaryBlockCount = orderedBlocks.filter(block => block.isTemporary).length;
+  const permanentBlockCount = orderedBlocks.filter(block => !block.isTemporary).length;
+
   if (orderedBlocks.length === 0) {
     return (
       <div className="text-center py-8">
         <p className="text-neutral-500 text-sm mb-4">
           Add context blocks to enhance your prompt
         </p>
-        <button
-          onClick={handleAddBlock}
-          className="bg-neutral-800 hover:bg-neutral-700 text-neutral-300 px-4 py-2 rounded-lg text-sm font-medium transition-colors border border-neutral-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <Plus className="w-4 h-4 inline mr-2" />
-          Add Context Block
-        </button>
+        <ContextDropdown />
       </div>
     );
   }
@@ -56,26 +64,43 @@ export function PromptBuilderBlockList() {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-neutral-400">
           Context Blocks ({orderedBlocks.length})
+          {(temporaryBlockCount > 0 || permanentBlockCount > 0) && (
+            <span className="text-xs text-neutral-500 ml-2">
+              {temporaryBlockCount > 0 && `${temporaryBlockCount} text${temporaryBlockCount > 1 ? 's' : ''}`}
+              {temporaryBlockCount > 0 && permanentBlockCount > 0 && ' • '}
+              {permanentBlockCount > 0 && `${permanentBlockCount} knowledge${permanentBlockCount > 1 ? '' : ''}`}
+            </span>
+          )}
         </h3>
-        <button
-          onClick={handleAddBlock}
-          className="text-neutral-400 hover:text-neutral-200 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors hover:bg-neutral-800 border border-neutral-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <Plus className="w-3 h-3 inline mr-1" />
-          Add More
-        </button>
+        <ContextDropdown variant="compact" />
       </div>
 
       {/* Expandable context blocks */}
       <div className="space-y-3">
-        {orderedBlocks.map((block, index) => (
-          <PromptBuilderBlock
-            key={block.id}
-            block={block}
-            index={index}
-            moveBlock={moveBlock}
-          />
-        ))}
+        {orderedBlocks.map((block, index) => {
+          const isLastCreatedTemporaryBlock = block.id === lastCreatedBlockId && block.isTemporary;
+
+          if (block.isTemporary) {
+            return (
+              <TemporaryContextBlock
+                key={block.id}
+                block={block}
+                index={index}
+                moveBlock={moveBlock}
+                autoFocus={isLastCreatedTemporaryBlock}
+              />
+            );
+          } else {
+            return (
+              <PromptBuilderBlock
+                key={block.id}
+                block={block}
+                index={index}
+                moveBlock={moveBlock}
+              />
+            );
+          }
+        })}
       </div>
 
       {/* Instructions */}

@@ -1,0 +1,34 @@
+#### Task Group 3: Temporary Text Block Creation and Management
+**Dependencies:** Task Group 2
+
+- [x] 3.0 Complete text block management system
+  - [x] 3.1 Write 5 focused tests for temporary text blocks
+    - Test temporary block creation with unique ID
+    - Test auto-focus on newly created editor
+    - Test content updates save to state
+    - Test drag and drop reordering of temporary blocks
+    - Test delete functionality for temporary blocks
+  - [x] 3.2 Create TemporaryContextBlock component
+    - Extend existing ContextBlock component
+    - Add visual distinction for temporary blocks (different icon/badge)
+    - Maintain expand/collapse functionality
+    - Add delete capability without confirmation
+    - Minimum 200px height for editor area
+  - [x] 3.3 Integrate TipTapEditor for temporary blocks
+    - Use existing TipTapEditor component
+    - Set placeholder "Start typing your context here..."
+    - Configure full formatting toolbar integration
+    - Handle real-time content updates to state
+    - Apply neutral theme styling consistency
+  - [x] 3.4 Implement drag and drop for temporary blocks
+    - Leverage existing React DnD implementation
+    - Ensure temporary blocks can be reordered with permanent blocks
+    - Maintain visual feedback during drag operations
+  - [x] 3.5 Add auto-focus functionality
+    - Focus TipTap editor when temporary block is created
+    - Scroll newly created block into view if needed
+    - Handle edge cases for multiple blocks
+  - [x] 3.6 Ensure text block management tests pass
+    - Run the 5 tests written in 3.1
+    - Verify integration with existing drag and drop system
+    - Do NOT run the entire test suite

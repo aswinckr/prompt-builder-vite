@@ -152,7 +152,10 @@ export function SavedPromptList({
       // Use LibraryContext action for consistency
       const result = await deleteSavedPrompt(promptToDelete.id);
 
-      const crudResult = handleCrudResult(result, 'Prompt deleted', promptToDelete.title);
+      const crudResult = handleCrudResult(result, 'Prompt deleted', promptToDelete.title, {
+        expectsData: false,
+        customMessage: 'Prompt {itemTitle} deleted'
+      });
 
       if (crudResult.success) {
         // Call the parent's delete handler for backward compatibility

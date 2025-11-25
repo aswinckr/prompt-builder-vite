@@ -64,6 +64,8 @@ type LibraryAction =
   | { type: 'CREATE_CONTEXT_BLOCK'; payload: ContextBlock }
   | { type: 'UPDATE_CONTEXT_BLOCK'; payload: { id: string; blockData: Partial<ContextBlock> } }
   | { type: 'DELETE_CONTEXT_BLOCK'; payload: string }
+  | { type: 'CREATE_TEMPORARY_BLOCK'; payload: ContextBlock }
+  | { type: 'REMOVE_TEMPORARY_BLOCK'; payload: string }
   // Prompt actions
   | { type: 'CREATE_SAVED_PROMPT'; payload: SavedPrompt }
   | { type: 'UPDATE_SAVED_PROMPT'; payload: { id: string; promptData: Partial<SavedPrompt> } }
@@ -211,6 +213,24 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
       return {
         ...state,
         contextBlocks: state.contextBlocks.filter(block => block.id !== action.payload)
+      };
+    case 'CREATE_TEMPORARY_BLOCK':
+      return {
+        ...state,
+        contextBlocks: [action.payload, ...state.contextBlocks],
+        promptBuilder: {
+          ...state.promptBuilder,
+          blockOrder: [action.payload.id, ...state.promptBuilder.blockOrder]
+        }
+      };
+    case 'REMOVE_TEMPORARY_BLOCK':
+      return {
+        ...state,
+        contextBlocks: state.contextBlocks.filter(block => block.id !== action.payload),
+        promptBuilder: {
+          ...state.promptBuilder,
+          blockOrder: state.promptBuilder.blockOrder.filter(id => id !== action.payload)
+        }
       };
     case 'CREATE_SAVED_PROMPT':
       return {
@@ -436,6 +456,24 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       return result;
     },
 
+    // Temporary block actions
+    createTemporaryBlock: (blockData: Omit<ContextBlock, 'id' | 'user_id' | 'created_at' | 'updated_at'>): ContextBlock => {
+      const temporaryBlock: ContextBlock = {
+        ...blockData,
+        id: crypto.randomUUID(),
+        user_id: 'temporary',
+        created_at: new Date(),
+        updated_at: new Date(),
+        isTemporary: true
+      };
+
+      dispatch({ type: 'CREATE_TEMPORARY_BLOCK', payload: temporaryBlock });
+      return temporaryBlock;
+    },
+    removeTemporaryBlock: (id: string) => {
+      dispatch({ type: 'REMOVE_TEMPORARY_BLOCK', payload: id });
+    },
+
     // Prompt actions
     createSavedPrompt: async (promptData: Omit<SavedPrompt, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       const result = await PromptService.createPrompt(promptData);
@@ -584,4 +622,3 @@ export function useLibraryActions() {
   }
   return context.actions;
 }
-

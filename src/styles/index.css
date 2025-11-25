@@ -2,6 +2,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* CSS variables for shadcn components */
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+    --accent: 240 5% 96%;
+    --accent-foreground: 240 6% 10%;
+    --muted: 240 4% 96%;
+    --muted-foreground: 240 4% 46%;
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --accent: 240 3% 15%;
+    --accent-foreground: 0 0% 98%;
+    --muted: 240 3% 15%;
+    --muted-foreground: 240 5% 64%;
+    --radius: 0.5rem;
+  }
+}
+
+/* Override for neutral theme */
+.dark {
+  --popover: 217 2% 14%;
+  --popover-foreground: 210 40% 98%;
+  --accent: 217 2% 20%;
+  --accent-foreground: 210 40% 98%;
+  --muted: 217 2% 20%;
+  --muted-foreground: 215 20% 65%;
+}
+
 /* Set body background color */
 body {
   @apply bg-neutral-900;
@@ -31,4 +68,3 @@ body {
 .focus\:ring-offset-neutral-800:focus {
   --tw-ring-offset-color: rgb(38 38 38);
 }
-

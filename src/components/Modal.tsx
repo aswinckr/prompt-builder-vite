@@ -55,11 +55,11 @@ export function Modal({
 
   // Responsive behavior classes
   const responsiveClasses = mobileBehavior === 'fullscreen'
-    ? 'inset-0 flex items-center justify-center md:items-center md:justify-center'
-    : 'inset-0 flex items-center justify-center';
+    ? 'inset-0 flex items-center justify-center p-0 md:p-4'
+    : 'inset-0 flex items-center justify-center p-4';
 
   const modalSizeClasses = mobileBehavior === 'fullscreen'
-    ? `${sizeClasses[size]} md:${sizeClasses[size]} w-full h-full md:h-auto md:max-h-[90vh] md:rounded-lg md:m-4`
+    ? `${sizeClasses[size]} w-full h-full md:h-auto md:max-h-[90vh] md:rounded-lg md:m-4`
     : sizeClasses[size];
 
   if (!isOpen) {
