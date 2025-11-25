@@ -132,6 +132,7 @@ export function PromptBuilderActions() {
       <CreatePromptModal
         isOpen={isSaveModalOpen}
         onClose={handleCloseSaveModal}
+        selectedProjectId={null}
         initialContent={saveModalContent}
       />
     </>

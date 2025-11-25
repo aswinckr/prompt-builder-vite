@@ -64,6 +64,10 @@ body {
   background-color: rgb(55 65 81);
 }
 
+.bg-neutral-750 {
+  background-color: rgb(55 65 81);
+}
+
 /* Ring offsets for dark theme */
 .focus\:ring-offset-neutral-800:focus {
   --tw-ring-offset-color: rgb(38 38 38);

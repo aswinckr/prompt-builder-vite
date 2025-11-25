@@ -70,19 +70,19 @@ export function ContextDropdown({ className = '', variant = 'default' }: Context
       <DropdownMenuContent
         align="start"
         side="bottom"
-        className="bg-popover border-neutral-700 min-w-[200px]"
+        className="bg-neutral-800 border-neutral-600 min-w-[200px] shadow-lg"
         onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <DropdownMenuItem
           onClick={handleAddTextBlock}
-          className="text-popover-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
+          className="text-neutral-200 hover:bg-neutral-700 focus:bg-neutral-700 focus:text-neutral-100 cursor-pointer rounded-sm"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Text Block
         </DropdownMenuItem>
         <DropdownMenuItem
           onClick={handleAddKnowledge}
-          className="text-popover-foreground focus:bg-accent focus:text-accent-foreground cursor-pointer"
+          className="text-neutral-200 hover:bg-neutral-700 focus:bg-neutral-700 focus:text-neutral-100 cursor-pointer rounded-sm"
         >
           <Plus className="w-4 h-4 mr-2" />
           Add Knowledge

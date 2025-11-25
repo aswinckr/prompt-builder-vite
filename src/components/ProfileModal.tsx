@@ -115,14 +115,14 @@ export function ProfileModal({
 
   // Handle successful authentication by closing modal and calling callback
   React.useEffect(() => {
-    if (isAuthenticated && isOpen) {
-      // Small delay to allow auth state to settle
+    if (isAuthenticated && !wasAuthenticated && isOpen) {
+      // Only close when user just became authenticated (not when already authenticated)
       const timer = setTimeout(() => {
         handleClose();
       }, 100);
       return () => clearTimeout(timer);
     }
-  }, [isAuthenticated, isOpen]);
+  }, [isAuthenticated, wasAuthenticated, isOpen]);
 
   return (
     <Modal

@@ -321,28 +321,30 @@ describe('ContextDropdown Integration Tests', () => {
     const button = screen.getByRole('button', { name: /add context options/i });
 
     // Should have neutral theme classes
-    expect(button).toHaveClass(/bg-neutral-800/);
-    expect(button).toHaveClass(/text-neutral-300/);
-    expect(button).toHaveClass(/border-neutral-600/);
+    expect(button.className).toContain('bg-neutral-800');
+    expect(button.className).toContain('text-neutral-300');
+    expect(button.className).toContain('border-neutral-600');
   });
 
   // Test 5.9: Test temporary block creation with UUID generation
   it('should generate unique IDs for temporary blocks', () => {
-    const block1 = mockCreateTemporaryBlock.mockReturnValue({
+    const block1 = {
       id: 'temp-uuid-1',
       title: 'Text Block',
       content: '',
       tags: [],
       isTemporary: true
-    });
+    };
 
-    const block2 = mockCreateTemporaryBlock.mockReturnValue({
+    const block2 = {
       id: 'temp-uuid-2',
       title: 'Text Block',
       content: '',
       tags: [],
       isTemporary: true
-    });
+    };
+
+    mockCreateTemporaryBlock.mockReturnValueOnce(block1).mockReturnValueOnce(block2);
 
     expect(block1.id).not.toBe(block2.id);
     expect(block1.id).toMatch(/^test-uuid-/);

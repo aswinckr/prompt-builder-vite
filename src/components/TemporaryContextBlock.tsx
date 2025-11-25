@@ -157,16 +157,16 @@ export function TemporaryContextBlock({
       data-block-id={block.id}
     >
       <div
-        className={`relative rounded-2xl border border-orange-700/50 bg-orange-900/30 backdrop-blur-sm transition-all duration-300 hover:border-orange-600/50 hover:bg-orange-900/40 hover:shadow-lg hover:shadow-black/20 ${
+        className={`relative rounded-2xl border border-neutral-600/50 bg-neutral-750/70 backdrop-blur-sm transition-all duration-300 hover:border-neutral-500/50 hover:bg-neutral-750/85 hover:shadow-lg hover:shadow-black/20 ${
           isDragging
             ? "rotate-1 scale-105 cursor-grabbing shadow-xl"
             : "cursor-grab"
         } ${
-          isExpanded ? "shadow-lg shadow-black/10 ring-2 ring-orange-500/30" : ""
+          isExpanded ? "shadow-lg shadow-black/10 ring-2 ring-neutral-500/30" : ""
         }`}
       >
         {/* Gradient overlay for depth */}
-        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-orange-500/5 via-transparent to-yellow-500/5" />
+        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-neutral-500/3 via-transparent to-neutral-400/3" />
 
         {/* Drag Handle */}
         <div className="absolute left-4 top-4 cursor-grab rounded-lg p-1.5 text-neutral-500 transition-colors duration-200 hover:bg-neutral-700/50 hover:text-neutral-400 active:cursor-grabbing">
@@ -186,7 +186,7 @@ export function TemporaryContextBlock({
         <button
           onClick={handleToggleExpand}
           onKeyDown={handleKeyDown}
-          className="absolute bottom-4 left-4 rounded-xl p-2 text-neutral-500 transition-all duration-200 hover:bg-orange-500/10 hover:text-orange-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50"
+          className="absolute bottom-4 left-4 rounded-xl p-2 text-neutral-500 transition-all duration-200 hover:bg-neutral-600/20 hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-neutral-500/50"
           aria-label={`${isExpanded ? "Collapse" : "Expand"} ${block.title}`}
           aria-expanded={isExpanded}
         >
@@ -199,15 +199,15 @@ export function TemporaryContextBlock({
 
         {/* Context Block Content */}
         <div className="flex items-start gap-4 pl-14 pr-12 pt-6">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-orange-500/30 bg-gradient-to-br from-orange-500/20 to-yellow-500/20">
-            <Type className="h-4 w-4 text-orange-400" />
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-neutral-500/30 bg-gradient-to-br from-neutral-500/20 to-neutral-400/20">
+            <Type className="h-4 w-4 text-neutral-400" />
           </div>
 
           <div className="min-w-0 flex-1">
             {/* Title and Badge */}
             <div className="mb-3 flex items-center gap-3">
-              <div className="rounded-lg border border-orange-500/30 bg-gradient-to-r from-orange-500/20 to-yellow-500/20 px-3 py-1">
-                <span className="text-xs font-medium text-orange-300">
+              <div className="rounded-lg border border-neutral-500/30 bg-gradient-to-r from-neutral-500/20 to-neutral-400/20 px-3 py-1">
+                <span className="text-xs font-medium text-neutral-300">
                   Text Block
                 </span>
               </div>
