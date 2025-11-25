@@ -4,6 +4,7 @@ import { TipTapEditor } from "./TipTapEditor";
 import { VariablePlaceholderHelper } from "./VariablePlaceholderHelper";
 import { useLibraryActions } from "../contexts/LibraryContext";
 import { useToast } from "../contexts/ToastContext";
+import { markdownToHtml } from "../utils/markdownUtils";
 
 interface CreatePromptModalProps {
   isOpen: boolean;
@@ -41,22 +42,7 @@ export function CreatePromptModal({
       if (initialContent) {
         // Pre-populate content when saving from prompt builder
         // Convert markdown/text content to HTML for the TipTapEditor
-        const htmlContent = initialContent
-          .split('\n')
-          .map(line => {
-            if (line.trim() === '') return '<p></p>';
-            if (line.startsWith('# ')) return `<h1>${line.substring(2)}</h1>`;
-            if (line.startsWith('## ')) return `<h2>${line.substring(3)}</h2>`;
-            if (line.startsWith('### ')) return `<h3>${line.substring(4)}</h3>`;
-            if (line.startsWith('#### ')) return `<h4>${line.substring(5)}</h4>`;
-            if (line.startsWith('##### ')) return `<h5>${line.substring(6)}</h5>`;
-            if (line.startsWith('###### ')) return `<h6>${line.substring(7)}</h6>`;
-            if (line.startsWith('- ')) return `<li>${line.substring(2)}</li>`;
-            if (/^\d+\. /.test(line)) return `<li>${line.substring(line.indexOf(' ') + 1)}</li>`;
-            return `<p>${line}</p>`;
-          })
-          .join('');
-
+        const htmlContent = markdownToHtml(initialContent);
         setContent({ html: htmlContent, json: null, text: initialContent });
       } else {
         // Reset for manual modal opening

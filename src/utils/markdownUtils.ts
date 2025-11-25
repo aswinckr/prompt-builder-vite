@@ -191,3 +191,78 @@ export function htmlToMarkdown(html: string): string {
 
   return markdown;
 }
+
+/**
+ * Converts Markdown content to HTML format
+ *
+ * @description Transforms Markdown elements into their HTML equivalents
+ * Handles headings, lists, paragraphs, and basic text formatting
+ * Designed for TipTapEditor compatibility
+ *
+ * @param markdown - Markdown string to convert to HTML
+ * @returns HTML-formatted string
+ *
+ * @example
+ * ```typescript
+ * const markdown = '# Title\n\nThis is a paragraph with **bold** text';
+ * const html = markdownToHtml(markdown);
+ * // Returns: '<h1>Title</h1><p>This is a paragraph with <strong>bold</strong> text</p>'
+ * ```
+ *
+ * @supportedElements
+ * - Headings: # ###### → h1-h6
+ * - Lists: - / 1. → li elements
+ * - Empty lines: → <p></p>
+ * - Regular text: → <p>text</p>
+ */
+export function markdownToHtml(markdown: string): string {
+  if (!markdown.trim()) {
+    return '';
+  }
+
+  return markdown
+    .split('\n')
+    .map(line => {
+      const trimmedLine = line.trim();
+
+      // Handle empty lines
+      if (trimmedLine === '') {
+        return '<p></p>';
+      }
+
+      // Handle headings (# to ######)
+      if (trimmedLine.startsWith('# ')) {
+        return `<h1>${trimmedLine.substring(2)}</h1>`;
+      }
+      if (trimmedLine.startsWith('## ')) {
+        return `<h2>${trimmedLine.substring(3)}</h2>`;
+      }
+      if (trimmedLine.startsWith('### ')) {
+        return `<h3>${trimmedLine.substring(4)}</h3>`;
+      }
+      if (trimmedLine.startsWith('#### ')) {
+        return `<h4>${trimmedLine.substring(5)}</h4>`;
+      }
+      if (trimmedLine.startsWith('##### ')) {
+        return `<h5>${trimmedLine.substring(6)}</h5>`;
+      }
+      if (trimmedLine.startsWith('###### ')) {
+        return `<h6>${trimmedLine.substring(7)}</h6>`;
+      }
+
+      // Handle unordered list items (-)
+      if (trimmedLine.startsWith('- ')) {
+        return `<li>${trimmedLine.substring(2)}</li>`;
+      }
+
+      // Handle ordered list items (1., 2., etc.)
+      if (/^\d+\. /.test(trimmedLine)) {
+        const spaceIndex = trimmedLine.indexOf(' ');
+        return `<li>${trimmedLine.substring(spaceIndex + 1)}</li>`;
+      }
+
+      // Handle regular text as paragraph
+      return `<p>${line}</p>`;
+    })
+    .join('');
+}

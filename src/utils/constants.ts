@@ -26,3 +26,24 @@ export const LIMITS = {
   MAX_FILE_SIZE: 10 * 1024 * 1024, // 10MB
   MAX_TEXT_LENGTH: 50000,
 } as const;
+
+// Chat configuration
+export const CHAT = {
+  DEFAULT_MODEL: 'gemini-2.5-flash',
+  TIME_FORMAT: {
+    HOUR: '2-digit',
+    MINUTE: '2-digit',
+  },
+} as const;
+
+// Temporary data markers
+export const TEMPORARY = {
+  USER_ID: 'temporary',
+} as const;
+
+// Animation delays (in seconds for CSS)
+export const ANIMATION_DELAYS = {
+  TYPING_INDICATOR_1: '0.2s',
+  TYPING_INDICATOR_2: '0.4s',
+  MOTION_HIGHLIGHT: '0.2s',
+} as const;

@@ -1,4 +1,5 @@
 import React, { useEffect, useLayoutEffect, useRef, useState, useCallback } from 'react';
+import { ANIMATION_DELAYS } from '../../../utils/constants';
 
 interface MotionHighlightProps {
   children: React.ReactNode;
@@ -15,7 +16,7 @@ export function MotionHighlight({
 }: MotionHighlightProps) {
   const [activeValue, setActiveValue] = useState<string | null>(defaultValue || null);
   const [highlightStyle, setHighlightStyle] = useState<React.CSSProperties>({
-    transition: 'left 0.2s cubic-bezier(0.4, 0, 0.2, 1), width 0.2s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out',
+    transition: `left ${ANIMATION_DELAYS.MOTION_HIGHLIGHT} cubic-bezier(0.4, 0, 0.2, 1), width ${ANIMATION_DELAYS.MOTION_HIGHLIGHT} cubic-bezier(0.4, 0, 0.2, 1), opacity 0.15s ease-out`,
     opacity: 0,
     transform: 'translateZ(0)', // Hardware acceleration
     willChange: 'left, width, opacity',

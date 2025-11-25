@@ -6,6 +6,7 @@ import { DatabaseResponse } from '../services/databaseService';
 import { PromptService } from '../services/promptService';
 import { ProjectService, Project } from '../services/projectService';
 import { useAuthState } from './AuthContext';
+import { CHAT, TEMPORARY } from '../utils/constants';
 
 interface ChatState {
   isChatPanelOpen: boolean;
@@ -93,7 +94,7 @@ const initialState: LibraryState = {
   },
   chat: {
     isChatPanelOpen: false,
-    selectedModel: 'gemini-2.5-flash',
+    selectedModel: CHAT.DEFAULT_MODEL,
   },
   contextSelection: {
     selectedBlockIds: []
@@ -467,7 +468,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       const temporaryBlock: ContextBlock = {
         ...blockData,
         id: crypto.randomUUID(),
-        user_id: 'temporary',
+        user_id: TEMPORARY.USER_ID,
         created_at: new Date(),
         updated_at: new Date(),
         isTemporary: true
