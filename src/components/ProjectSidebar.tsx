@@ -8,19 +8,24 @@ interface ProjectSidebarProps {
   selectedProject: string;
   setSelectedProject: (id: string) => void;
   loading?: boolean;
+  onCreateFolder?: (type: 'prompts' | 'datasets') => void;
 }
 
-export function ProjectSidebar({ projects, selectedProject, setSelectedProject, loading = false }: ProjectSidebarProps) {
+export function ProjectSidebar({ projects, selectedProject, setSelectedProject, loading = false, onCreateFolder }: ProjectSidebarProps) {
   const { openFolderModal } = useLibraryActions();
 
   // Organize projects by type
   const promptProjects = projects.filter(p => p.type === 'prompts');
   const datasetProjects = projects.filter(p => p.type === 'datasets');
 
-  // Handle project creation - open modal instead of direct creation
+  // Handle project creation - use authentication-aware handler if provided, otherwise fallback to direct modal
   const handleCreateProject = useCallback((type: 'prompts' | 'datasets') => {
-    openFolderModal(type);
-  }, [openFolderModal]);
+    if (onCreateFolder) {
+      onCreateFolder(type);
+    } else {
+      openFolderModal(type);
+    }
+  }, [onCreateFolder, openFolderModal]);
 
   // Handle keyboard navigation
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {

@@ -15,6 +15,7 @@ export function PromptBuilder() {
   const { promptBuilder, chat, contextBlocks } = useLibraryState();
   const { user, isAuthenticated, isLoading } = useAuthState();
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [avatarImageError, setAvatarImageError] = useState(false);
 
   const { setCustomText, setChatPanelOpen, setSelectedModel } =
     useLibraryActions();
@@ -130,21 +131,12 @@ export function PromptBuilder() {
             >
               {isLoading ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-neutral-400 border-t-white"></div>
-              ) : isAuthenticated && user?.user_metadata?.avatar_url ? (
+              ) : isAuthenticated && user?.user_metadata?.avatar_url && !avatarImageError ? (
                 <img
                   src={user.user_metadata.avatar_url}
                   alt="User avatar"
                   className="h-full w-full object-cover"
-                  onError={(e) => {
-                    // Fallback to user initial if avatar fails to load
-                    e.currentTarget.style.display = "none";
-                    const parent = e.currentTarget.parentElement;
-                    if (parent) {
-                      parent.innerHTML = `<span class="text-sm font-medium text-neutral-300 flex items-center justify-center w-full h-full">${
-                        user?.email?.charAt(0).toUpperCase() || "U"
-                      }</span>`;
-                    }
-                  }}
+                  onError={() => setAvatarImageError(true)}
                 />
               ) : isAuthenticated && user?.email ? (
                 <span className="text-sm font-medium text-neutral-300">

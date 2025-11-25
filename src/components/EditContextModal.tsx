@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Modal } from "./Modal";
 import { TipTapEditor } from "./TipTapEditor";
 import { useLibraryState, useLibraryActions } from "../contexts/LibraryContext";
+import { useToast } from "../contexts/ToastContext";
 import { ContextBlock } from "../types/ContextBlock";
 
 interface EditContextModalProps {
@@ -20,6 +21,8 @@ export function EditContextModal({
 }: EditContextModalProps) {
   const { contextBlocks } = useLibraryState();
   const { updateContextBlock } = useLibraryActions();
+  const { showToast } = useToast();
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState<{ html: string; json: any; text: string }>({
     html: '',
@@ -44,6 +47,7 @@ export function EditContextModal({
         });
         setOriginalData(block);
         setHasChanges(false);
+        setError(''); // Clear any previous errors
       }
     }
   }, [isOpen, blockId, contextBlocks]);
@@ -74,16 +78,24 @@ export function EditContextModal({
     setError('');
 
     try {
-      await updateContextBlock(blockId, {
+      const result = await updateContextBlock(blockId, {
         title: title.trim(),
         content: content.text,
-        lastUpdated: new Date(),
       });
 
-      onClose();
-      // Success feedback could be handled by parent component
+      if (result.error) {
+        console.error('Failed to update context block:', result.error);
+        setError(result.error || 'Failed to update context block. Please try again.');
+        showToast('Failed to update context block. Please try again.', 'error');
+      } else {
+        showToast(`Context block '${title.trim()}' updated successfully`, 'success');
+        onClose();
+      }
     } catch (error) {
-      setError(error instanceof Error ? error.message : 'Failed to update context block');
+      console.error('Failed to update context block:', error);
+      const errorMessage = error instanceof Error ? error.message : 'An unexpected error occurred';
+      setError(errorMessage);
+      showToast('Failed to update context block. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -139,6 +151,7 @@ export function EditContextModal({
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-neutral-600 focus:ring-2 focus:ring-blue-500/20 transition-all"
               aria-required="true"
               aria-describedby="edit-title-description"
+              disabled={isSubmitting}
             />
             <p id="edit-title-description" className="mt-1 text-xs text-neutral-500">
               A brief title to help you identify this knowledge block
@@ -155,7 +168,7 @@ export function EditContextModal({
                 content={content.html}
                 onUpdate={setContent}
                 placeholder="Add your knowledge content here..."
-                editable={true}
+                editable={!isSubmitting}
               />
             </div>
             <p className="mt-1 text-xs text-neutral-500">

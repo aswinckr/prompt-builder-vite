@@ -34,6 +34,22 @@ export function CreateFolderModal({
     }
   }, [isOpen]);
 
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = () => {
+    return folderName.trim() !== '';
+  };
+
+  // Handle close attempt with unsaved changes check
+  const handleCloseAttempt = () => {
+    if (hasUnsavedChanges()) {
+      if (window.confirm('Are you sure you want to discard your changes? Any data you entered will be lost.')) {
+        onClose();
+      }
+    } else {
+      onClose();
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log('🚀 Form submitted!');
@@ -82,7 +98,7 @@ export function CreateFolderModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleCloseAttempt}
       title={getModalTitle()}
       size="md"
       closeOnOverlayClick={!loading}
@@ -141,7 +157,7 @@ export function CreateFolderModal({
         <div className="flex gap-3 pt-4 border-t border-neutral-700">
           <button
             type="button"
-            onClick={onClose}
+            onClick={handleCloseAttempt}
             disabled={loading}
             className="flex-1 px-4 py-3 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
           >

@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 import { Modal } from './Modal';
 import { TipTapEditor } from './TipTapEditor';
+import { useToast } from '../contexts/ToastContext';
 import { SavedPrompt } from '../types/SavedPrompt';
 
 interface EditPromptModalProps {
@@ -28,10 +29,13 @@ export function EditPromptModal({
   prompt,
   isLoading = false
 }: EditPromptModalProps) {
+  const { showToast } = useToast();
+
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Initialize form when prompt changes
   useEffect(() => {
@@ -51,21 +55,32 @@ export function EditPromptModal({
     }
   }, [title, content, prompt]);
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!title.trim()) {
-      alert('Please enter a title for the prompt');
+      showToast('Please enter a title for the prompt', 'error');
       return;
     }
 
     if (prompt) {
-      onSave({
-        ...prompt,
-        title: title.trim(),
-        content: content.trim(),
-        description: content.trim(), // Keep description for backward compatibility
-        updated_at: new Date(),
-      });
-      onClose();
+      setIsSubmitting(true);
+      try {
+        const promptData: Partial<SavedPrompt> = {
+          ...prompt,
+          title: title.trim(),
+          content: content.trim(),
+          description: content.trim(), // Keep description for backward compatibility
+          updated_at: new Date(),
+        };
+
+        await onSave(promptData);
+        showToast(`Prompt '${title.trim()}' updated successfully`, 'success');
+        onClose();
+      } catch (error) {
+        console.error('Failed to save prompt:', error);
+        showToast('Failed to update prompt. Please try again.', 'error');
+      } finally {
+        setIsSubmitting(false);
+      }
     }
   };
 
@@ -138,7 +153,7 @@ export function EditPromptModal({
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter prompt title..."
               className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
-              disabled={isLoading}
+              disabled={isSubmitting || isLoading}
             />
             {!title.trim() && (
               <p className="mt-1 text-sm text-red-400">Title is required</p>
@@ -153,7 +168,7 @@ export function EditPromptModal({
             <TipTapEditor
               content={content}
               onUpdate={handleContentUpdate}
-              editable={!isLoading}
+              editable={!isSubmitting && !isLoading}
               placeholder="Write your prompt content here..."
             />
           </div>
@@ -162,17 +177,17 @@ export function EditPromptModal({
           <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-700">
             <button
               onClick={handleClose}
-              disabled={isLoading}
+              disabled={isSubmitting || isLoading}
               className="px-4 py-2 text-neutral-300 hover:bg-neutral-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
             </button>
             <button
               onClick={handleSave}
-              disabled={isLoading || !title.trim()}
+              disabled={isSubmitting || isLoading || !title.trim()}
               className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
-              {isLoading ? (
+              {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   Saving...

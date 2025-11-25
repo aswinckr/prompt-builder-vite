@@ -37,6 +37,22 @@ export function CreateContextModal({
     }
   }, [isOpen]);
 
+  // Check if there are unsaved changes
+  const hasUnsavedChanges = () => {
+    return title.trim() !== '' || content.text.trim() !== '';
+  };
+
+  // Handle close attempt with unsaved changes check
+  const handleCloseAttempt = () => {
+    if (hasUnsavedChanges()) {
+      if (window.confirm('Are you sure you want to discard your changes? Any data you entered will be lost.')) {
+        onClose();
+      }
+    } else {
+      onClose();
+    }
+  };
+
   const handleSave = async () => {
     if (!title.trim()) {
       setError('Please enter a title');
@@ -78,7 +94,7 @@ export function CreateContextModal({
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleCloseAttempt}
       title="Add Knowledge"
       size="lg"
       mobileBehavior="fullscreen"
@@ -140,7 +156,7 @@ export function CreateContextModal({
           </p>
           <div className="flex items-center gap-3">
             <button
-              onClick={onClose}
+              onClick={handleCloseAttempt}
               disabled={isSubmitting}
               className="px-4 py-2 text-sm font-medium text-neutral-300 bg-neutral-700 hover:bg-neutral-600 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >

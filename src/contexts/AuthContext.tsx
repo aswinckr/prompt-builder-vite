@@ -80,10 +80,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const accessToken = hashParams.get('access_token');
 
     if (accessToken) {
-      console.log('🔑 Found access token in hash! Processing...');
-      console.log('Access token first 50 chars:', accessToken.substring(0, 50) + '...');
-      console.log('All hash params:', Object.fromEntries(hashParams.entries()));
-
       try {
         // Manually set the session from the hash parameters
         const { data, error } = await supabase.auth.setSession({
@@ -96,7 +92,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           return false;
         }
 
-        console.log('✅ Session set from hash successfully!', data);
+        if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Session set from hash successfully');
+      }
 
         // Clear the hash from URL to prevent processing again
         window.history.replaceState(null, '', window.location.pathname);
@@ -119,7 +117,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Process OAuth hash if present
     const processOAuthHash = async () => {
       if (accessToken) {
+        if (process.env.NODE_ENV === 'development') {
         console.log('🔑 Processing OAuth hash...');
+      }
         try {
           // Manually set the session from the hash parameters
           const { data, error } = await supabase.auth.setSession({
@@ -130,7 +130,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (error) {
             console.error('❌ Error setting session from hash:', error);
           } else {
-            console.log('✅ Session set from hash successfully!', data);
+            if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Session set from hash successfully');
+      }
             // Clear the hash from URL to prevent processing again
             window.history.replaceState(null, '', window.location.pathname);
           }
@@ -145,7 +147,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         // Process OAuth hash if present
         if (accessToken) {
-          console.log('🔑 Processing OAuth hash...');
+          if (process.env.NODE_ENV === 'development') {
+        console.log('🔑 Processing OAuth hash...');
+      }
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: hashParams.get('refresh_token') || '',
@@ -154,18 +158,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (error) {
             console.error('❌ Error setting session from hash:', error);
           } else {
-            console.log('✅ Session set from hash successfully!', data);
+            if (process.env.NODE_ENV === 'development') {
+        console.log('✅ Session set from hash successfully');
+      }
             // Clear the hash from URL to prevent processing again
             window.history.replaceState(null, '', window.location.pathname);
           }
         }
 
-        console.log('Getting initial session...');
         const session = await auth.getCurrentSession();
         const user = await auth.getCurrentUser();
-
-        console.log('Initial session result:', session);
-        console.log('Initial user result:', user);
 
         if (session && user) {
           console.log('✅ Session found - dispatching AUTH_SUCCESS');
@@ -191,10 +193,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Listen for auth changes
     const { data: { subscription } } = auth.onAuthStateChange(
       async (event, session) => {
+        if (process.env.NODE_ENV === 'development') {
         console.log('=== AUTH STATE CHANGE ===');
         console.log('Event:', event);
-        console.log('Session:', session);
-        console.log('User:', session?.user);
+        // Removed sensitive session/user data logging
+      }
 
         if (session && session.user) {
           console.log('✅ Auth state changed - dispatching AUTH_SUCCESS');
@@ -318,6 +321,10 @@ export function useAuthActions() {
           payload: error instanceof Error ? error.message : 'Failed to sign out',
         });
       }
+    },
+
+    setError: (error: string) => {
+      dispatch({ type: 'AUTH_ERROR', payload: error });
     },
 
     clearError: () => {

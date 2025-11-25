@@ -5,6 +5,7 @@ import { ContextService } from '../services/contextService';
 import { DatabaseResponse } from '../services/databaseService';
 import { PromptService } from '../services/promptService';
 import { ProjectService, Project } from '../services/projectService';
+import { useAuthState } from './AuthContext';
 
 interface ChatState {
   isChatPanelOpen: boolean;
@@ -323,54 +324,79 @@ const LibraryContext = createContext<{
 
 export function LibraryProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(libraryReducer, initialState);
+  const { isAuthenticated, isLoading: authLoading } = useAuthState();
 
-  // Load initial data when component mounts
+  // Load data when component mounts and when authentication state changes
   useEffect(() => {
-    loadInitialData();
-  }, []);
+    // Only load data if authentication is not loading
+    if (!authLoading) {
+      loadInitialData();
+    }
+  }, [authLoading, isAuthenticated]); // Reload when auth state changes
 
   const loadInitialData = async () => {
     dispatch({ type: 'SET_LOADING', payload: true });
 
     try {
-      // First, ensure unsorted folders exist for the user
-      await ProjectService.ensureUnsortedFolders();
+      if (isAuthenticated) {
+        console.log('📚 Loading library data for authenticated user...');
 
-      // Load all data in parallel
-      const [contextBlocksResult, savedPromptsResult, promptProjectsResult, datasetProjectsResult, systemPromptProjectsResult, systemDatasetProjectsResult] = await Promise.all([
-        ContextService.getContextBlocks(),
-        PromptService.getPrompts(),
-        ProjectService.getUserProjects('prompt'),
-        ProjectService.getUserProjects('dataset'),
-        ProjectService.getSystemProjects('prompt'),
-        ProjectService.getSystemProjects('dataset')
-      ]);
+        // First, ensure unsorted folders exist for the user
+        await ProjectService.ensureUnsortedFolders();
 
-      // Always set the data, even if it's empty (this is normal for new users)
-      dispatch({ type: 'SET_CONTEXT_BLOCKS', payload: contextBlocksResult.data || [] });
-      dispatch({ type: 'SET_SAVED_PROMPTS', payload: savedPromptsResult.data || [] });
-      dispatch({ type: 'SET_PROMPT_PROJECTS', payload: promptProjectsResult.data || [] });
-      dispatch({ type: 'SET_DATASET_PROJECTS', payload: datasetProjectsResult.data || [] });
-      dispatch({ type: 'SET_SYSTEM_PROMPT_PROJECTS', payload: systemPromptProjectsResult.data || [] });
-      dispatch({ type: 'SET_SYSTEM_DATASET_PROJECTS', payload: systemDatasetProjectsResult.data || [] });
+        // Load all user data in parallel
+        const [contextBlocksResult, savedPromptsResult, promptProjectsResult, datasetProjectsResult, systemPromptProjectsResult, systemDatasetProjectsResult] = await Promise.all([
+          ContextService.getContextBlocks(),
+          PromptService.getPrompts(),
+          ProjectService.getUserProjects('prompt'),
+          ProjectService.getUserProjects('dataset'),
+          ProjectService.getSystemProjects('prompt'),
+          ProjectService.getSystemProjects('dataset')
+        ]);
 
-      // Check for any errors from the service calls
-      const errors = [
-        contextBlocksResult.error,
-        savedPromptsResult.error,
-        promptProjectsResult.error,
-        datasetProjectsResult.error,
-        systemPromptProjectsResult.error,
-        systemDatasetProjectsResult.error
-      ].filter(Boolean);
+        // Set the user's data, even if it's empty (this is normal for new users)
+        dispatch({ type: 'SET_CONTEXT_BLOCKS', payload: contextBlocksResult.data || [] });
+        dispatch({ type: 'SET_SAVED_PROMPTS', payload: savedPromptsResult.data || [] });
+        dispatch({ type: 'SET_PROMPT_PROJECTS', payload: promptProjectsResult.data || [] });
+        dispatch({ type: 'SET_DATASET_PROJECTS', payload: datasetProjectsResult.data || [] });
+        dispatch({ type: 'SET_SYSTEM_PROMPT_PROJECTS', payload: systemPromptProjectsResult.data || [] });
+        dispatch({ type: 'SET_SYSTEM_DATASET_PROJECTS', payload: systemDatasetProjectsResult.data || [] });
 
-      if (errors.length > 0) {
-        console.error('Database errors:', errors);
-        dispatch({ type: 'SET_ERROR', payload: errors[0] || 'Failed to load data' });
+        console.log('✅ Library data loaded successfully');
+
+        // Check for any errors from the service calls
+        const errors = [
+          contextBlocksResult.error,
+          savedPromptsResult.error,
+          promptProjectsResult.error,
+          datasetProjectsResult.error,
+          systemPromptProjectsResult.error,
+          systemDatasetProjectsResult.error
+        ].filter(Boolean);
+
+        if (errors.length > 0) {
+          console.error('Database errors:', errors);
+          dispatch({ type: 'SET_ERROR', payload: errors[0] || 'Failed to load data' });
+        }
+      } else {
+        console.log('📚 User not authenticated - clearing library data...');
+
+        // Clear all user data when not authenticated
+        dispatch({ type: 'SET_CONTEXT_BLOCKS', payload: [] });
+        dispatch({ type: 'SET_SAVED_PROMPTS', payload: [] });
+        dispatch({ type: 'SET_PROMPT_PROJECTS', payload: [] });
+        dispatch({ type: 'SET_DATASET_PROJECTS', payload: [] });
+        dispatch({ type: 'SET_SYSTEM_PROMPT_PROJECTS', payload: [] });
+        dispatch({ type: 'SET_SYSTEM_DATASET_PROJECTS', payload: [] });
+        dispatch({ type: 'SET_ERROR', payload: null });
+
+        console.log('✅ Library data cleared for unauthenticated user');
       }
     } catch (error) {
       console.error('Error loading initial data:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load data' });
+    } finally {
+      dispatch({ type: 'SET_LOADING', payload: false });
     }
   };
 
