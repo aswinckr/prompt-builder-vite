@@ -65,6 +65,7 @@ type LibraryAction =
   | { type: 'UPDATE_CONTEXT_BLOCK'; payload: { id: string; blockData: Partial<ContextBlock> } }
   | { type: 'DELETE_CONTEXT_BLOCK'; payload: string }
   | { type: 'CREATE_TEMPORARY_BLOCK'; payload: ContextBlock }
+  | { type: 'UPDATE_TEMPORARY_BLOCK'; payload: { id: string; blockData: Partial<ContextBlock> } }
   | { type: 'REMOVE_TEMPORARY_BLOCK'; payload: string }
   // Prompt actions
   | { type: 'CREATE_SAVED_PROMPT'; payload: SavedPrompt }
@@ -222,6 +223,15 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
           ...state.promptBuilder,
           blockOrder: [action.payload.id, ...state.promptBuilder.blockOrder]
         }
+      };
+    case 'UPDATE_TEMPORARY_BLOCK':
+      return {
+        ...state,
+        contextBlocks: state.contextBlocks.map(block =>
+          block.id === action.payload.id
+            ? { ...block, ...action.payload.blockData, updated_at: new Date() }
+            : block
+        )
       };
     case 'REMOVE_TEMPORARY_BLOCK':
       return {
@@ -469,6 +479,9 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
       dispatch({ type: 'CREATE_TEMPORARY_BLOCK', payload: temporaryBlock });
       return temporaryBlock;
+    },
+    updateTemporaryBlock: (id: string, blockData: Partial<ContextBlock>) => {
+      dispatch({ type: 'UPDATE_TEMPORARY_BLOCK', payload: { id, blockData } });
     },
     removeTemporaryBlock: (id: string) => {
       dispatch({ type: 'REMOVE_TEMPORARY_BLOCK', payload: id });

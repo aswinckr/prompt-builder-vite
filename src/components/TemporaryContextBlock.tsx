@@ -31,7 +31,7 @@ export function TemporaryContextBlock({
   moveBlock,
   autoFocus = false,
 }: TemporaryContextBlockProps) {
-  const { updateContextBlock, removeTemporaryBlock } = useLibraryActions();
+  const { updateTemporaryBlock, removeTemporaryBlock } = useLibraryActions();
   const ref = useRef<HTMLDivElement>(null);
   const editorRef = useRef<TipTapEditorRef | null>(null);
   const [isExpanded, setIsExpanded] = useState(true);
@@ -137,7 +137,7 @@ export function TemporaryContextBlock({
   const handleContentUpdate = (update: { html: string; json: any; text: string }) => {
     const newContent = update.html;
     setContent(newContent);
-    updateContextBlock(block.id, { content: newContent });
+    updateTemporaryBlock(block.id, { content: newContent });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {

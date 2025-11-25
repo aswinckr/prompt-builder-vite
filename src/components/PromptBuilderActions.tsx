@@ -3,6 +3,108 @@ import { Copy, Download, Save, Trash2 } from 'lucide-react';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 import { CreatePromptModal } from './CreatePromptModal';
 
+/**
+ * Convert HTML content to markdown for copying to clipboard
+ */
+const htmlToMarkdown = (html: string): string => {
+  // Create a temporary DOM element to parse HTML
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+
+  let markdown = '';
+
+  // Process each node recursively
+  const processNode = (node: Node): string => {
+    if (node.nodeType === Node.TEXT_NODE) {
+      return node.textContent || '';
+    }
+
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      const element = node as Element;
+      const tagName = element.tagName.toLowerCase();
+
+      switch (tagName) {
+        case 'p':
+          return processChildren(element) + '\n\n';
+
+        case 'strong':
+        case 'b':
+          return `**${processChildren(element)}**`;
+
+        case 'em':
+        case 'i':
+          return `*${processChildren(element)}*`;
+
+        case 'u':
+          return `__${processChildren(element)}__`;
+
+        case 'h1':
+          return `# ${processChildren(element)}\n\n`;
+
+        case 'h2':
+          return `## ${processChildren(element)}\n\n`;
+
+        case 'h3':
+          return `### ${processChildren(element)}\n\n`;
+
+        case 'h4':
+          return `#### ${processChildren(element)}\n\n`;
+
+        case 'h5':
+          return `##### ${processChildren(element)}\n\n`;
+
+        case 'h6':
+          return `###### ${processChildren(element)}\n\n`;
+
+        case 'ul':
+          const ulItems = Array.from(element.querySelectorAll('li'));
+          return ulItems.map(li => `- ${processChildren(li).trim()}`).join('\n') + '\n\n';
+
+        case 'ol':
+          const olItems = Array.from(element.querySelectorAll('li'));
+          return olItems.map((li, index) => `${index + 1}. ${processChildren(li).trim()}`).join('\n') + '\n\n';
+
+        case 'li':
+          return processChildren(element);
+
+        case 'code':
+          return `\`${processChildren(element)}\``;
+
+        case 'pre':
+          return `\`\`\`\n${processChildren(element)}\n\`\`\`\n\n`;
+
+        case 'blockquote':
+          return `> ${processChildren(element).replace(/\n/g, '\n> ')}\n\n`;
+
+        case 'br':
+          return '\n';
+
+        case 'div':
+        case 'span':
+        default:
+          return processChildren(element);
+      }
+    }
+
+    return '';
+  };
+
+  const processChildren = (element: Element): string => {
+    return Array.from(element.childNodes).map(processNode).join('');
+  };
+
+  markdown = processNode(tempDiv);
+
+  // Clean up extra whitespace and normalize newlines
+  markdown = markdown
+    .replace(/\n\s*\n\s*\n/g, '\n\n')  // Remove excessive newlines
+    .replace(/[ \t]+/g, ' ')           // Replace multiple spaces with single space
+    .replace(/^\s+|\s+$/g, '')         // Trim leading/trailing whitespace
+    .replace(/\n[ \t]+/g, '\n');       // Remove spaces at start of lines
+
+  return markdown;
+};
+
 export function PromptBuilderActions() {
   const { promptBuilder, contextBlocks } = useLibraryState();
   const { clearPromptBuilder, savePromptAsTemplate, createFolder, movePromptToFolder } = useLibraryActions();
@@ -16,29 +118,91 @@ export function PromptBuilderActions() {
       .map(blockId => contextBlocks.find(block => block.id === blockId))
       .filter(block => block !== undefined);
 
+    console.log('🔍 Assemble Prompt Debug:');
+    console.log('- Block order:', promptBuilder.blockOrder);
+    console.log('- Selected blocks count:', selectedBlocks.length);
+    console.log('- Temporary blocks:', selectedBlocks.filter(b => b?.isTemporary).length);
+    console.log('- Permanent blocks:', selectedBlocks.filter(b => !b?.isTemporary).length);
+    console.log('- Custom text:', promptBuilder.customText.trim() ? 'Present' : 'Empty');
+
     let assembledText = '';
 
     // Add custom text if provided
     if (promptBuilder.customText.trim()) {
       assembledText += promptBuilder.customText.trim() + '\n\n';
+      console.log('- Added custom text length:', promptBuilder.customText.trim().length);
     }
 
     // Add context blocks
     selectedBlocks.forEach((block, index) => {
       if (index > 0) assembledText += '\n\n';
-      assembledText += `### ${block.title}\n\n${block.content}`;
+
+      console.log(`- Processing block ${index + 1}:`, {
+        id: block.id,
+        title: block.title,
+        isTemporary: block.isTemporary,
+        contentLength: block.content.length,
+        contentPreview: block.content.substring(0, 100) + '...'
+      });
+
+      // For temporary text blocks, only add content without headers
+      // For permanent knowledge blocks, add content with headers
+      if (block.isTemporary) {
+        // Convert HTML content to markdown for temporary blocks
+        const markdown = htmlToMarkdown(block.content);
+        console.log(`  - HTML to markdown conversion:`, {
+          original: block.content,
+          converted: markdown,
+          convertedLength: markdown.length
+        });
+        assembledText += markdown;
+      } else {
+        assembledText += `### ${block.title}\n\n${block.content}`;
+        console.log(`  - Added permanent block with header`);
+      }
     });
 
-    return assembledText.trim();
+    const finalText = assembledText.trim();
+    console.log('- Final assembled prompt length:', finalText.length);
+    console.log('- Final assembled prompt:', finalText);
+
+    return finalText;
   };
 
   const handleCopyToClipboard = async () => {
+    console.log('🚀 Starting copy to clipboard process...');
+
     try {
+      // Check if Clipboard API is available
+      if (!navigator.clipboard) {
+        throw new Error('Clipboard API not available in this browser');
+      }
+
       const prompt = assemblePrompt();
+
+      // Validate that we have content to copy
+      if (!prompt || prompt.trim() === '') {
+        throw new Error('No content to copy - assembled prompt is empty');
+      }
+
+      console.log('📋 Attempting to copy to clipboard:', {
+        contentLength: prompt.length,
+        contentPreview: prompt.substring(0, 200) + '...'
+      });
+
       await navigator.clipboard.writeText(prompt);
+
+      console.log('✅ Successfully copied to clipboard');
       setCopyStatus('copied');
       setTimeout(() => setCopyStatus('idle'), 2000);
     } catch (error) {
+      console.error('❌ Copy to clipboard failed:', error);
+      console.error('❌ Error details:', {
+        name: error.name,
+        message: error.message,
+        stack: error.stack
+      });
+
       setCopyStatus('error');
       setTimeout(() => setCopyStatus('idle'), 2000);
     }
