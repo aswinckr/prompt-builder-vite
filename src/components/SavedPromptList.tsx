@@ -2,6 +2,10 @@ import React, { useState, useMemo } from 'react';
 import { Search, Calendar, Hash, Play, Edit, Trash2, FileText } from 'lucide-react';
 import { SavedPrompt } from '../types/SavedPrompt';
 import { EditPromptModal } from './EditPromptModal';
+import { ConfirmationModal } from './ConfirmationModal';
+import { useToast } from '../contexts/ToastContext';
+import { useLibraryActions } from '../contexts/LibraryContext';
+import { handleCrudResult, logError } from '../utils/errorHandling';
 
 interface SavedPromptListProps {
   selectedProject: string;
@@ -23,6 +27,12 @@ export function SavedPromptList({
   const [sortBy, setSortBy] = useState<'updated' | 'created' | 'title'>('updated');
   const [editingPrompt, setEditingPrompt] = useState<SavedPrompt | null>(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [promptToDelete, setPromptToDelete] = useState<SavedPrompt | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { showToast } = useToast();
+  const { deleteSavedPrompt, updateSavedPrompt } = useLibraryActions();
 
   // Filter and sort prompts
   const filteredPrompts = useMemo(() => {
@@ -107,25 +117,68 @@ export function SavedPromptList({
         updated_at: new Date(),
       };
 
-      // Call the parent's update handler
-      onPromptUpdate?.(promptToSave);
+      // Use LibraryContext action for consistency
+      const result = await updateSavedPrompt(editingPrompt.id, promptToSave);
 
-      setEditingPrompt(null);
+      const crudResult = handleCrudResult(result, 'Prompt updated', promptToSave.title);
+
+      if (crudResult.success) {
+        // Call the parent's update handler for backward compatibility
+        onPromptUpdate?.(promptToSave);
+        showToast(crudResult.message, 'success');
+        setEditingPrompt(null);
+      } else {
+        showToast(crudResult.message, 'error');
+        logError('Prompt Update', result.error, { promptId: editingPrompt.id, title: promptToSave.title });
+      }
     } catch (error) {
-      console.error('Failed to save prompt:', error);
-      // Handle error state - could show toast/alert
+      logError('Prompt Update Exception', error, { promptId: editingPrompt.id });
+      showToast('Failed to update prompt. Please try again.', 'error');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDeletePrompt = async (promptId: string) => {
-    console.log('Deleting prompt:', promptId);
-    onPromptDelete?.(promptId);
+  const handleDeleteClick = (prompt: SavedPrompt) => {
+    setPromptToDelete(prompt);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!promptToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      // Use LibraryContext action for consistency
+      const result = await deleteSavedPrompt(promptToDelete.id);
+
+      const crudResult = handleCrudResult(result, 'Prompt deleted', promptToDelete.title);
+
+      if (crudResult.success) {
+        // Call the parent's delete handler for backward compatibility
+        onPromptDelete?.(promptToDelete.id);
+        showToast(crudResult.message, 'success');
+      } else {
+        showToast(crudResult.message, crudResult.shouldRetry ? 'warning' : 'error');
+        logError('Prompt Delete', result.error, { promptId: promptToDelete.id, title: promptToDelete.title });
+      }
+    } catch (error) {
+      logError('Prompt Delete Exception', error, { promptId: promptToDelete.id, title: promptToDelete.title });
+      showToast('Failed to delete prompt. Please try again.', 'error');
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmOpen(false);
+      setPromptToDelete(null);
+    }
   };
 
   const handleCloseEditModal = () => {
     setEditingPrompt(null);
+  };
+
+  const handleCloseDeleteConfirm = () => {
+    setDeleteConfirmOpen(false);
+    setPromptToDelete(null);
   };
 
   return (
@@ -235,7 +288,7 @@ export function SavedPromptList({
                         <Edit size={16} />
                       </button>
                       <button
-                        onClick={() => handleDeletePrompt(prompt.id)}
+                        onClick={() => handleDeleteClick(prompt)}
                         className="p-2 rounded hover:bg-red-600/20 text-neutral-400 hover:text-red-400 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
                         aria-label="Delete prompt"
                       >
@@ -281,6 +334,19 @@ export function SavedPromptList({
         onSave={handleSavePrompt}
         prompt={editingPrompt}
         isLoading={isSaving}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteConfirmOpen}
+        onClose={handleCloseDeleteConfirm}
+        onConfirm={handleConfirmDelete}
+        title="Delete Prompt"
+        message={`Are you sure you want to delete '${promptToDelete?.title || 'this prompt'}'? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="delete"
+        isLoading={isDeleting}
       />
     </>
   );

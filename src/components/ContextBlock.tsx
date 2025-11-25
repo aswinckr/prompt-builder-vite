@@ -1,5 +1,5 @@
 import React from 'react';
-import { Hash, Edit } from 'lucide-react';
+import { Hash, Edit, Trash2 } from 'lucide-react';
 import { ContextBlock as ContextBlockType } from '../types/ContextBlock';
 
 interface ContextBlockProps {
@@ -7,13 +7,14 @@ interface ContextBlockProps {
   isSelected: boolean;
   onSelect: () => void;
   onEdit?: (block: ContextBlockType) => void;
+  onDelete?: (block: ContextBlockType) => void;
   onKeyDown?: (event: React.KeyboardEvent<HTMLDivElement>) => void;
 }
 
 /**
  * ContextBlock component displays a single context block in the grid
  */
-export function ContextBlock({ block, isSelected, onSelect, onEdit, onKeyDown }: ContextBlockProps) {
+export function ContextBlock({ block, isSelected, onSelect, onEdit, onDelete, onKeyDown }: ContextBlockProps) {
   const handleClick = () => {
     onSelect();
   };
@@ -22,6 +23,9 @@ export function ContextBlock({ block, isSelected, onSelect, onEdit, onKeyDown }:
     if (event.key === 'e' || event.key === 'E') {
       event.preventDefault();
       onEdit?.(block);
+    } else if (event.key === 'd' || event.key === 'D') {
+      event.preventDefault();
+      onDelete?.(block);
     } else if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       onSelect();
@@ -32,6 +36,11 @@ export function ContextBlock({ block, isSelected, onSelect, onEdit, onKeyDown }:
   const handleEditClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     event.stopPropagation();
     onEdit?.(block);
+  };
+
+  const handleDeleteClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+    onDelete?.(block);
   };
 
   return (
@@ -55,6 +64,16 @@ export function ContextBlock({ block, isSelected, onSelect, onEdit, onKeyDown }:
           {block.title}
         </h3>
         <div className="flex items-center gap-2 flex-shrink-0 ml-2">
+          {/* Delete Icon */}
+          {onDelete && (
+            <button
+              onClick={handleDeleteClick}
+              className="p-1 text-neutral-400 hover:text-red-400 transition-colors rounded hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+              aria-label={`Delete ${block.title}`}
+            >
+              <Trash2 size={14} />
+            </button>
+          )}
           {/* Edit Icon */}
           {onEdit && (
             <button
@@ -97,6 +116,12 @@ export function ContextBlock({ block, isSelected, onSelect, onEdit, onKeyDown }:
             +{block.tags.length - 3}
           </span>
         )}
+      </div>
+
+      {/* Help text for keyboard shortcuts */}
+      <div className="mt-2 text-xs text-neutral-500 opacity-0 hover:opacity-100 transition-opacity">
+        Press <kbd className="px-1 py-0.5 bg-neutral-700 rounded text-neutral-300">E</kbd> to edit,
+        <kbd className="px-1 py-0.5 bg-neutral-700 rounded text-neutral-300 ml-1">D</kbd> to delete
       </div>
     </div>
   );

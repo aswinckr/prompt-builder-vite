@@ -1,8 +1,12 @@
-import React, { useMemo, useCallback, useRef } from 'react';
+import React, { useMemo, useCallback, useRef, useState } from 'react';
 import { ContextBlock } from './ContextBlock';
 import { SelectionActionBar } from './SelectionActionBar';
 import { EditContextModal } from './EditContextModal';
+import { ConfirmationModal } from './ConfirmationModal';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
+import { useToast } from '../contexts/ToastContext';
+import { handleCrudResult, logError } from '../utils/errorHandling';
+import { ContextBlock as ContextBlockType } from '../types/ContextBlock';
 
 interface ContextBlocksGridProps {
   selectedProject: string;
@@ -10,10 +14,17 @@ interface ContextBlocksGridProps {
 
 export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
   const { contextSelection, contextBlocks } = useLibraryState();
-  const { toggleBlockSelection, clearBlockSelection, setSelectedBlocks } = useLibraryActions();
+  const { toggleBlockSelection, clearBlockSelection, setSelectedBlocks, removeBlockFromBuilder, deleteContextBlock } = useLibraryActions();
   const [searchQuery] = React.useState('');
   const gridRef = useRef<HTMLDivElement>(null);
   const [editingBlockId, setEditingBlockId] = React.useState<string | null>(null);
+
+  // Delete confirmation state
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [blockToDelete, setBlockToDelete] = useState<ContextBlockType | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const { showToast } = useToast();
 
   // Filter blocks based on project and search query
   const filteredBlocks = useMemo(() => {
@@ -40,9 +51,60 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
   }, [filteredBlocks, setSelectedBlocks]);
 
   // Handle block editing
-  const handleEditBlock = useCallback((block: any) => {
+  const handleEditBlock = useCallback((block: ContextBlockType) => {
     setEditingBlockId(block.id);
   }, []);
+
+  // Handle block deletion
+  const handleDeleteClick = useCallback((block: ContextBlockType) => {
+    setBlockToDelete(block);
+    setDeleteConfirmOpen(true);
+  }, []);
+
+  const handleConfirmDelete = async () => {
+    if (!blockToDelete) return;
+
+    setIsDeleting(true);
+    try {
+      // Delete from database
+      const result = await deleteContextBlock(blockToDelete.id);
+
+      const crudResult = handleCrudResult(result, 'Context block deleted', blockToDelete.title);
+
+      if (crudResult.success) {
+        // Remove from any active selections in prompt builder
+        if (contextSelection.selectedBlockIds.includes(blockToDelete.id)) {
+          // Remove from prompt builder if it was selected
+          removeBlockFromBuilder(blockToDelete.id);
+        }
+
+        showToast(crudResult.message, 'success');
+      } else {
+        showToast(crudResult.message, crudResult.shouldRetry ? 'warning' : 'error');
+        logError('Context Block Delete', result.error, {
+          blockId: blockToDelete.id,
+          title: blockToDelete.title,
+          project_id: blockToDelete.project_id,
+        });
+      }
+    } catch (error) {
+      logError('Context Block Delete Exception', error, {
+        blockId: blockToDelete.id,
+        title: blockToDelete.title,
+        project_id: blockToDelete.project_id,
+      });
+      showToast('Failed to delete context block. Please try again.', 'error');
+    } finally {
+      setIsDeleting(false);
+      setDeleteConfirmOpen(false);
+      setBlockToDelete(null);
+    }
+  };
+
+  const handleCloseDeleteConfirm = () => {
+    setDeleteConfirmOpen(false);
+    setBlockToDelete(null);
+  };
 
   // Grid keyboard navigation
   const handleKeyDown = useCallback((event: React.KeyboardEvent<HTMLDivElement>, blockId: string) => {
@@ -104,6 +166,7 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
                 isSelected={contextSelection.selectedBlockIds.includes(block.id)}
                 onSelect={() => toggleBlockSelection(block.id)}
                 onEdit={handleEditBlock}
+                onDelete={handleDeleteClick}
                 onKeyDown={(e) => handleKeyDown(e, block.id)}
               />
             ))}
@@ -127,6 +190,19 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
         isOpen={editingBlockId !== null}
         onClose={() => setEditingBlockId(null)}
         blockId={editingBlockId}
+      />
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={deleteConfirmOpen}
+        onClose={handleCloseDeleteConfirm}
+        onConfirm={handleConfirmDelete}
+        title="Delete Context Block"
+        message={`Are you sure you want to delete '${blockToDelete?.title || 'this context block'}'? This action cannot be undone.`}
+        confirmText="Delete"
+        cancelText="Cancel"
+        type="delete"
+        isLoading={isDeleting}
       />
     </div>
   );

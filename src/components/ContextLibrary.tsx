@@ -13,12 +13,17 @@ import { CreatePromptModal } from './CreatePromptModal';
 import { CreateFolderModal } from './CreateFolderModal';
 import { SynchronizedLoading } from './ui/SynchronizedLoading';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
+import { useAuthState } from '../contexts/AuthContext';
 import { Project } from '../services/projectService';
 
 // Extended project interface with type information
 interface ProjectWithType extends Project {
   type: 'prompts' | 'datasets';
 }
+
+// Action type for post-authentication trigger
+type PostAuthAction = 'add-knowledge' | 'add-prompt' | 'create-folder' | null;
+type FolderType = 'prompts' | 'datasets';
 
 export function ContextLibrary() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
@@ -28,10 +33,15 @@ export function ContextLibrary() {
     window.innerWidth >= 768 // Auto-collapse on mobile
   );
   const [selectedProject, setSelectedProject] = useState<string>('');
+  const [postAuthAction, setPostAuthAction] = useState<PostAuthAction>(null);
+  const [pendingFolderType, setPendingFolderType] = useState<FolderType>('prompts');
+
+  // Get authentication state
+  const { isAuthenticated } = useAuthState();
 
   // Get data from LibraryContext
   const { savedPrompts, promptProjects, datasetProjects, systemPromptProjects, systemDatasetProjects, loading, error, folderModal } = useLibraryState();
-  const { updateSavedPrompt, deleteSavedPrompt, createFolder, closeFolderModal } = useLibraryActions();
+  const { updateSavedPrompt, deleteSavedPrompt, createFolder, closeFolderModal, openFolderModal } = useLibraryActions();
 
   // Combine all projects for sidebar with type information (system projects first)
   const allProjects: ProjectWithType[] = [
@@ -47,6 +57,33 @@ export function ContextLibrary() {
       setSelectedProject(allProjects[0].id);
     }
   }, [selectedProject, allProjects]);
+
+  // Handle post-authentication action triggering
+  const handleAuthSuccess = () => {
+    if (postAuthAction) {
+      // Execute the stored action after successful authentication
+      switch (postAuthAction) {
+        case 'add-knowledge':
+          handleOpenCreateContextModal();
+          break;
+        case 'add-prompt':
+          handleOpenCreatePromptModal();
+          break;
+        case 'create-folder':
+          openFolderModal(pendingFolderType);
+          break;
+      }
+      // Clear the stored action
+      setPostAuthAction(null);
+    }
+  };
+
+  // Handle authentication failure or cancellation
+  const handleAuthFailure = () => {
+    // Clear the stored action and folder type, return to clean state
+    setPostAuthAction(null);
+    setPendingFolderType('prompts');
+  };
 
   // Remove blocking empty state - let users access the interface even with no projects
 
@@ -76,6 +113,38 @@ export function ContextLibrary() {
 
   const handleCloseCreatePromptModal = () => {
     setIsCreatePromptModalOpen(false);
+  };
+
+  // Enhanced handlers for add buttons that check authentication
+  const handleAddKnowledge = () => {
+    if (!isAuthenticated) {
+      // Store the intended action and open auth modal
+      setPostAuthAction('add-knowledge');
+      setIsProfileModalOpen(true);
+    } else {
+      handleOpenCreateContextModal();
+    }
+  };
+
+  const handleAddPrompt = () => {
+    if (!isAuthenticated) {
+      // Store the intended action and open auth modal
+      setPostAuthAction('add-prompt');
+      setIsProfileModalOpen(true);
+    } else {
+      handleOpenCreatePromptModal();
+    }
+  };
+
+  const handleCreateFolder = (type: FolderType) => {
+    if (!isAuthenticated) {
+      // Store the intended action and folder type, then open auth modal
+      setPostAuthAction('create-folder');
+      setPendingFolderType(type);
+      setIsProfileModalOpen(true);
+    } else {
+      openFolderModal(type);
+    }
   };
 
   // Helper function to get the type of the current selected project
@@ -121,10 +190,13 @@ export function ContextLibrary() {
   // Default to context blocks view if no project or if project is a dataset
   const isPromptProject = currentProject?.type === 'prompts';
 
-  
+  // Modify error handling - don't show error overlay for authentication-related issues
+  const shouldShowErrorOverlay = error && !error.toLowerCase().includes('user not authenticated');
+
+
   return (
     <SynchronizedLoading
-      isLoading={loading && !error && allProjects.length === 0}
+      isLoading={loading && !shouldShowErrorOverlay && allProjects.length === 0}
       message="Loading your data..."
     >
       <div className="h-full flex overflow-hidden">
@@ -173,6 +245,7 @@ export function ContextLibrary() {
               selectedProject={selectedProject}
               setSelectedProject={setSelectedProject}
               loading={loading}
+              onCreateFolder={handleCreateFolder}
             />
           </div>
         )}
@@ -206,8 +279,8 @@ export function ContextLibrary() {
                 <div className="flex-1 min-w-0">
                   <SearchBar
                     showFullWidth={false}
-                    onAddKnowledge={getCurrentProjectType() === 'datasets' ? handleOpenCreateContextModal : undefined}
-                    onAddPrompt={handleOpenCreatePromptModal}
+                    onAddKnowledge={getCurrentProjectType() === 'datasets' ? handleAddKnowledge : undefined}
+                    onAddPrompt={handleAddPrompt}
                     searchType={getCurrentProjectType() === 'prompts' ? 'prompts' : 'context'}
                   />
                 </div>
@@ -240,6 +313,8 @@ export function ContextLibrary() {
       <ProfileModal
         isOpen={isProfileModalOpen}
         onClose={handleCloseProfileModal}
+        onAuthSuccess={handleAuthSuccess}
+        onAuthFailure={handleAuthFailure}
       />
 
       {/* Create Context Modal */}
@@ -265,8 +340,8 @@ export function ContextLibrary() {
         loading={folderModal.loading}
       />
 
-      {/* Error State Overlay */}
-      {error && (
+      {/* Error State Overlay - Only show for non-authentication errors */}
+      {shouldShowErrorOverlay && (
         <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center">
           <div className="bg-neutral-800 rounded-lg p-6 max-w-md mx-4 text-center">
             <AlertCircle className="w-12 h-12 mx-auto mb-4 text-red-400" />

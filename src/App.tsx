@@ -6,6 +6,7 @@ import { BottomTabNavigation } from './components/BottomTabNavigation';
 import { RouteTransition } from './components/ui/RouteTransition';
 import { LibraryProvider } from './contexts/LibraryContext';
 import { AuthProvider } from './contexts/AuthContext';
+import { ToastProvider } from './contexts/ToastContext';
 
 function AppContent() {
   return (
@@ -32,9 +33,11 @@ function App() {
   return (
     <AuthProvider>
       <LibraryProvider>
-        <Router>
-          <AppContent />
-        </Router>
+        <ToastProvider>
+          <Router>
+            <AppContent />
+          </Router>
+        </ToastProvider>
       </LibraryProvider>
     </AuthProvider>
   );

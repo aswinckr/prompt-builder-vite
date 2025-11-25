@@ -6,6 +6,8 @@ import { useAuthState, useAuthActions } from "../contexts/AuthContext";
 interface ProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onAuthSuccess?: () => void; // Optional callback for successful authentication
+  onAuthFailure?: () => void; // Optional callback for authentication failure/cancellation
 }
 
 /**
@@ -14,10 +16,31 @@ interface ProfileModalProps {
 export function ProfileModal({
   isOpen,
   onClose,
+  onAuthSuccess,
+  onAuthFailure,
 }: ProfileModalProps) {
-  const { user, isLoading, error } = useAuthState();
+  const { user, isLoading, error, isAuthenticated } = useAuthState();
   const { signInWithGoogle, signInWithEmail, signUpWithEmail, resetPassword, signOut, clearError } = useAuthActions();
-  const isAuthenticated = !!user;
+
+  // Track previous auth state to detect successful authentication
+  const [wasAuthenticated, setWasAuthenticated] = useState(isAuthenticated);
+
+  // Check for successful authentication
+  React.useEffect(() => {
+    if (!wasAuthenticated && isAuthenticated && onAuthSuccess) {
+      onAuthSuccess();
+    }
+    setWasAuthenticated(isAuthenticated);
+  }, [isAuthenticated, wasAuthenticated, onAuthSuccess]);
+
+  // Handle authentication failure when modal closes without successful auth
+  const handleClose = () => {
+    if (!isAuthenticated && onAuthFailure) {
+      onAuthFailure();
+    }
+    clearError(); // Clear any existing errors
+    onClose();
+  };
 
   // Form states
   const [authTab, setAuthTab] = useState<'signin' | 'signup'>('signin');
@@ -45,9 +68,9 @@ export function ProfileModal({
     e.preventDefault();
     try {
       await signInWithEmail(email, password);
-      onClose();
+      // Modal will be closed by the useEffect that detects successful auth
     } catch (error) {
-      // Error is handled by auth context
+      // Error is handled by auth context, no additional handling needed
     }
   };
 
@@ -78,10 +101,31 @@ export function ProfileModal({
       // Error is handled by auth context
     }
   };
+
+  const handleGoogleSignIn = async () => {
+    try {
+      await signInWithGoogle();
+      // Modal will be closed by the useEffect that detects successful auth
+    } catch (error) {
+      // Error is handled by auth context
+    }
+  };
+
+  // Handle successful authentication by closing modal and calling callback
+  React.useEffect(() => {
+    if (isAuthenticated && isOpen) {
+      // Small delay to allow auth state to settle
+      const timer = setTimeout(() => {
+        handleClose();
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isAuthenticated, isOpen]);
+
   return (
     <Modal
       isOpen={isOpen}
-      onClose={onClose}
+      onClose={handleClose}
       title="Profile Settings"
       size="md"
       mobileBehavior="fullscreen"
@@ -345,7 +389,7 @@ export function ProfileModal({
 
                 {/* Google OAuth Button */}
                 <button
-                  onClick={signInWithGoogle}
+                  onClick={handleGoogleSignIn}
                   disabled={isLoading}
                   className="flex w-full items-center justify-center gap-3 rounded-lg bg-white px-6 py-3 font-medium text-gray-900 transition-colors hover:bg-neutral-100 focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-neutral-900 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
