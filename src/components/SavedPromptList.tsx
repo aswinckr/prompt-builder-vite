@@ -38,15 +38,8 @@ export function SavedPromptList({
   const filteredPrompts = useMemo(() => {
     let filtered = [...(prompts || [])];
 
-    console.log('SavedPromptList - selectedProject:', selectedProject);
-    console.log('SavedPromptList - all prompts:', filtered.length);
-
     // Filter by selected project
-    const filteredByProject = filtered.filter(prompt => prompt.project_id === selectedProject);
-    console.log('SavedPromptList - filtered prompts count:', filteredByProject.length);
-    console.log('SavedPromptList - filtered prompts:', filteredByProject.map(p => ({ id: p.id, title: p.title, project_id: p.project_id })));
-
-    filtered = filteredByProject;
+    filtered = filtered.filter(prompt => prompt.project_id === selectedProject);
 
     // Filter by search query
     if (searchQuery) {
@@ -97,12 +90,10 @@ export function SavedPromptList({
   }, [prompts, selectedProject, searchQuery, selectedDate, sortBy]);
 
   const handleLoadPrompt = (promptId: string) => {
-    console.log('Loading prompt:', promptId);
     onPromptLoad?.(promptId);
   };
 
   const handleEditPrompt = (prompt: SavedPrompt) => {
-    console.log('Editing prompt:', prompt.id);
     setEditingPrompt(prompt);
   };
 
@@ -152,7 +143,10 @@ export function SavedPromptList({
       // Use LibraryContext action for consistency
       const result = await deleteSavedPrompt(promptToDelete.id);
 
-      const crudResult = handleCrudResult(result, 'Prompt deleted', promptToDelete.title);
+      const crudResult = handleCrudResult(result, 'Prompt deleted', promptToDelete.title, {
+        expectsData: false,
+        customMessage: 'Prompt {itemTitle} deleted'
+      });
 
       if (crudResult.success) {
         // Call the parent's delete handler for backward compatibility

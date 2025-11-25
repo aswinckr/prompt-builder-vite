@@ -6,6 +6,7 @@ import { DatabaseResponse } from '../services/databaseService';
 import { PromptService } from '../services/promptService';
 import { ProjectService, Project } from '../services/projectService';
 import { useAuthState } from './AuthContext';
+import { CHAT, TEMPORARY } from '../utils/constants';
 
 interface ChatState {
   isChatPanelOpen: boolean;
@@ -64,6 +65,9 @@ type LibraryAction =
   | { type: 'CREATE_CONTEXT_BLOCK'; payload: ContextBlock }
   | { type: 'UPDATE_CONTEXT_BLOCK'; payload: { id: string; blockData: Partial<ContextBlock> } }
   | { type: 'DELETE_CONTEXT_BLOCK'; payload: string }
+  | { type: 'CREATE_TEMPORARY_BLOCK'; payload: ContextBlock }
+  | { type: 'UPDATE_TEMPORARY_BLOCK'; payload: { id: string; blockData: Partial<ContextBlock> } }
+  | { type: 'REMOVE_TEMPORARY_BLOCK'; payload: string }
   // Prompt actions
   | { type: 'CREATE_SAVED_PROMPT'; payload: SavedPrompt }
   | { type: 'UPDATE_SAVED_PROMPT'; payload: { id: string; promptData: Partial<SavedPrompt> } }
@@ -90,7 +94,7 @@ const initialState: LibraryState = {
   },
   chat: {
     isChatPanelOpen: false,
-    selectedModel: 'gemini-2.5-flash',
+    selectedModel: CHAT.DEFAULT_MODEL,
   },
   contextSelection: {
     selectedBlockIds: []
@@ -211,6 +215,33 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
       return {
         ...state,
         contextBlocks: state.contextBlocks.filter(block => block.id !== action.payload)
+      };
+    case 'CREATE_TEMPORARY_BLOCK':
+      return {
+        ...state,
+        contextBlocks: [action.payload, ...state.contextBlocks],
+        promptBuilder: {
+          ...state.promptBuilder,
+          blockOrder: [action.payload.id, ...state.promptBuilder.blockOrder]
+        }
+      };
+    case 'UPDATE_TEMPORARY_BLOCK':
+      return {
+        ...state,
+        contextBlocks: state.contextBlocks.map(block =>
+          block.id === action.payload.id
+            ? { ...block, ...action.payload.blockData, updated_at: new Date() }
+            : block
+        )
+      };
+    case 'REMOVE_TEMPORARY_BLOCK':
+      return {
+        ...state,
+        contextBlocks: state.contextBlocks.filter(block => block.id !== action.payload),
+        promptBuilder: {
+          ...state.promptBuilder,
+          blockOrder: state.promptBuilder.blockOrder.filter(id => id !== action.payload)
+        }
       };
     case 'CREATE_SAVED_PROMPT':
       return {
@@ -339,8 +370,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
     try {
       if (isAuthenticated) {
-        console.log('📚 Loading library data for authenticated user...');
-
+        
         // First, ensure unsorted folders exist for the user
         await ProjectService.ensureUnsortedFolders();
 
@@ -362,8 +392,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'SET_SYSTEM_PROMPT_PROJECTS', payload: systemPromptProjectsResult.data || [] });
         dispatch({ type: 'SET_SYSTEM_DATASET_PROJECTS', payload: systemDatasetProjectsResult.data || [] });
 
-        console.log('✅ Library data loaded successfully');
-
+        
         // Check for any errors from the service calls
         const errors = [
           contextBlocksResult.error,
@@ -379,8 +408,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
           dispatch({ type: 'SET_ERROR', payload: errors[0] || 'Failed to load data' });
         }
       } else {
-        console.log('📚 User not authenticated - clearing library data...');
-
+        
         // Clear all user data when not authenticated
         dispatch({ type: 'SET_CONTEXT_BLOCKS', payload: [] });
         dispatch({ type: 'SET_SAVED_PROMPTS', payload: [] });
@@ -390,8 +418,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'SET_SYSTEM_DATASET_PROJECTS', payload: [] });
         dispatch({ type: 'SET_ERROR', payload: null });
 
-        console.log('✅ Library data cleared for unauthenticated user');
-      }
+              }
     } catch (error) {
       console.error('Error loading initial data:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load data' });
@@ -434,6 +461,27 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'DELETE_CONTEXT_BLOCK', payload: id });
       }
       return result;
+    },
+
+    // Temporary block actions
+    createTemporaryBlock: (blockData: Omit<ContextBlock, 'id' | 'user_id' | 'created_at' | 'updated_at'>): ContextBlock => {
+      const temporaryBlock: ContextBlock = {
+        ...blockData,
+        id: crypto.randomUUID(),
+        user_id: TEMPORARY.USER_ID,
+        created_at: new Date(),
+        updated_at: new Date(),
+        isTemporary: true
+      };
+
+      dispatch({ type: 'CREATE_TEMPORARY_BLOCK', payload: temporaryBlock });
+      return temporaryBlock;
+    },
+    updateTemporaryBlock: (id: string, blockData: Partial<ContextBlock>) => {
+      dispatch({ type: 'UPDATE_TEMPORARY_BLOCK', payload: { id, blockData } });
+    },
+    removeTemporaryBlock: (id: string) => {
+      dispatch({ type: 'REMOVE_TEMPORARY_BLOCK', payload: id });
     },
 
     // Prompt actions
@@ -482,24 +530,17 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
     // Unified folder creation (type is determined by modal context)
     createFolder: async (folderData: { name: string; icon: string }) => {
-      console.log('🔨 Create folder called with:', folderData);
-      console.log('📊 Current modal state:', state.folderModal);
-
       try {
         dispatch({ type: 'SET_FOLDER_MODAL_LOADING', payload: true });
 
         // Get the current folder type from the modal state
         const currentType = state.folderModal.defaultType;
-        console.log('🎯 Creating folder of type:', currentType);
 
         const result = currentType === 'prompts'
           ? await ProjectService.createProject({ name: folderData.name, icon: folderData.icon, type: 'prompt' })
           : await ProjectService.createProject({ name: folderData.name, icon: folderData.icon, type: 'dataset' });
 
-        console.log('✅ ProjectService result:', result);
-
         if (result.data) {
-          console.log('📝 Dispatching project creation to state');
           dispatch({
             type: currentType === 'prompts' ? 'CREATE_PROMPT_PROJECT' : 'CREATE_DATASET_PROJECT',
             payload: result.data
@@ -584,4 +625,3 @@ export function useLibraryActions() {
   }
   return context.actions;
 }
-

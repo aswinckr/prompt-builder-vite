@@ -12,12 +12,16 @@
   "dependencies": {
     "@ai-sdk/react": "^2.0.100",
     "@openrouter/ai-sdk-provider": "^1.2.5",
+    "@radix-ui/react-dropdown-menu": "^2.1.16",
+    "@radix-ui/react-slot": "^1.2.4",
     "@supabase/supabase-js": "^2.84.0",
     "@tiptap/extension-placeholder": "^3.11.0",
     "@tiptap/pm": "^3.11.0",
     "@tiptap/react": "^3.11.0",
     "@tiptap/starter-kit": "^3.11.0",
     "ai": "^5.0.99",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "lucide-react": "^0.554.0",
     "react": "^18.3.1",
     "react-dnd": "^16.0.1",
@@ -27,6 +31,7 @@
     "react-router-dom": "^6.28.1",
     "rehype-highlight": "^7.0.2",
     "remark-gfm": "^4.0.1",
+    "tailwind-merge": "^3.4.0",
     "vitawind": "^2.0.0"
   },
   "devDependencies": {

@@ -1,16 +1,19 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { useDrag, useDrop } from "react-dnd";
 import type { Identifier } from "dnd-core";
 import type { XYCoord } from "react-dnd";
 import type { DragSourceMonitor } from "react-dnd";
-import { X, GripVertical, Hash, ChevronDown, ChevronRight } from "lucide-react";
+import { X, GripVertical, Type, ChevronDown, ChevronRight } from "lucide-react";
 import { ContextBlock as ContextBlockType } from "../types/ContextBlock";
 import { useLibraryActions } from "../contexts/LibraryContext";
+import { TipTapEditor, TipTapEditorRef } from "./TipTapEditor";
+import { TIMEOUTS } from "../utils/constants";
 
-interface PromptBuilderBlockProps {
+interface TemporaryContextBlockProps {
   block: ContextBlockType;
   index: number;
   moveBlock: (dragIndex: number, hoverIndex: number) => void;
+  autoFocus?: boolean;
 }
 
 // Define the drag item type
@@ -24,14 +27,37 @@ interface DragItem {
   type: string;
 }
 
-export function PromptBuilderBlock({
+export function TemporaryContextBlock({
   block,
   index,
   moveBlock,
-}: PromptBuilderBlockProps) {
-  const { removeBlockFromBuilder } = useLibraryActions();
+  autoFocus = false,
+}: TemporaryContextBlockProps) {
+  const { updateTemporaryBlock, removeTemporaryBlock } = useLibraryActions();
   const ref = useRef<HTMLDivElement>(null);
-  const [isExpanded, setIsExpanded] = useState(false);
+  const editorRef = useRef<TipTapEditorRef | null>(null);
+  const [isExpanded, setIsExpanded] = useState(true);
+  const [content, setContent] = useState(block.content || '');
+
+  // Auto-focus functionality with cleanup - fixed race condition
+  useEffect(() => {
+    if (!autoFocus) return;
+
+    let timeoutId: NodeJS.Timeout;
+
+    // Wait for component to be fully mounted and editor to be ready
+    timeoutId = setTimeout(() => {
+      if (editorRef.current?.focus) {
+        editorRef.current.focus();
+      }
+    }, TIMEOUTS.MODAL_FOCUS_DELAY);
+
+    return () => {
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [autoFocus]);
 
   // Set up drag functionality
   const [{ isDragging }, drag] = useDrag({
@@ -110,13 +136,19 @@ export function PromptBuilderBlock({
   drag(drop(ref));
 
   const handleRemove = () => {
-    removeBlockFromBuilder(block.id);
+    removeTemporaryBlock(block.id);
   };
 
   const handleToggleExpand = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsExpanded(!isExpanded);
+  };
+
+  const handleContentUpdate = (update: { html: string; json: any; text: string }) => {
+    const newContent = update.html;
+    setContent(newContent);
+    updateTemporaryBlock(block.id, { content: newContent });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -132,23 +164,24 @@ export function PromptBuilderBlock({
       style={{ opacity }}
       data-handler-id={handlerId}
       className="mb-4"
+      data-testid="temporary-context-block"
+      data-block-id={block.id}
     >
       <div
-        className={`relative rounded-2xl border border-neutral-700/50 bg-neutral-800/70 backdrop-blur-sm transition-all duration-300 hover:border-neutral-600/50 hover:bg-neutral-800/90 hover:shadow-lg hover:shadow-black/20 ${
+        className={`relative rounded-2xl border border-neutral-600/50 bg-neutral-750/70 backdrop-blur-sm transition-all duration-300 hover:border-neutral-500/50 hover:bg-neutral-750/85 hover:shadow-lg hover:shadow-black/20 ${
           isDragging
             ? "rotate-1 scale-105 cursor-grabbing shadow-xl"
             : "cursor-grab"
         } ${
-          isExpanded ? "shadow-lg shadow-black/10 ring-2 ring-blue-500/30" : ""
+          isExpanded ? "shadow-lg shadow-black/10 ring-2 ring-neutral-500/30" : ""
         }`}
-        data-block-id={block.id}
       >
         {/* Gradient overlay for depth */}
-        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5" />
+        <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-neutral-500/3 via-transparent to-neutral-400/3" />
 
         {/* Drag Handle */}
         <div className="absolute left-4 top-4 cursor-grab rounded-lg p-1.5 text-neutral-500 transition-colors duration-200 hover:bg-neutral-700/50 hover:text-neutral-400 active:cursor-grabbing">
-          <GripVertical className="h-4 w-4" data-testid="grip-vertical" />
+          <GripVertical className="h-4 w-4" />
         </div>
 
         {/* Remove Button */}
@@ -164,7 +197,7 @@ export function PromptBuilderBlock({
         <button
           onClick={handleToggleExpand}
           onKeyDown={handleKeyDown}
-          className="absolute bottom-4 left-4 rounded-xl p-2 text-neutral-500 transition-all duration-200 hover:bg-blue-500/10 hover:text-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+          className="absolute bottom-4 left-4 rounded-xl p-2 text-neutral-500 transition-all duration-200 hover:bg-neutral-600/20 hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-neutral-500/50"
           aria-label={`${isExpanded ? "Collapse" : "Expand"} ${block.title}`}
           aria-expanded={isExpanded}
         >
@@ -177,16 +210,16 @@ export function PromptBuilderBlock({
 
         {/* Context Block Content */}
         <div className="flex items-start gap-4 pl-14 pr-12 pt-6">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-blue-500/30 bg-gradient-to-br from-blue-500/20 to-purple-500/20">
-            <Hash className="h-4 w-4 text-blue-400" />
+          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-neutral-500/30 bg-gradient-to-br from-neutral-500/20 to-neutral-400/20">
+            <Type className="h-4 w-4 text-neutral-400" />
           </div>
 
           <div className="min-w-0 flex-1">
             {/* Title and Badge */}
             <div className="mb-3 flex items-center gap-3">
-              <div className="rounded-lg border border-blue-500/30 bg-gradient-to-r from-blue-500/20 to-purple-500/20 px-3 py-1">
-                <span className="text-xs font-medium text-blue-300">
-                  Context Block
+              <div className="rounded-lg border border-neutral-500/30 bg-gradient-to-r from-neutral-500/20 to-neutral-400/20 px-3 py-1">
+                <span className="text-xs font-medium text-neutral-300">
+                  Text Block
                 </span>
               </div>
               <h3 className="truncate text-sm font-semibold text-neutral-100">
@@ -194,30 +227,22 @@ export function PromptBuilderBlock({
               </h3>
             </div>
 
-            {/* Content Preview - Always visible but truncated when collapsed */}
-            <div className="mb-4 text-sm leading-relaxed text-neutral-300">
+            {/* Content Editor */}
+            <div className="mb-4">
               {isExpanded ? (
-                <div className="scrollbar-thin scrollbar-thumb-neutral-600 scrollbar-track-neutral-800/50 max-h-96 overflow-y-auto pr-2">
-                  <div className="whitespace-pre-wrap">{block.content}</div>
-                </div>
+                <TipTapEditor
+                  ref={editorRef}
+                  content={content}
+                  onUpdate={handleContentUpdate}
+                  placeholder="Start typing your context here..."
+                  editable={true}
+                />
               ) : (
-                <div className="line-clamp-2">{block.content}</div>
+                <div className="text-sm leading-relaxed text-neutral-300 line-clamp-2 min-h-[48px]">
+                  {content || <span className="text-neutral-500 italic">Start typing your context here...</span>}
+                </div>
               )}
             </div>
-
-            {/* Tags - Always visible */}
-            {block.tags.length > 0 && (
-              <div className="mb-4 flex flex-wrap gap-2">
-                {block.tags.map((tag) => (
-                  <span
-                    key={tag}
-                    className="rounded-full border border-neutral-600/50 bg-neutral-700/50 px-2.5 py-1 text-xs text-neutral-300 backdrop-blur-sm"
-                  >
-                    #{tag}
-                  </span>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       </div>

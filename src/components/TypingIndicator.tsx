@@ -1,4 +1,5 @@
 import React from 'react';
+import { ANIMATION_DELAYS } from '../utils/constants';
 
 export function TypingIndicator() {
   return (
@@ -9,8 +10,8 @@ export function TypingIndicator() {
         </div>
         <div className="flex items-center gap-1">
           <div className="w-2 h-2 bg-neutral-400 rounded-full animate-pulse"></div>
-          <div className="w-2 h-2 bg-neutral-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-          <div className="w-2 h-2 bg-neutral-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+          <div className="w-2 h-2 bg-neutral-400 rounded-full animate-pulse" style={{ animationDelay: ANIMATION_DELAYS.TYPING_INDICATOR_1 }}></div>
+          <div className="w-2 h-2 bg-neutral-400 rounded-full animate-pulse" style={{ animationDelay: ANIMATION_DELAYS.TYPING_INDICATOR_2 }}></div>
         </div>
       </div>
     </div>

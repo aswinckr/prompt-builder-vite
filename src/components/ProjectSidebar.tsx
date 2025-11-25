@@ -54,10 +54,8 @@ export function ProjectSidebar({ projects, selectedProject, setSelectedProject, 
 
         if (activeElement.hasAttribute('data-project-name')) {
           const projectId = activeElement.getAttribute('data-project-name');
-          console.log('ProjectSidebar - clicked project ID:', projectId);
           if (projectId) {
             setSelectedProject(projectId);
-            console.log('ProjectSidebar - set selectedProject to:', projectId);
           }
         } else if (activeElement.hasAttribute('data-add-button')) {
           const projectType = activeElement.getAttribute('data-add-button') as 'prompts' | 'datasets';

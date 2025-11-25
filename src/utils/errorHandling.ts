@@ -202,8 +202,12 @@ function analyzeDatabaseError(errorMessage: string): ErrorInfo {
 export function handleCrudResult<T>(
   result: DatabaseResponse<T>,
   operation: string,
-  itemTitle?: string
+  itemTitle?: string,
+  options?: { expectsData?: boolean; customMessage?: string }
 ): { success: boolean; message: string; shouldRetry?: boolean } {
+  // Default to expecting data for backward compatibility
+  const expectsData = options?.expectsData !== false;
+
   if (result.error) {
     const errorInfo = analyzeError(result.error);
     return {
@@ -213,7 +217,18 @@ export function handleCrudResult<T>(
     };
   }
 
-  if (result.data) {
+  // Use custom message if provided
+  if (options?.customMessage) {
+    return {
+      success: true,
+      message: itemTitle
+        ? options.customMessage.replace('{itemTitle}', itemTitle)
+        : options.customMessage,
+    };
+  }
+
+  // For delete operations, successful response can have data: null
+  if (!expectsData && result.data === null) {
     return {
       success: true,
       message: itemTitle
@@ -222,9 +237,29 @@ export function handleCrudResult<T>(
     };
   }
 
+  // For operations that expect data (read, create, update)
+  if (expectsData) {
+    if (result.data) {
+      return {
+        success: true,
+        message: itemTitle
+          ? `${operation} '${itemTitle}' completed successfully`
+          : `${operation} completed successfully`,
+      };
+    }
+
+    return {
+      success: false,
+      message: `No data returned from ${operation.toLowerCase()}`,
+    };
+  }
+
+  // Fallback success case
   return {
-    success: false,
-    message: `No data returned from ${operation.toLowerCase()}`,
+    success: true,
+    message: itemTitle
+      ? `${operation} '${itemTitle}' completed successfully`
+      : `${operation} completed successfully`,
   };
 }
 

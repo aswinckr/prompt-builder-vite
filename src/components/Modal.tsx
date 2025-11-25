@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import { Portal } from './ui/Portal';
 
 interface ModalProps {
   isOpen: boolean;
@@ -53,33 +54,32 @@ export function Modal({
     full: 'max-w-full mx-4'
   };
 
-  // Responsive behavior classes
-  const responsiveClasses = mobileBehavior === 'fullscreen'
-    ? 'inset-0 flex items-center justify-center md:items-center md:justify-center'
-    : 'inset-0 flex items-center justify-center';
+  // Container classes for centering - higher z-index to appear above everything
+  const containerClasses = 'fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4';
 
-  const modalSizeClasses = mobileBehavior === 'fullscreen'
-    ? `${sizeClasses[size]} md:${sizeClasses[size]} w-full h-full md:h-auto md:max-h-[90vh] md:rounded-lg md:m-4`
-    : sizeClasses[size];
+  // Modal size and behavior classes - ensure proper positioning
+  const modalClasses = mobileBehavior === 'fullscreen'
+    ? `${sizeClasses[size]} w-full h-full md:h-auto md:max-h-[90vh] md:rounded-lg md:w-auto md:h-auto relative`
+    : `${sizeClasses[size]} w-full max-h-[90vh] relative`;
 
   if (!isOpen) {
     return null;
   }
 
   return (
-    <div
-      className={`fixed inset-0 bg-black/50 z-50 ${responsiveClasses}`}
-      onClick={handleOverlayClick}
-      onKeyDown={handleKeyDown}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby={modalId}
-    >
+    <Portal>
+      <div
+        className={containerClasses}
+        onClick={handleOverlayClick}
+        onKeyDown={handleKeyDown}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby={modalId}
+      >
       <div
         className={`
-          ${modalSizeClasses}
+          ${modalClasses}
           bg-neutral-800 border border-neutral-700 shadow-xl
-          ${mobileBehavior === 'fullscreen' ? 'w-full h-full' : ''}
           flex flex-col overflow-hidden
         `}
       >
@@ -104,6 +104,7 @@ export function Modal({
           {children}
         </div>
       </div>
-    </div>
+      </div>
+    </Portal>
   );
 }

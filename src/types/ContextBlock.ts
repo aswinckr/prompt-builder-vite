@@ -7,6 +7,7 @@ export interface ContextBlock {
   tags: string[];
   created_at: Date;
   updated_at: Date;
+  isTemporary?: boolean; // New field to distinguish temporary text blocks from permanent knowledge blocks
   project?: {
     id: string;
     name: string;

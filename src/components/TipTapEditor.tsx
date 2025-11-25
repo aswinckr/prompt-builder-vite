@@ -1,4 +1,4 @@
-import React from "react";
+import React, { forwardRef, useImperativeHandle, useRef } from "react";
 import { EditorContent } from "@tiptap/react";
 import { useTiptapEditor } from "../hooks/useTiptapEditor";
 import { TipTapToolbar } from "./TipTapToolbar";
@@ -11,21 +11,34 @@ interface TipTapEditorProps {
   placeholder?: string;
 }
 
+export interface TipTapEditorRef {
+  focus: () => void;
+}
+
 /**
  * Complete Tiptap editor component with toolbar and content area
  */
-export function TipTapEditor({
+export const TipTapEditor = forwardRef<TipTapEditorRef, TipTapEditorProps>(({
   content = "",
   onUpdate,
   editable = true,
   placeholder = "Start writing...",
-}: TipTapEditorProps) {
+}, ref) => {
   const editor = useTiptapEditor({
     content,
     onUpdate,
     editable,
     placeholder,
   });
+
+  // Expose focus method to parent components
+  useImperativeHandle(ref, () => ({
+    focus: () => {
+      if (editor) {
+        editor.commands.focus();
+      }
+    },
+  }), [editor]);
 
   if (!editor) {
     return (
@@ -54,4 +67,6 @@ export function TipTapEditor({
       </div>
     </div>
   );
-}
+});
+
+TipTapEditor.displayName = "TipTapEditor";

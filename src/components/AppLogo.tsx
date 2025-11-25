@@ -7,7 +7,6 @@ import React from 'react';
 export function AppLogo() {
   const handleLogoClick = () => {
     // Future: Navigate to home/dashboard
-    console.log('Logo clicked - future navigation to home/dashboard');
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {

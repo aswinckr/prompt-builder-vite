@@ -3,20 +3,24 @@ import { Modal } from "./Modal";
 import { TipTapEditor } from "./TipTapEditor";
 import { VariablePlaceholderHelper } from "./VariablePlaceholderHelper";
 import { useLibraryActions } from "../contexts/LibraryContext";
+import { useToast } from "../contexts/ToastContext";
+import { markdownToHtml } from "../utils/markdownUtils";
 
 interface CreatePromptModalProps {
   isOpen: boolean;
   onClose: () => void;
   selectedProjectId?: string | null;
+  initialContent?: string;
 }
 
 /**
- * Modal for creating new prompt templates
+ * Modal for creating new prompt templates or saving assembled prompts
  */
 export function CreatePromptModal({
   isOpen,
   onClose,
   selectedProjectId,
+  initialContent,
 }: CreatePromptModalProps) {
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -27,18 +31,33 @@ export function CreatePromptModal({
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [isInitialized, setIsInitialized] = useState(false);
 
   const { createSavedPrompt } = useLibraryActions();
+  const { showToast } = useToast();
 
-  // Reset form when modal closes
+  // Initialize content when modal opens or initialContent changes
   React.useEffect(() => {
-    if (!isOpen) {
+    if (isOpen && !isInitialized) {
+      if (initialContent) {
+        // Pre-populate content when saving from prompt builder
+        // Convert markdown/text content to HTML for the TipTapEditor
+        const htmlContent = markdownToHtml(initialContent);
+        setContent({ html: htmlContent, json: null, text: initialContent });
+      } else {
+        // Reset for manual modal opening
+        setContent({ html: '', json: null, text: '' });
+      }
+      setIsInitialized(true);
+    } else if (!isOpen) {
+      // Reset all form state when modal closes
       setTitle('');
       setDescription('');
       setContent({ html: '', json: null, text: '' });
       setError('');
+      setIsInitialized(false);
     }
-  }, [isOpen]);
+  }, [isOpen, initialContent, isInitialized]);
 
   // Check if there are unsaved changes
   const hasUnsavedChanges = () => {
@@ -79,9 +98,12 @@ export function CreatePromptModal({
         tags: [], // Empty tags for now - could be added later
       });
 
+      // Show success toast notification
+      showToast('Prompt saved successfully!', 'success');
       onClose();
-      // Show success message could be handled by parent component
     } catch (error) {
+      // Show error toast notification
+      showToast('Failed to save prompt. Please try again.', 'error');
       setError(error instanceof Error ? error.message : 'Failed to create prompt');
     } finally {
       setIsSubmitting(false);
@@ -95,11 +117,14 @@ export function CreatePromptModal({
     }
   };
 
+  // Determine modal title based on whether content is pre-populated
+  const modalTitle = initialContent ? "Save Prompt" : "Add Prompt";
+
   return (
     <Modal
       isOpen={isOpen}
       onClose={handleCloseAttempt}
-      title="Add Prompt"
+      title={modalTitle}
       size="lg"
       mobileBehavior="fullscreen"
       aria-labelledby="create-prompt-modal-title"
@@ -191,11 +216,11 @@ export function CreatePromptModal({
               {isSubmitting ? (
                 <>
                   <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  Creating...
+                  {initialContent ? 'Saving...' : 'Creating...'}
                 </>
               ) : (
                 <>
-                  Add Prompt
+                  {initialContent ? 'Save Prompt' : 'Add Prompt'}
                 </>
               )}
             </button>

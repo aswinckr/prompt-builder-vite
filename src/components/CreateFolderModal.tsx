@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { AlertCircle, Loader2, FolderOpen } from 'lucide-react';
 import { Modal } from './Modal';
 import { IconPicker } from './IconPicker';
+import { TIMEOUTS } from '../utils/constants';
 
 interface CreateFolderModalProps {
   isOpen: boolean;
@@ -30,7 +31,7 @@ export function CreateFolderModal({
       setSelectedIcon('📁');
       setError(null);
       // Focus on name input when modal opens
-      setTimeout(() => nameInputRef.current?.focus(), 100);
+      setTimeout(() => nameInputRef.current?.focus(), TIMEOUTS.MODAL_FOCUS_DELAY);
     }
   }, [isOpen]);
 
@@ -52,35 +53,26 @@ export function CreateFolderModal({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('🚀 Form submitted!');
-    console.log('📝 Form data:', { folderName, selectedIcon, folderType });
 
     // Validation
     if (!folderName.trim()) {
-      console.log('❌ Validation failed: Empty folder name');
       setError('Folder name is required');
       return;
     }
 
     if (folderName.trim().length > 50) {
-      console.log('❌ Validation failed: Name too long');
       setError('Folder name must be 50 characters or less');
       return;
     }
 
-    console.log('✅ Validation passed, calling onCreateFolder');
-    console.log('🔍 onCreateFolder function type:', typeof onCreateFolder);
-    console.log('🔍 onCreateFolder function:', onCreateFolder);
     try {
       setError(null);
       const result = await onCreateFolder({
         name: folderName.trim(),
         icon: selectedIcon
       });
-      console.log('✅ onCreateFolder completed successfully with result:', result);
       onClose();
     } catch (err) {
-      console.error('❌ onCreateFolder failed:', err);
       setError(err instanceof Error ? err.message : 'Failed to create folder');
     }
   };

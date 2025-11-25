@@ -69,7 +69,10 @@ export function ContextBlocksGrid({ selectedProject }: ContextBlocksGridProps) {
       // Delete from database
       const result = await deleteContextBlock(blockToDelete.id);
 
-      const crudResult = handleCrudResult(result, 'Context block deleted', blockToDelete.title);
+      const crudResult = handleCrudResult(result, 'Context block deleted', blockToDelete.title, {
+        expectsData: false,
+        customMessage: 'Context block {itemTitle} deleted'
+      });
 
       if (crudResult.success) {
         // Remove from any active selections in prompt builder

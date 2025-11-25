@@ -1,3 +1,5 @@
+import { CHAT } from './constants';
+
 // Generate UUID for message IDs
 export function generateUUID(): string {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {
@@ -26,8 +28,8 @@ export function getTextFromMessage(message: any): string {
 export function formatTime(timestamp: number | string | Date): string {
   const date = new Date(timestamp);
   return date.toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit'
+    hour: CHAT.TIME_FORMAT.HOUR,
+    minute: CHAT.TIME_FORMAT.MINUTE
   });
 }
 
