@@ -50,6 +50,7 @@ export function ProfileModal({
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [successMessage, setSuccessMessage] = useState('');
+  const [imageError, setImageError] = useState(false);
 
   // Reset form when modal closes
   React.useEffect(() => {
@@ -61,6 +62,7 @@ export function ProfileModal({
       setAuthTab('signin');
       setShowPassword(false);
       setShowConfirmPassword(false);
+      setImageError(false);
     }
   }, [isOpen]);
 
@@ -156,20 +158,12 @@ export function ProfileModal({
             {/* User Info */}
             <div className="mb-6 flex items-center gap-4">
               <div className="h-16 w-16 rounded-full bg-neutral-600 overflow-hidden">
-                {user?.user_metadata?.avatar_url ? (
+                {user?.user_metadata?.avatar_url && !imageError ? (
                   <img
                     src={user.user_metadata.avatar_url}
                     alt="Avatar"
                     className="h-16 w-16 rounded-full object-cover"
-                    onError={(e) => {
-                      // Replace broken image with user initial
-                      const target = e.target as HTMLImageElement;
-                      target.style.display = 'none';
-                      const parent = target.parentElement;
-                      if (parent) {
-                        parent.innerHTML = `<span class="text-2xl font-semibold text-neutral-300 flex items-center justify-center h-full">${user?.email?.charAt(0).toUpperCase() || 'U'}</span>`;
-                      }
-                    }}
+                    onError={() => setImageError(true)}
                   />
                 ) : (
                   <div className="h-16 w-16 flex items-center justify-center">

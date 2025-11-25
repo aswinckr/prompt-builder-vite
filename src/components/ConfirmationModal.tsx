@@ -20,7 +20,7 @@ interface ConfirmationModalProps {
  * ConfirmationModal component based on existing Modal.tsx
  * Provides confirmation dialogs with customizable buttons and icons
  */
-export function ConfirmationModal({
+export const ConfirmationModal = React.memo(function ConfirmationModal({
   isOpen,
   onClose,
   onConfirm,
@@ -36,10 +36,10 @@ export function ConfirmationModal({
   // Focus management
   useEffect(() => {
     if (isOpen && confirmButtonRef.current) {
-      // Small delay to ensure modal is fully rendered
-      setTimeout(() => {
+      // Use requestAnimationFrame for more reliable focus management
+      requestAnimationFrame(() => {
         confirmButtonRef.current?.focus();
-      }, 100);
+      });
     }
   }, [isOpen]);
 
@@ -155,4 +155,4 @@ export function ConfirmationModal({
       </div>
     </Modal>
   );
-}
+});

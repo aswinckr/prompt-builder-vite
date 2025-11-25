@@ -15,7 +15,7 @@ export interface ToastProps {
 /**
  * Toast notification component with auto-dismiss and manual dismiss
  */
-export function Toast({
+export const Toast = React.memo(function Toast({
   id,
   message,
   variant = 'info',
@@ -122,4 +122,4 @@ export function Toast({
       </button>
     </div>
   );
-}
+});

@@ -65,7 +65,7 @@ export function ToastProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(toastReducer, initialState);
 
   const showToast = (message: string, variant: ToastVariant = 'info'): string => {
-    const id = Date.now().toString() + Math.random().toString(36).substr(2, 9);
+    const id = crypto.randomUUID();
     dispatch({
       type: 'SHOW_TOAST',
       payload: { id, message, variant },

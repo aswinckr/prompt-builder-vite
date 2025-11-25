@@ -14,7 +14,7 @@ interface ContextBlockProps {
 /**
  * ContextBlock component displays a single context block in the grid
  */
-export function ContextBlock({ block, isSelected, onSelect, onEdit, onDelete, onKeyDown }: ContextBlockProps) {
+export const ContextBlock = React.memo(function ContextBlock({ block, isSelected, onSelect, onEdit, onDelete, onKeyDown }: ContextBlockProps) {
   const handleClick = () => {
     onSelect();
   };
@@ -125,4 +125,4 @@ export function ContextBlock({ block, isSelected, onSelect, onEdit, onDelete, on
       </div>
     </div>
   );
-}
+});
