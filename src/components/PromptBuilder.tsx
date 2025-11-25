@@ -54,9 +54,8 @@ export function PromptBuilder() {
   };
 
   const handleSaveChat = (conversation: any) => {
-    // For now, just log the conversation. In a real implementation,
+    // For now, just save the conversation. In a real implementation,
     // you'd save this to your database or state
-    console.log("Saving conversation:", conversation);
     alert("Chat conversation saved!");
   };
 

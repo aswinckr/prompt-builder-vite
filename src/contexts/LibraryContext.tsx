@@ -369,8 +369,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
     try {
       if (isAuthenticated) {
-        console.log('📚 Loading library data for authenticated user...');
-
+        
         // First, ensure unsorted folders exist for the user
         await ProjectService.ensureUnsortedFolders();
 
@@ -392,8 +391,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'SET_SYSTEM_PROMPT_PROJECTS', payload: systemPromptProjectsResult.data || [] });
         dispatch({ type: 'SET_SYSTEM_DATASET_PROJECTS', payload: systemDatasetProjectsResult.data || [] });
 
-        console.log('✅ Library data loaded successfully');
-
+        
         // Check for any errors from the service calls
         const errors = [
           contextBlocksResult.error,
@@ -409,8 +407,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
           dispatch({ type: 'SET_ERROR', payload: errors[0] || 'Failed to load data' });
         }
       } else {
-        console.log('📚 User not authenticated - clearing library data...');
-
+        
         // Clear all user data when not authenticated
         dispatch({ type: 'SET_CONTEXT_BLOCKS', payload: [] });
         dispatch({ type: 'SET_SAVED_PROMPTS', payload: [] });
@@ -420,8 +417,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'SET_SYSTEM_DATASET_PROJECTS', payload: [] });
         dispatch({ type: 'SET_ERROR', payload: null });
 
-        console.log('✅ Library data cleared for unauthenticated user');
-      }
+              }
     } catch (error) {
       console.error('Error loading initial data:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load data' });
@@ -533,24 +529,17 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
     // Unified folder creation (type is determined by modal context)
     createFolder: async (folderData: { name: string; icon: string }) => {
-      console.log('🔨 Create folder called with:', folderData);
-      console.log('📊 Current modal state:', state.folderModal);
-
       try {
         dispatch({ type: 'SET_FOLDER_MODAL_LOADING', payload: true });
 
         // Get the current folder type from the modal state
         const currentType = state.folderModal.defaultType;
-        console.log('🎯 Creating folder of type:', currentType);
 
         const result = currentType === 'prompts'
           ? await ProjectService.createProject({ name: folderData.name, icon: folderData.icon, type: 'prompt' })
           : await ProjectService.createProject({ name: folderData.name, icon: folderData.icon, type: 'dataset' });
 
-        console.log('✅ ProjectService result:', result);
-
         if (result.data) {
-          console.log('📝 Dispatching project creation to state');
           dispatch({
             type: currentType === 'prompts' ? 'CREATE_PROMPT_PROJECT' : 'CREATE_DATASET_PROJECT',
             payload: result.data

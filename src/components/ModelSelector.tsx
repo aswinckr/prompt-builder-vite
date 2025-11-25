@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { ChevronDown } from 'lucide-react';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 
@@ -35,14 +35,16 @@ export function ModelSelector({ selectedModel, onModelChange }: ModelSelectorPro
     { value: "claude-opus", label: "Claude 3 Opus", group: "Anthropic" },
   ];
 
-  // Group models by provider
-  const groupedModels = availableModels.reduce((acc, model) => {
-    if (!acc[model.group]) {
-      acc[model.group] = [];
-    }
-    acc[model.group].push(model);
-    return acc;
-  }, {} as Record<string, Model[]>);
+  // Group models by provider - memoized for performance
+  const groupedModels = useMemo(() => {
+    return availableModels.reduce((acc, model) => {
+      if (!acc[model.group]) {
+        acc[model.group] = [];
+      }
+      acc[model.group].push(model);
+      return acc;
+    }, {} as Record<string, Model[]>);
+  }, [availableModels]);
 
   return (
     <div className="relative">

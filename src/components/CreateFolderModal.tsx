@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { AlertCircle, Loader2, FolderOpen } from 'lucide-react';
 import { Modal } from './Modal';
 import { IconPicker } from './IconPicker';
+import { TIMEOUTS } from '../utils/constants';
 
 interface CreateFolderModalProps {
   isOpen: boolean;
@@ -30,7 +31,7 @@ export function CreateFolderModal({
       setSelectedIcon('📁');
       setError(null);
       // Focus on name input when modal opens
-      setTimeout(() => nameInputRef.current?.focus(), 100);
+      setTimeout(() => nameInputRef.current?.focus(), TIMEOUTS.MODAL_FOCUS_DELAY);
     }
   }, [isOpen]);
 

@@ -3,6 +3,7 @@ import { X, CheckSquare, Square, Play, Copy } from 'lucide-react';
 import { useLibraryActions, useLibraryState } from '../contexts/LibraryContext';
 import { useNavigate } from 'react-router-dom';
 import { ROUTES } from '../routes/AppRoutes';
+import { TIMEOUTS } from '../utils/constants';
 
 interface SelectionActionBarProps {
   selectedCount: number;
@@ -56,10 +57,10 @@ export function SelectionActionBar({ selectedCount, selectedBlocks, onClear, onS
 
       await navigator.clipboard.writeText(copiedText);
       setCopyStatus('copied');
-      setTimeout(() => setCopyStatus('idle'), 2000);
+      setTimeout(() => setCopyStatus('idle'), TIMEOUTS.COPY_STATUS_RESET);
     } catch (error) {
       setCopyStatus('error');
-      setTimeout(() => setCopyStatus('idle'), 2000);
+      setTimeout(() => setCopyStatus('idle'), TIMEOUTS.COPY_STATUS_RESET);
     }
   };
 

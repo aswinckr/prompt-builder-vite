@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
+import React, { useState, useCallback, useRef, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Plus } from 'lucide-react';
 import { PromptBuilderBlock } from './PromptBuilderBlock';
@@ -13,10 +13,18 @@ export function PromptBuilderBlockList() {
   const { reorderBlocksInBuilder, addBlockToBuilder } = useLibraryActions();
   const [lastCreatedBlockId, setLastCreatedBlockId] = useState<string | null>(null);
 
-  // Get block data for selected blocks in the correct order
-  const orderedBlocks = promptBuilder.blockOrder
-    .map(blockId => contextBlocks.find(block => block.id === blockId))
-    .filter((block): block is NonNullable<typeof block> => block !== undefined);
+  // Get block data for selected blocks in the correct order - memoized for performance
+  const orderedBlocks = useMemo(() => {
+    return promptBuilder.blockOrder
+      .map(blockId => contextBlocks.find(block => block.id === blockId))
+      .filter((block): block is NonNullable<typeof block> => block !== undefined);
+  }, [promptBuilder.blockOrder, contextBlocks]);
+
+  // Calculate block counts - memoized to avoid recalculation
+  const blockCounts = useMemo(() => ({
+    temporary: orderedBlocks.filter(block => block.isTemporary).length,
+    permanent: orderedBlocks.filter(block => !block.isTemporary).length,
+  }), [orderedBlocks]);
 
   // Reset last created block ID when blocks are reordered
   useEffect(() => {
@@ -45,9 +53,7 @@ export function PromptBuilderBlockList() {
   }, [promptBuilder.blockOrder, reorderBlocksInBuilder]);
 
   // Count temporary and permanent blocks
-  const temporaryBlockCount = orderedBlocks.filter(block => block.isTemporary).length;
-  const permanentBlockCount = orderedBlocks.filter(block => !block.isTemporary).length;
-
+  
   if (orderedBlocks.length === 0) {
     return (
       <div className="text-center py-8">
@@ -65,11 +71,11 @@ export function PromptBuilderBlockList() {
       <div className="flex items-center justify-between mb-4">
         <h3 className="text-sm font-medium text-neutral-400">
           Context Blocks ({orderedBlocks.length})
-          {(temporaryBlockCount > 0 || permanentBlockCount > 0) && (
+          {(blockCounts.temporary > 0 || blockCounts.permanent > 0) && (
             <span className="text-xs text-neutral-500 ml-2">
-              {temporaryBlockCount > 0 && `${temporaryBlockCount} text${temporaryBlockCount > 1 ? 's' : ''}`}
-              {temporaryBlockCount > 0 && permanentBlockCount > 0 && ' • '}
-              {permanentBlockCount > 0 && `${permanentBlockCount} knowledge${permanentBlockCount > 1 ? '' : ''}`}
+              {blockCounts.temporary > 0 && `${blockCounts.temporary} text${blockCounts.temporary > 1 ? 's' : ''}`}
+              {blockCounts.temporary > 0 && blockCounts.permanent > 0 && ' • '}
+              {blockCounts.permanent > 0 && `${blockCounts.permanent} knowledge${blockCounts.permanent > 1 ? '' : ''}`}
             </span>
           )}
         </h3>

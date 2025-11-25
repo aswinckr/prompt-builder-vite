@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { ChevronLeft, ChevronRight, AlertCircle, Loader2, Plus } from 'lucide-react';
 import { AppLogo } from './AppLogo';
 import { ProjectSidebar } from './ProjectSidebar';
@@ -43,13 +43,13 @@ export function ContextLibrary() {
   const { savedPrompts, promptProjects, datasetProjects, systemPromptProjects, systemDatasetProjects, loading, error, folderModal } = useLibraryState();
   const { updateSavedPrompt, deleteSavedPrompt, createFolder, closeFolderModal, openFolderModal } = useLibraryActions();
 
-  // Combine all projects for sidebar with type information (system projects first)
-  const allProjects: ProjectWithType[] = [
+  // Combine all projects for sidebar with type information (system projects first) - memoized for performance
+  const allProjects: ProjectWithType[] = useMemo(() => [
     ...((systemPromptProjects || []).map(p => ({ ...p, type: 'prompts' as const }))),
     ...((systemDatasetProjects || []).map(p => ({ ...p, type: 'datasets' as const }))),
     ...((promptProjects || []).map(p => ({ ...p, type: 'prompts' as const }))),
     ...((datasetProjects || []).map(p => ({ ...p, type: 'datasets' as const })))
-  ];
+  ], [systemPromptProjects, systemDatasetProjects, promptProjects, datasetProjects]);
 
   // Set default project if none selected
   useEffect(() => {
@@ -157,7 +157,6 @@ export function ContextLibrary() {
   const handlePromptUpdate = async (updatedPrompt: any) => {
     try {
       await updateSavedPrompt(updatedPrompt.id, updatedPrompt);
-      console.log('Prompt updated successfully:', updatedPrompt);
     } catch (error) {
       console.error('Failed to update prompt:', error);
       // Handle error - could show toast notification
@@ -168,7 +167,6 @@ export function ContextLibrary() {
   const handlePromptDelete = async (promptId: string) => {
     try {
       await deleteSavedPrompt(promptId);
-      console.log('Prompt deleted successfully:', promptId);
     } catch (error) {
       console.error('Failed to delete prompt:', error);
       // Handle error - could show toast notification
@@ -179,8 +177,7 @@ export function ContextLibrary() {
   const handlePromptLoad = (promptId: string) => {
     const prompt = savedPrompts?.find(p => p.id === promptId);
     if (prompt) {
-      console.log('Loading prompt:', prompt);
-      // Here you could implement logic to load the prompt into the main editor
+            // Here you could implement logic to load the prompt into the main editor
       // For now, we'll just log it
     }
   };

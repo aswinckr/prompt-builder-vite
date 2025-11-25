@@ -93,8 +93,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (process.env.NODE_ENV === 'development') {
-        console.log('✅ Session set from hash successfully');
-      }
+              }
 
         // Clear the hash from URL to prevent processing again
         window.history.replaceState(null, '', window.location.pathname);
@@ -118,8 +117,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const processOAuthHash = async () => {
       if (accessToken) {
         if (process.env.NODE_ENV === 'development') {
-        console.log('🔑 Processing OAuth hash...');
-      }
+              }
         try {
           // Manually set the session from the hash parameters
           const { data, error } = await supabase.auth.setSession({
@@ -131,8 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error('❌ Error setting session from hash:', error);
           } else {
             if (process.env.NODE_ENV === 'development') {
-        console.log('✅ Session set from hash successfully');
-      }
+              }
             // Clear the hash from URL to prevent processing again
             window.history.replaceState(null, '', window.location.pathname);
           }
@@ -148,8 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         // Process OAuth hash if present
         if (accessToken) {
           if (process.env.NODE_ENV === 'development') {
-        console.log('🔑 Processing OAuth hash...');
-      }
+              }
           const { data, error } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: hashParams.get('refresh_token') || '',
@@ -159,8 +155,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error('❌ Error setting session from hash:', error);
           } else {
             if (process.env.NODE_ENV === 'development') {
-        console.log('✅ Session set from hash successfully');
-      }
+              }
             // Clear the hash from URL to prevent processing again
             window.history.replaceState(null, '', window.location.pathname);
           }
