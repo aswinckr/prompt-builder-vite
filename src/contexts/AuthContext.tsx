@@ -320,6 +320,10 @@ export function useAuthActions() {
       }
     },
 
+    setError: (error: string) => {
+      dispatch({ type: 'AUTH_ERROR', payload: error });
+    },
+
     clearError: () => {
       dispatch({ type: 'CLEAR_ERROR' });
     },

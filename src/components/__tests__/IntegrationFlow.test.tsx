@@ -3,9 +3,9 @@ import { render, screen, waitFor, fireEvent } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
-import { AuthProvider } from '../../../contexts/AuthContext';
-import { LibraryProvider } from '../../../contexts/LibraryContext';
-import { ContextLibrary } from '../../ContextLibrary';
+import { AuthProvider } from '../../contexts/AuthContext';
+import { LibraryProvider } from '../../contexts/LibraryContext';
+import { ContextLibrary } from '../ContextLibrary';
 
 // Mock authentication actions for testing
 const mockAuthActions = {

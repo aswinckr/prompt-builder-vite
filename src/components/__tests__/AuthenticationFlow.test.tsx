@@ -3,9 +3,9 @@ import { render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
-import { AuthProvider, useAuthState, useAuthActions } from '../../../contexts/AuthContext';
-import { ProfileModal } from '../../ProfileModal';
-import { SearchBar } from '../../SearchBar';
+import { AuthProvider, useAuthState, useAuthActions } from '../../contexts/AuthContext';
+import { ProfileModal } from '../ProfileModal';
+import { SearchBar } from '../SearchBar';
 
 // Test wrapper component to access auth context
 function TestComponent() {

@@ -3,14 +3,14 @@ import { render, screen, waitFor } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
-import { AuthProvider, useAuthState, useAuthActions } from '../../../contexts/AuthContext';
-import { LibraryProvider } from '../../../contexts/LibraryContext';
-import { ContextLibrary } from '../../ContextLibrary';
+import { AuthProvider, useAuthState, useAuthActions } from '../../contexts/AuthContext';
+import { LibraryProvider } from '../../contexts/LibraryContext';
+import { ContextLibrary } from '../ContextLibrary';
 
 // Mock component to simulate error states
 function MockContextWithError() {
-  const { error, setError } = useAuthActions();
-  const { isAuthenticated } = useAuthState();
+  const { error, isAuthenticated } = useAuthState();
+  const { setError } = useAuthActions(); // We'll need to add this to useAuthActions
 
   return (
     <div>

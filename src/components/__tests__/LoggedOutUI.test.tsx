@@ -2,10 +2,10 @@ import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { vi } from 'vitest';
 import '@testing-library/jest-dom';
-import { AuthProvider } from '../../../contexts/AuthContext';
-import { LibraryProvider } from '../../../contexts/LibraryContext';
-import { ContextBlocksGrid } from '../../ContextBlocksGrid';
-import { SavedPromptList } from '../../SavedPromptList';
+import { AuthProvider } from '../../contexts/AuthContext';
+import { LibraryProvider } from '../../contexts/LibraryContext';
+import { ContextBlocksGrid } from '../ContextBlocksGrid';
+import { SavedPromptList } from '../SavedPromptList';
 
 // Test wrapper that provides both contexts
 function TestWrapper({ children }: { children: React.ReactNode }) {
