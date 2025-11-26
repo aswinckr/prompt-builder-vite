@@ -3,6 +3,7 @@ import { ContextBlock } from '../types/ContextBlock';
 import { SavedPrompt } from '../types/SavedPrompt';
 import { ContextService } from '../services/contextService';
 import { DatabaseResponse, RealtimeSubscription } from '../services/databaseService';
+import { DatabaseService } from '../services/databaseService';
 import { PromptService } from '../services/promptService';
 import { ProjectService, Project } from '../services/projectService';
 import { useAuthState } from './AuthContext';
