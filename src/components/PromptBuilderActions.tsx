@@ -1,16 +1,21 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { Copy, Download, Save, Trash2 } from 'lucide-react';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
+import { useAuthState } from '../contexts/AuthContext';
 import { CreatePromptModal } from './CreatePromptModal';
+import { ProfileModal } from './ProfileModal';
 import { htmlToMarkdown } from '../utils/markdownUtils';
 import { TIMEOUTS } from '../utils/constants';
 
 export function PromptBuilderActions() {
   const { promptBuilder, contextBlocks } = useLibraryState();
   const { clearPromptBuilder, savePromptAsTemplate, createFolder, movePromptToFolder } = useLibraryActions();
+  const { isAuthenticated } = useAuthState();
   const [copyStatus, setCopyStatus] = useState<'idle' | 'copied' | 'error'>('idle');
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [saveModalContent, setSaveModalContent] = useState('');
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   // Cleanup timeout on unmount
   useEffect(() => {
@@ -90,10 +95,34 @@ export function PromptBuilderActions() {
     URL.revokeObjectURL(url);
   };
 
+  const handleAuthSuccess = () => {
+    // Execute pending action after successful authentication
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+    }
+  };
+
+  const handleAuthFailure = () => {
+    // Clear pending action if authentication fails or is cancelled
+    setPendingAction(null);
+  };
+
+  const checkAuthenticationAndExecute = (action: () => void) => {
+    if (isAuthenticated) {
+      action();
+    } else {
+      setPendingAction(() => action);
+      setIsProfileModalOpen(true);
+    }
+  };
+
   const handleOpenSaveModal = () => {
-    const assembledContent = assemblePrompt;
-    setSaveModalContent(assembledContent);
-    setIsSaveModalOpen(true);
+    checkAuthenticationAndExecute(() => {
+      const assembledContent = assemblePrompt;
+      setSaveModalContent(assembledContent);
+      setIsSaveModalOpen(true);
+    });
   };
 
   const handleCloseSaveModal = () => {
@@ -167,6 +196,13 @@ export function PromptBuilderActions() {
         onClose={handleCloseSaveModal}
         selectedProjectId={null}
         initialContent={saveModalContent}
+      />
+
+      <ProfileModal
+        isOpen={isProfileModalOpen}
+        onClose={() => setIsProfileModalOpen(false)}
+        onAuthSuccess={handleAuthSuccess}
+        onAuthFailure={handleAuthFailure}
       />
     </>
   );

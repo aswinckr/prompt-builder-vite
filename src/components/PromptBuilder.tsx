@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useMemo, useState } from "react";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
 import { PromptBuilderActions } from "./PromptBuilderActions";
@@ -6,6 +6,7 @@ import { ChatInterface } from "./ChatInterface";
 import { PromptBuilderContent } from "./PromptBuilderContent";
 import { UserProfile } from "./UserProfile";
 import { ModelSelector } from "./ModelSelector";
+import { ProfileModal } from "./ProfileModal";
 import { SynchronizedLoading } from "./ui/SynchronizedLoading";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useLibraryState, useLibraryActions } from "../contexts/LibraryContext";
@@ -14,10 +15,13 @@ import { htmlToMarkdown } from "../utils/markdownUtils";
 
 export function PromptBuilder() {
   const { promptBuilder, chat, contextBlocks } = useLibraryState();
-  const { isLoading } = useAuthState();
+  const { isAuthenticated, isLoading } = useAuthState();
 
   const { setCustomText, setChatPanelOpen, setSelectedModel } =
     useLibraryActions();
+
+  const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
+  const [pendingAction, setPendingAction] = useState<(() => void) | null>(null);
 
   // Assemble the full prompt from blocks and custom text
   const assembledPrompt = useMemo(() => {
@@ -48,9 +52,33 @@ export function PromptBuilder() {
     return allTexts.join("\n\n").trim();
   }, [promptBuilder.blockOrder, promptBuilder.customText, contextBlocks]);
 
+  const handleAuthSuccess = () => {
+    // Execute pending action after successful authentication
+    if (pendingAction) {
+      pendingAction();
+      setPendingAction(null);
+    }
+  };
+
+  const handleAuthFailure = () => {
+    // Clear pending action if authentication fails or is cancelled
+    setPendingAction(null);
+  };
+
+  const checkAuthenticationAndExecute = (action: () => void) => {
+    if (isAuthenticated) {
+      action();
+    } else {
+      setPendingAction(() => action);
+      setIsProfileModalOpen(true);
+    }
+  };
+
   const handleRunPrompt = () => {
-    // Open the chat panel directly
-    setChatPanelOpen(true);
+    checkAuthenticationAndExecute(() => {
+      // Open the chat panel directly
+      setChatPanelOpen(true);
+    });
   };
 
   const handleSaveChat = (conversation: any) => {
@@ -100,6 +128,14 @@ export function PromptBuilder() {
 
         {/* User Profile Button */}
         <UserProfile />
+
+        {/* Profile Modal for Authentication */}
+        <ProfileModal
+          isOpen={isProfileModalOpen}
+          onClose={() => setIsProfileModalOpen(false)}
+          onAuthSuccess={handleAuthSuccess}
+          onAuthFailure={handleAuthFailure}
+        />
         </div>
         </SynchronizedLoading>
       </ErrorBoundary>
