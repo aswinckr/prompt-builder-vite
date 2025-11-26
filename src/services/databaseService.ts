@@ -12,6 +12,10 @@ export interface DatabaseResponse<T> {
   error: string | null
 }
 
+export interface RealtimeSubscription {
+  unsubscribe: () => void;
+}
+
 // Generic database operations
 export class DatabaseService {
   static async handleResponse<T>(response: any): Promise<DatabaseResponse<T>> {
@@ -38,15 +42,174 @@ export class DatabaseService {
     table: string,
     filter: string,
     callback: (payload: any) => void
-  ) {
-    return supabase
-      .channel(`realtime-${table}`)
-      .on(
-        'postgres_changes',
-        { event: '*', schema: 'public', table, filter },
+  ): Promise<RealtimeSubscription> {
+    try {
+      const channel = supabase
+        .channel(`realtime-${table}`)
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table, filter },
+          callback
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log(`Successfully subscribed to ${table} changes`);
+          } else if (status === 'CHANNEL_ERROR') {
+            console.error(`Failed to subscribe to ${table} changes`);
+          }
+        })
+
+      return {
+        unsubscribe: () => {
+          try {
+            supabase.removeChannel(channel)
+          } catch (error) {
+            console.error(`Error removing channel for ${table}:`, error);
+          }
+        }
+      }
+    } catch (error) {
+      console.error(`Error creating realtime subscription for ${table}:`, error);
+      throw error;
+    }
+  }
+
+  // Enhanced subscription methods for all three data types
+  static async createContextBlocksSubscription(
+    callback: (payload: any) => void
+  ): Promise<RealtimeSubscription | null> {
+    try {
+      const user = await this.getUser()
+      if (!user) {
+        console.warn('User not authenticated for context blocks subscription')
+        return null
+      }
+
+      return await this.createRealtimeSubscription(
+        'context_blocks',
+        `user_id=eq.${user.id}`,
         callback
       )
-      .subscribe()
+    } catch (error) {
+      console.error('Failed to create context blocks subscription:', error)
+      return null
+    }
+  }
+
+  static async createPromptsSubscription(
+    callback: (payload: any) => void
+  ): Promise<RealtimeSubscription | null> {
+    try {
+      const user = await this.getUser()
+      if (!user) {
+        console.warn('User not authenticated for prompts subscription')
+        return null
+      }
+
+      return await this.createRealtimeSubscription(
+        'prompts',
+        `user_id=eq.${user.id}`,
+        callback
+      )
+    } catch (error) {
+      console.error('Failed to create prompts subscription:', error)
+      return null
+    }
+  }
+
+  static async createPromptProjectsSubscription(
+    callback: (payload: any) => void
+  ): Promise<RealtimeSubscription | null> {
+    try {
+      const user = await this.getUser()
+      if (!user) {
+        console.warn('User not authenticated for prompt projects subscription')
+        return null
+      }
+
+      return await this.createRealtimeSubscription(
+        'prompt_projects',
+        `user_id=eq.${user.id}`,
+        callback
+      )
+    } catch (error) {
+      console.error('Failed to create prompt projects subscription:', error)
+      return null
+    }
+  }
+
+  static async createDatasetProjectsSubscription(
+    callback: (payload: any) => void
+  ): Promise<RealtimeSubscription | null> {
+    try {
+      const user = await this.getUser()
+      if (!user) {
+        console.warn('User not authenticated for dataset projects subscription')
+        return null
+      }
+
+      return await this.createRealtimeSubscription(
+        'dataset_projects',
+        `user_id=eq.${user.id}`,
+        callback
+      )
+    } catch (error) {
+      console.error('Failed to create dataset projects subscription:', error)
+      return null
+    }
+  }
+
+  // Utility method to create all subscriptions for data synchronization
+  static async createAllSubscriptions(
+    callback: (payload: any) => void
+  ): Promise<RealtimeSubscription[]> {
+    const subscriptions: RealtimeSubscription[] = []
+
+    try {
+      // Context blocks subscription
+      const contextBlocksSub = await this.createContextBlocksSubscription(callback)
+      if (contextBlocksSub) {
+        subscriptions.push(contextBlocksSub)
+      }
+
+      // Prompts subscription
+      const promptsSub = await this.createPromptsSubscription(callback)
+      if (promptsSub) {
+        subscriptions.push(promptsSub)
+      }
+
+      // Prompt projects subscription
+      const promptProjectsSub = await this.createPromptProjectsSubscription(callback)
+      if (promptProjectsSub) {
+        subscriptions.push(promptProjectsSub)
+      }
+
+      // Dataset projects subscription
+      const datasetProjectsSub = await this.createDatasetProjectsSubscription(callback)
+      if (datasetProjectsSub) {
+        subscriptions.push(datasetProjectsSub)
+      }
+
+      console.log(`Created ${subscriptions.length} real-time subscriptions`)
+      return subscriptions
+    } catch (error) {
+      console.error('Failed to create subscriptions:', error)
+      // Cleanup any successful subscriptions
+      subscriptions.forEach(sub => sub.unsubscribe())
+      return []
+    }
+  }
+
+  // Utility method to cleanup all subscriptions
+  static cleanupSubscriptions(subscriptions: RealtimeSubscription[]): void {
+    try {
+      subscriptions.forEach(subscription => {
+        subscription.unsubscribe()
+      })
+      console.log(`Cleaned up ${subscriptions.length} subscriptions`)
+    } catch (error) {
+      console.error('Failed to cleanup subscriptions:', error)
+    }
   }
 
   // Convert database row to TypeScript interface (handles UUID to string conversion)

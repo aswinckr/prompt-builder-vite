@@ -1,8 +1,8 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, ReactNode, useRef } from 'react';
 import { ContextBlock } from '../types/ContextBlock';
 import { SavedPrompt } from '../types/SavedPrompt';
 import { ContextService } from '../services/contextService';
-import { DatabaseResponse } from '../services/databaseService';
+import { DatabaseResponse, RealtimeSubscription } from '../services/databaseService';
 import { PromptService } from '../services/promptService';
 import { ProjectService, Project } from '../services/projectService';
 import { useAuthState } from './AuthContext';
@@ -34,6 +34,7 @@ interface LibraryState {
   systemDatasetProjects: Project[];
   loading: boolean;
   error: string | null;
+  syncLoading: boolean; // New state for synchronization loading
   // Folder modal state
   folderModal: {
     isOpen: boolean;
@@ -51,6 +52,7 @@ type LibraryAction =
   | { type: 'SET_DATASET_PROJECTS'; payload: Project[] }
   | { type: 'SET_SYSTEM_PROMPT_PROJECTS'; payload: Project[] }
   | { type: 'SET_SYSTEM_DATASET_PROJECTS'; payload: Project[] }
+  | { type: 'SET_SYNC_LOADING'; payload: boolean } // New action type
   | { type: 'SET_CUSTOM_TEXT'; payload: string }
   | { type: 'ADD_BLOCK_TO_BUILDER'; payload: string }
   | { type: 'REMOVE_BLOCK_FROM_BUILDER'; payload: string }
@@ -107,6 +109,7 @@ const initialState: LibraryState = {
   systemDatasetProjects: [],
   loading: false,
   error: null,
+  syncLoading: false,
   folderModal: {
     isOpen: false,
     defaultType: 'prompts',
@@ -120,18 +123,20 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
       return { ...state, loading: action.payload };
     case 'SET_ERROR':
       return { ...state, error: action.payload, loading: false };
+    case 'SET_SYNC_LOADING':
+      return { ...state, syncLoading: action.payload };
     case 'SET_CONTEXT_BLOCKS':
-      return { ...state, contextBlocks: action.payload, loading: false };
+      return { ...state, contextBlocks: action.payload, loading: false, syncLoading: false };
     case 'SET_SAVED_PROMPTS':
-      return { ...state, savedPrompts: action.payload, loading: false };
+      return { ...state, savedPrompts: action.payload, loading: false, syncLoading: false };
     case 'SET_PROMPT_PROJECTS':
-      return { ...state, promptProjects: action.payload, loading: false };
+      return { ...state, promptProjects: action.payload, loading: false, syncLoading: false };
     case 'SET_DATASET_PROJECTS':
-      return { ...state, datasetProjects: action.payload, loading: false };
+      return { ...state, datasetProjects: action.payload, loading: false, syncLoading: false };
     case 'SET_SYSTEM_PROMPT_PROJECTS':
-      return { ...state, systemPromptProjects: action.payload, loading: false };
+      return { ...state, systemPromptProjects: action.payload, loading: false, syncLoading: false };
     case 'SET_SYSTEM_DATASET_PROJECTS':
-      return { ...state, systemDatasetProjects: action.payload, loading: false };
+      return { ...state, systemDatasetProjects: action.payload, loading: false, syncLoading: false };
     case 'SET_CUSTOM_TEXT':
       return {
         ...state,
@@ -357,6 +362,131 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(libraryReducer, initialState);
   const { isAuthenticated, isLoading: authLoading } = useAuthState();
 
+  // Refs for managing real-time subscriptions and debouncing
+  const subscriptionsRef = useRef<RealtimeSubscription[]>([]);
+  const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const lastRefreshTimeRef = useRef<number>(0);
+
+  // Enhanced data refresh utility function with debouncing (Task 2.2 and 3.3)
+  const refreshAllData = async () => {
+    if (!isAuthenticated) {
+      return;
+    }
+
+    // Debounce rapid successive refreshes to prevent sync storms
+    const now = Date.now();
+    const minimumInterval = 500; // 500ms minimum interval between refreshes
+    const timeSinceLastRefresh = now - lastRefreshTimeRef.current;
+
+    if (timeSinceLastRefresh < minimumInterval && refreshTimeoutRef.current) {
+      // Cancel pending refresh and schedule a new one
+      clearTimeout(refreshTimeoutRef.current);
+    }
+
+    if (timeSinceLastRefresh < minimumInterval) {
+      // Schedule a delayed refresh
+      refreshTimeoutRef.current = setTimeout(() => {
+        refreshAllData();
+      }, minimumInterval - timeSinceLastRefresh);
+      return;
+    }
+
+    lastRefreshTimeRef.current = now;
+    dispatch({ type: 'SET_SYNC_LOADING', payload: true });
+
+    try {
+      // First, ensure unsorted folders exist for the user
+      await ProjectService.ensureUnsortedFolders();
+
+      // Load all user data in parallel
+      const [contextBlocksResult, savedPromptsResult, promptProjectsResult, datasetProjectsResult, systemPromptProjectsResult, systemDatasetProjectsResult] = await Promise.all([
+        ContextService.getContextBlocks(),
+        PromptService.getPrompts(),
+        ProjectService.getUserProjects('prompt'),
+        ProjectService.getUserProjects('dataset'),
+        ProjectService.getSystemProjects('prompt'),
+        ProjectService.getSystemProjects('dataset')
+      ]);
+
+      // Set the user's data, even if it's empty (this is normal for new users)
+      dispatch({ type: 'SET_CONTEXT_BLOCKS', payload: contextBlocksResult.data || [] });
+      dispatch({ type: 'SET_SAVED_PROMPTS', payload: savedPromptsResult.data || [] });
+      dispatch({ type: 'SET_PROMPT_PROJECTS', payload: promptProjectsResult.data || [] });
+      dispatch({ type: 'SET_DATASET_PROJECTS', payload: datasetProjectsResult.data || [] });
+      dispatch({ type: 'SET_SYSTEM_PROMPT_PROJECTS', payload: systemPromptProjectsResult.data || [] });
+      dispatch({ type: 'SET_SYSTEM_DATASET_PROJECTS', payload: systemDatasetProjectsResult.data || [] });
+
+      // Check for any errors from the service calls
+      const errors = [
+        contextBlocksResult.error,
+        savedPromptsResult.error,
+        promptProjectsResult.error,
+        datasetProjectsResult.error,
+        systemPromptProjectsResult.error,
+        systemDatasetProjectsResult.error
+      ].filter(Boolean);
+
+      if (errors.length > 0) {
+        console.error('Database errors during refresh:', errors);
+        dispatch({ type: 'SET_ERROR', payload: errors[0] || 'Failed to refresh data' });
+      }
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+      dispatch({ type: 'SET_ERROR', payload: 'Failed to refresh data' });
+    } finally {
+      dispatch({ type: 'SET_SYNC_LOADING', payload: false });
+      refreshTimeoutRef.current = null;
+    }
+  };
+
+  // Real-time event handler (Task 3.2)
+  const handleRealtimeEvent = (payload: any) => {
+    console.log('Real-time event received:', payload);
+
+    // Filter events by table and trigger refresh for relevant changes
+    const supportedTables = ['context_blocks', 'prompts', 'prompt_projects', 'dataset_projects'];
+
+    if (supportedTables.includes(payload.table)) {
+      // Trigger a debounced refresh when real-time events are received
+      refreshAllData();
+    }
+  };
+
+  // Set up real-time subscriptions (Task 3.2) - SIMPLIFIED VERSION
+  useEffect(() => {
+    const setupSubscriptions = async () => {
+      if (isAuthenticated && !authLoading) {
+        try {
+          console.log('Setting up real-time subscriptions...');
+          const subscriptions = await DatabaseService.createAllSubscriptions(handleRealtimeEvent);
+          subscriptionsRef.current = subscriptions;
+          console.log(`Successfully set up ${subscriptions.length} real-time subscriptions`);
+        } catch (error) {
+          console.error('Failed to set up real-time subscriptions:', error);
+          // Don't show error to user - just continue without real-time sync
+          // The auto-refresh after CRUD operations will still work
+          console.log('Continuing without real-time sync - data will refresh on manual operations');
+        }
+      }
+    };
+
+    setupSubscriptions();
+
+    // Cleanup function to remove subscriptions when component unmounts (Task 3.2)
+    return () => {
+      if (subscriptionsRef.current.length > 0) {
+        DatabaseService.cleanupSubscriptions(subscriptionsRef.current);
+        subscriptionsRef.current = [];
+        console.log('Cleaned up real-time subscriptions');
+      }
+
+      if (refreshTimeoutRef.current) {
+        clearTimeout(refreshTimeoutRef.current);
+        refreshTimeoutRef.current = null;
+      }
+    };
+  }, [isAuthenticated, authLoading]);
+
   // Load data when component mounts and when authentication state changes
   useEffect(() => {
     // Only load data if authentication is not loading
@@ -370,45 +500,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
     try {
       if (isAuthenticated) {
-        
-        // First, ensure unsorted folders exist for the user
-        await ProjectService.ensureUnsortedFolders();
-
-        // Load all user data in parallel
-        const [contextBlocksResult, savedPromptsResult, promptProjectsResult, datasetProjectsResult, systemPromptProjectsResult, systemDatasetProjectsResult] = await Promise.all([
-          ContextService.getContextBlocks(),
-          PromptService.getPrompts(),
-          ProjectService.getUserProjects('prompt'),
-          ProjectService.getUserProjects('dataset'),
-          ProjectService.getSystemProjects('prompt'),
-          ProjectService.getSystemProjects('dataset')
-        ]);
-
-        // Set the user's data, even if it's empty (this is normal for new users)
-        dispatch({ type: 'SET_CONTEXT_BLOCKS', payload: contextBlocksResult.data || [] });
-        dispatch({ type: 'SET_SAVED_PROMPTS', payload: savedPromptsResult.data || [] });
-        dispatch({ type: 'SET_PROMPT_PROJECTS', payload: promptProjectsResult.data || [] });
-        dispatch({ type: 'SET_DATASET_PROJECTS', payload: datasetProjectsResult.data || [] });
-        dispatch({ type: 'SET_SYSTEM_PROMPT_PROJECTS', payload: systemPromptProjectsResult.data || [] });
-        dispatch({ type: 'SET_SYSTEM_DATASET_PROJECTS', payload: systemDatasetProjectsResult.data || [] });
-
-        
-        // Check for any errors from the service calls
-        const errors = [
-          contextBlocksResult.error,
-          savedPromptsResult.error,
-          promptProjectsResult.error,
-          datasetProjectsResult.error,
-          systemPromptProjectsResult.error,
-          systemDatasetProjectsResult.error
-        ].filter(Boolean);
-
-        if (errors.length > 0) {
-          console.error('Database errors:', errors);
-          dispatch({ type: 'SET_ERROR', payload: errors[0] || 'Failed to load data' });
-        }
+        await refreshAllData();
       } else {
-        
         // Clear all user data when not authenticated
         dispatch({ type: 'SET_CONTEXT_BLOCKS', payload: [] });
         dispatch({ type: 'SET_SAVED_PROMPTS', payload: [] });
@@ -417,8 +510,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'SET_SYSTEM_PROMPT_PROJECTS', payload: [] });
         dispatch({ type: 'SET_SYSTEM_DATASET_PROJECTS', payload: [] });
         dispatch({ type: 'SET_ERROR', payload: null });
-
-              }
+      }
     } catch (error) {
       console.error('Error loading initial data:', error);
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load data' });
@@ -440,11 +532,13 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     setSelectedBlocks: (blockIds: string[]) => dispatch({ type: 'SET_SELECTED_BLOCKS', payload: blockIds }),
     clearBlockSelection: () => dispatch({ type: 'CLEAR_BLOCK_SELECTION' }),
 
-    // Context block actions
+    // Enhanced context block actions with auto-refresh (Task 2.3)
     createContextBlock: async (blockData: Omit<ContextBlock, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       const result = await ContextService.createContextBlock(blockData);
       if (result.data) {
         dispatch({ type: 'CREATE_CONTEXT_BLOCK', payload: result.data });
+        // Wait for database confirmation, then refresh all data
+        await refreshAllData();
       }
       return result;
     },
@@ -452,6 +546,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       const result = await ContextService.updateContextBlock(id, blockData);
       if (result.data) {
         dispatch({ type: 'UPDATE_CONTEXT_BLOCK', payload: { id, blockData } });
+        // Wait for database confirmation, then refresh all data
+        await refreshAllData();
       }
       return result;
     },
@@ -459,11 +555,13 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       const result = await ContextService.deleteContextBlock(id);
       if (!result.error) {
         dispatch({ type: 'DELETE_CONTEXT_BLOCK', payload: id });
+        // Wait for database confirmation, then refresh all data
+        await refreshAllData();
       }
       return result;
     },
 
-    // Temporary block actions
+    // Temporary block actions (unchanged - remain local-only)
     createTemporaryBlock: (blockData: Omit<ContextBlock, 'id' | 'user_id' | 'created_at' | 'updated_at'>): ContextBlock => {
       const temporaryBlock: ContextBlock = {
         ...blockData,
@@ -484,11 +582,13 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'REMOVE_TEMPORARY_BLOCK', payload: id });
     },
 
-    // Prompt actions
+    // Enhanced prompt actions with auto-refresh (Task 2.4)
     createSavedPrompt: async (promptData: Omit<SavedPrompt, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       const result = await PromptService.createPrompt(promptData);
       if (result.data) {
         dispatch({ type: 'CREATE_SAVED_PROMPT', payload: result.data });
+        // Wait for database confirmation, then refresh all data
+        await refreshAllData();
       }
       return result;
     },
@@ -496,6 +596,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       const result = await PromptService.updatePrompt(id, promptData);
       if (result.data) {
         dispatch({ type: 'UPDATE_SAVED_PROMPT', payload: { id, promptData } });
+        // Wait for database confirmation, then refresh all data
+        await refreshAllData();
       }
       return result;
     },
@@ -503,15 +605,19 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       const result = await PromptService.deletePrompt(id);
       if (!result.error) {
         dispatch({ type: 'DELETE_SAVED_PROMPT', payload: id });
+        // Wait for database confirmation, then refresh all data
+        await refreshAllData();
       }
       return result;
     },
 
-    // Project actions
+    // Enhanced project actions with auto-refresh (Task 2.5)
     createPromptProject: async (projectData: { name: string; icon?: string; parent_id?: string }) => {
       const result = await ProjectService.createProject({ ...projectData, type: 'prompt' });
       if (result.data) {
         dispatch({ type: 'CREATE_PROMPT_PROJECT', payload: result.data });
+        // Wait for database confirmation, then refresh all data
+        await refreshAllData();
       }
       return result;
     },
@@ -519,6 +625,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       const result = await ProjectService.createProject({ ...projectData, type: 'dataset' });
       if (result.data) {
         dispatch({ type: 'CREATE_DATASET_PROJECT', payload: result.data });
+        // Wait for database confirmation, then refresh all data
+        await refreshAllData();
       }
       return result;
     },
@@ -528,7 +636,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     closeFolderModal: () => dispatch({ type: 'CLOSE_FOLDER_MODAL' }),
     setFolderModalLoading: (loading: boolean) => dispatch({ type: 'SET_FOLDER_MODAL_LOADING', payload: loading }),
 
-    // Unified folder creation (type is determined by modal context)
+    // Enhanced folder creation with auto-refresh
     createFolder: async (folderData: { name: string; icon: string }) => {
       try {
         dispatch({ type: 'SET_FOLDER_MODAL_LOADING', payload: true });
@@ -545,6 +653,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
             type: currentType === 'prompts' ? 'CREATE_PROMPT_PROJECT' : 'CREATE_DATASET_PROJECT',
             payload: result.data
           });
+          // Wait for database confirmation, then refresh all data
+          await refreshAllData();
         } else {
           console.error('❌ No data returned from ProjectService:', result.error);
         }
@@ -560,7 +670,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       }
     },
 
-    // System project management
+    // System project management (unchanged)
     refreshSystemProjects: async () => {
       try {
         const [systemPromptProjectsResult, systemDatasetProjectsResult] = await Promise.all([
@@ -586,6 +696,8 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
           type: type === 'prompt' ? 'DELETE_PROMPT_PROJECT' : 'DELETE_DATASET_PROJECT',
           payload: id
         });
+        // Wait for database confirmation, then refresh all data
+        await refreshAllData();
       }
       return result;
     },
