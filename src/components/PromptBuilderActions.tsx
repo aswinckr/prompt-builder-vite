@@ -130,13 +130,17 @@ export function PromptBuilderActions() {
     setSaveModalContent('');
   };
 
-  const handleSaveAsPrompt = () => {
-    const templateName = `Prompt ${new Date().toLocaleDateString()}`;
-    const promptId = savePromptAsTemplate(templateName);
+  const handleSaveAsPrompt = async () => {
+    const templateTitle = `Prompt ${new Date().toLocaleDateString()}`;
+    try {
+      const promptId = await savePromptAsTemplate(templateTitle);
 
-    // Create "Unsorted" folder if it doesn't exist and move prompt there
-    const unsortedFolderId = createFolder("Unsorted");
-    movePromptToFolder(promptId, unsortedFolderId);
+      // Create "Unsorted" folder if it doesn't exist and move prompt there
+      const unsortedFolderId = createFolder("Unsorted");
+      movePromptToFolder(promptId, unsortedFolderId);
+    } catch (error) {
+      console.warn('Failed to save prompt as template');
+    }
   };
 
   const handleClearAll = () => {

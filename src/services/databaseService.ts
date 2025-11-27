@@ -13,11 +13,32 @@ export interface DatabaseResponse<T> {
 }
 
 export interface RealtimeSubscription {
-  unsubscribe: () => void;
+  unsubscribe: () => Promise<void>;
+}
+
+// Type definition for Supabase realtime event payload
+export interface RealtimeEventPayload {
+  event_type?: 'INSERT' | 'UPDATE' | 'DELETE';
+  table?: string;
+  schema?: string;
+  old_record?: any;
+  new_record?: any;
+  commit_timestamp?: string;
+  [key: string]: any; // Allow additional properties for Supabase compatibility
 }
 
 // Generic database operations
 export class DatabaseService {
+  // Security: Sanitize user ID to prevent SQL injection
+  private static sanitizeUserId(userId: string): string {
+    // Only allow UUID format (alphanumeric with dashes) or valid email format
+    const validUserIdPattern = /^[a-zA-Z0-9\-@._]+$/;
+    if (validUserIdPattern.test(userId) && userId.length > 0 && userId.length < 255) {
+      return userId;
+    }
+    throw new Error('Invalid user ID format');
+  }
+
   static async handleResponse<T>(response: any): Promise<DatabaseResponse<T>> {
     // Handle both wrapped responses (like Supabase) and unwrapped data
     if (response && typeof response === 'object' && 'error' in response) {
@@ -60,11 +81,11 @@ export class DatabaseService {
         })
 
       return {
-        unsubscribe: () => {
+        unsubscribe: async () => {
           try {
-            supabase.removeChannel(channel)
+            await supabase.removeChannel(channel)
           } catch (error) {
-            console.error(`Error removing channel for ${table}:`, error);
+            console.warn(`Failed to remove channel for ${table}`);
           }
         }
       }
@@ -80,14 +101,15 @@ export class DatabaseService {
   ): Promise<RealtimeSubscription | null> {
     try {
       const user = await this.getUser()
-      if (!user) {
+      if (!user || !user.id) {
         console.warn('User not authenticated for context blocks subscription')
         return null
       }
 
+      const sanitizedUserId = this.sanitizeUserId(user.id);
       return await this.createRealtimeSubscription(
         'context_blocks',
-        `user_id=eq.${user.id}`,
+        `user_id=eq.${sanitizedUserId}`,
         callback
       )
     } catch (error) {
@@ -101,14 +123,15 @@ export class DatabaseService {
   ): Promise<RealtimeSubscription | null> {
     try {
       const user = await this.getUser()
-      if (!user) {
+      if (!user || !user.id) {
         console.warn('User not authenticated for prompts subscription')
         return null
       }
 
+      const sanitizedUserId = this.sanitizeUserId(user.id);
       return await this.createRealtimeSubscription(
         'prompts',
-        `user_id=eq.${user.id}`,
+        `user_id=eq.${sanitizedUserId}`,
         callback
       )
     } catch (error) {
@@ -122,14 +145,15 @@ export class DatabaseService {
   ): Promise<RealtimeSubscription | null> {
     try {
       const user = await this.getUser()
-      if (!user) {
+      if (!user || !user.id) {
         console.warn('User not authenticated for prompt projects subscription')
         return null
       }
 
+      const sanitizedUserId = this.sanitizeUserId(user.id);
       return await this.createRealtimeSubscription(
         'prompt_projects',
-        `user_id=eq.${user.id}`,
+        `user_id=eq.${sanitizedUserId}`,
         callback
       )
     } catch (error) {
@@ -143,14 +167,15 @@ export class DatabaseService {
   ): Promise<RealtimeSubscription | null> {
     try {
       const user = await this.getUser()
-      if (!user) {
+      if (!user || !user.id) {
         console.warn('User not authenticated for dataset projects subscription')
         return null
       }
 
+      const sanitizedUserId = this.sanitizeUserId(user.id);
       return await this.createRealtimeSubscription(
         'dataset_projects',
-        `user_id=eq.${user.id}`,
+        `user_id=eq.${sanitizedUserId}`,
         callback
       )
     } catch (error) {
@@ -201,14 +226,12 @@ export class DatabaseService {
   }
 
   // Utility method to cleanup all subscriptions
-  static cleanupSubscriptions(subscriptions: RealtimeSubscription[]): void {
+  static async cleanupSubscriptions(subscriptions: RealtimeSubscription[]): Promise<void> {
     try {
-      subscriptions.forEach(subscription => {
-        subscription.unsubscribe()
-      })
+      await Promise.all(subscriptions.map(subscription => subscription.unsubscribe()))
       console.log(`Cleaned up ${subscriptions.length} subscriptions`)
     } catch (error) {
-      console.error('Failed to cleanup subscriptions:', error)
+      console.warn('Failed to cleanup subscriptions');
     }
   }
 

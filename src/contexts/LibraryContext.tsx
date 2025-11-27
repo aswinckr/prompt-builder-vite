@@ -1,13 +1,14 @@
-import React, { createContext, useContext, useReducer, useEffect, ReactNode, useRef } from 'react';
+import React, { createContext, useContext, useReducer, useEffect, ReactNode, useRef, useCallback } from 'react';
 import { ContextBlock } from '../types/ContextBlock';
 import { SavedPrompt } from '../types/SavedPrompt';
 import { ContextService } from '../services/contextService';
-import { DatabaseResponse, RealtimeSubscription } from '../services/databaseService';
+import { DatabaseResponse, RealtimeSubscription, RealtimeEventPayload } from '../services/databaseService';
 import { DatabaseService } from '../services/databaseService';
 import { PromptService } from '../services/promptService';
 import { ProjectService, Project } from '../services/projectService';
 import { useAuthState } from './AuthContext';
 import { CHAT, TEMPORARY } from '../utils/constants';
+import { SYNC_CONSTANTS } from '../constants/sync';
 
 interface ChatState {
   isChatPanelOpen: boolean;
@@ -368,27 +369,62 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
   const refreshTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const lastRefreshTimeRef = useRef<number>(0);
 
-  // Enhanced data refresh utility function with debouncing (Task 2.2 and 3.3)
-  const refreshAllData = async () => {
+  // Enhanced data refresh utility function with debouncing (Task 2.2 and 3.3) - MEMOIZED & RACE-CONDITION-FREE
+  const refreshAllData = useCallback(async () => {
     if (!isAuthenticated) {
       return;
     }
 
     // Debounce rapid successive refreshes to prevent sync storms
     const now = Date.now();
-    const minimumInterval = 500; // 500ms minimum interval between refreshes
+    const minimumInterval = SYNC_CONSTANTS.DEBOUNCE_INTERVAL_MS;
     const timeSinceLastRefresh = now - lastRefreshTimeRef.current;
 
-    if (timeSinceLastRefresh < minimumInterval && refreshTimeoutRef.current) {
-      // Cancel pending refresh and schedule a new one
-      clearTimeout(refreshTimeoutRef.current);
-    }
-
     if (timeSinceLastRefresh < minimumInterval) {
-      // Schedule a delayed refresh
-      refreshTimeoutRef.current = setTimeout(() => {
-        refreshAllData();
-      }, minimumInterval - timeSinceLastRefresh);
+      // Only schedule if not already pending
+      if (!refreshTimeoutRef.current) {
+        refreshTimeoutRef.current = setTimeout(() => {
+          refreshTimeoutRef.current = null;
+          // Use direct execution instead of recursive call to prevent infinite loops
+          const executeRefresh = async () => {
+            try {
+              if (!isAuthenticated) return;
+
+              dispatch({ type: 'SET_SYNC_LOADING', payload: true });
+
+              // Parallel loading of all data types
+              const [contextBlocksResult, savedPromptsResult, promptProjectsResult, datasetProjectsResult] = await Promise.all([
+                ContextService.getContextBlocks(),
+                PromptService.getPrompts(),
+                ProjectService.getPromptProjects(),
+                ProjectService.getDatasetProjects()
+              ]);
+
+              // Dispatch data updates
+              if (contextBlocksResult.data) {
+                dispatch({ type: 'SET_CONTEXT_BLOCKS', payload: contextBlocksResult.data });
+              }
+              if (savedPromptsResult.data) {
+                dispatch({ type: 'SET_SAVED_PROMPTS', payload: savedPromptsResult.data });
+              }
+              if (promptProjectsResult.data) {
+                dispatch({ type: 'SET_PROMPT_PROJECTS', payload: promptProjectsResult.data });
+              }
+              if (datasetProjectsResult.data) {
+                dispatch({ type: 'SET_DATASET_PROJECTS', payload: datasetProjectsResult.data });
+              }
+  
+              lastRefreshTimeRef.current = Date.now();
+            } catch (error) {
+              console.warn('Data refresh operation failed');
+            } finally {
+              dispatch({ type: 'SET_SYNC_LOADING', payload: false });
+            }
+          };
+
+          executeRefresh();
+        }, minimumInterval - timeSinceLastRefresh);
+      }
       return;
     }
 
@@ -428,21 +464,25 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       ].filter(Boolean);
 
       if (errors.length > 0) {
-        console.error('Database errors during refresh:', errors);
+        console.warn('Database operation failed during refresh');
         dispatch({ type: 'SET_ERROR', payload: errors[0] || 'Failed to refresh data' });
       }
     } catch (error) {
-      console.error('Error refreshing data:', error);
+      console.warn('Data refresh operation failed');
       dispatch({ type: 'SET_ERROR', payload: 'Failed to refresh data' });
     } finally {
       dispatch({ type: 'SET_SYNC_LOADING', payload: false });
       refreshTimeoutRef.current = null;
     }
-  };
+  }, [isAuthenticated, dispatch]);
 
-  // Real-time event handler (Task 3.2)
-  const handleRealtimeEvent = (payload: any) => {
-    console.log('Real-time event received:', payload);
+  // Real-time event handler (Task 3.2) - MEMOIZED
+  const handleRealtimeEvent = useCallback((payload: any) => {
+    // Type safety: Validate payload structure
+    if (!payload || typeof payload !== 'object' || !('table' in payload)) {
+      console.warn('Invalid realtime event payload received');
+      return;
+    }
 
     // Filter events by table and trigger refresh for relevant changes
     const supportedTables = ['context_blocks', 'prompts', 'prompt_projects', 'dataset_projects'];
@@ -451,7 +491,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       // Trigger a debounced refresh when real-time events are received
       refreshAllData();
     }
-  };
+  }, [refreshAllData]);
 
   // Set up real-time subscriptions (Task 3.2) - SIMPLIFIED VERSION
   useEffect(() => {
@@ -463,10 +503,9 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
           subscriptionsRef.current = subscriptions;
           console.log(`Successfully set up ${subscriptions.length} real-time subscriptions`);
         } catch (error) {
-          console.error('Failed to set up real-time subscriptions:', error);
+          console.warn('Real-time subscription setup failed');
           // Don't show error to user - just continue without real-time sync
           // The auto-refresh after CRUD operations will still work
-          console.log('Continuing without real-time sync - data will refresh on manual operations');
         }
       }
     };
@@ -475,8 +514,9 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
     // Cleanup function to remove subscriptions when component unmounts (Task 3.2)
     return () => {
+      // Perform async cleanup without awaiting (React doesn't allow async cleanup)
       if (subscriptionsRef.current.length > 0) {
-        DatabaseService.cleanupSubscriptions(subscriptionsRef.current);
+        DatabaseService.cleanupSubscriptions(subscriptionsRef.current).catch(console.warn);
         subscriptionsRef.current = [];
         console.log('Cleaned up real-time subscriptions');
       }
@@ -513,7 +553,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         dispatch({ type: 'SET_ERROR', payload: null });
       }
     } catch (error) {
-      console.error('Error loading initial data:', error);
+      console.warn('Initial data loading failed');
       dispatch({ type: 'SET_ERROR', payload: 'Failed to load data' });
     } finally {
       dispatch({ type: 'SET_LOADING', payload: false });
@@ -533,30 +573,27 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     setSelectedBlocks: (blockIds: string[]) => dispatch({ type: 'SET_SELECTED_BLOCKS', payload: blockIds }),
     clearBlockSelection: () => dispatch({ type: 'CLEAR_BLOCK_SELECTION' }),
 
-    // Enhanced context block actions with auto-refresh (Task 2.3)
+    // Enhanced context block actions with auto-refresh (Task 2.3) - NO OPTIMISTIC UPDATES
     createContextBlock: async (blockData: Omit<ContextBlock, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       const result = await ContextService.createContextBlock(blockData);
-      if (result.data) {
-        dispatch({ type: 'CREATE_CONTEXT_BLOCK', payload: result.data });
-        // Wait for database confirmation, then refresh all data
+      // Wait for database confirmation, then refresh all data (no optimistic dispatch)
+      if (!result.error) {
         await refreshAllData();
       }
       return result;
     },
     updateContextBlock: async (id: string, blockData: Partial<ContextBlock>) => {
       const result = await ContextService.updateContextBlock(id, blockData);
-      if (result.data) {
-        dispatch({ type: 'UPDATE_CONTEXT_BLOCK', payload: { id, blockData } });
-        // Wait for database confirmation, then refresh all data
+      // Wait for database confirmation, then refresh all data (no optimistic dispatch)
+      if (!result.error) {
         await refreshAllData();
       }
       return result;
     },
     deleteContextBlock: async (id: string) => {
       const result = await ContextService.deleteContextBlock(id);
+      // Wait for database confirmation, then refresh all data (no optimistic dispatch)
       if (!result.error) {
-        dispatch({ type: 'DELETE_CONTEXT_BLOCK', payload: id });
-        // Wait for database confirmation, then refresh all data
         await refreshAllData();
       }
       return result;
@@ -583,50 +620,45 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       dispatch({ type: 'REMOVE_TEMPORARY_BLOCK', payload: id });
     },
 
-    // Enhanced prompt actions with auto-refresh (Task 2.4)
+    // Enhanced prompt actions with auto-refresh (Task 2.4) - NO OPTIMISTIC UPDATES
     createSavedPrompt: async (promptData: Omit<SavedPrompt, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
       const result = await PromptService.createPrompt(promptData);
-      if (result.data) {
-        dispatch({ type: 'CREATE_SAVED_PROMPT', payload: result.data });
-        // Wait for database confirmation, then refresh all data
+      // Wait for database confirmation, then refresh all data (no optimistic dispatch)
+      if (!result.error) {
         await refreshAllData();
       }
       return result;
     },
     updateSavedPrompt: async (id: string, promptData: Partial<SavedPrompt>) => {
       const result = await PromptService.updatePrompt(id, promptData);
-      if (result.data) {
-        dispatch({ type: 'UPDATE_SAVED_PROMPT', payload: { id, promptData } });
-        // Wait for database confirmation, then refresh all data
+      // Wait for database confirmation, then refresh all data (no optimistic dispatch)
+      if (!result.error) {
         await refreshAllData();
       }
       return result;
     },
     deleteSavedPrompt: async (id: string) => {
       const result = await PromptService.deletePrompt(id);
+      // Wait for database confirmation, then refresh all data (no optimistic dispatch)
       if (!result.error) {
-        dispatch({ type: 'DELETE_SAVED_PROMPT', payload: id });
-        // Wait for database confirmation, then refresh all data
         await refreshAllData();
       }
       return result;
     },
 
-    // Enhanced project actions with auto-refresh (Task 2.5)
+    // Enhanced project actions with auto-refresh (Task 2.5) - NO OPTIMISTIC UPDATES
     createPromptProject: async (projectData: { name: string; icon?: string; parent_id?: string }) => {
       const result = await ProjectService.createProject({ ...projectData, type: 'prompt' });
-      if (result.data) {
-        dispatch({ type: 'CREATE_PROMPT_PROJECT', payload: result.data });
-        // Wait for database confirmation, then refresh all data
+      // Wait for database confirmation, then refresh all data (no optimistic dispatch)
+      if (!result.error) {
         await refreshAllData();
       }
       return result;
     },
     createDatasetProject: async (projectData: { name: string; icon?: string; parent_id?: string }) => {
       const result = await ProjectService.createProject({ ...projectData, type: 'dataset' });
-      if (result.data) {
-        dispatch({ type: 'CREATE_DATASET_PROJECT', payload: result.data });
-        // Wait for database confirmation, then refresh all data
+      // Wait for database confirmation, then refresh all data (no optimistic dispatch)
+      if (!result.error) {
         await refreshAllData();
       }
       return result;
@@ -657,7 +689,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
           // Wait for database confirmation, then refresh all data
           await refreshAllData();
         } else {
-          console.error('❌ No data returned from ProjectService:', result.error);
+          console.warn('Project creation operation failed');
         }
 
         dispatch({ type: 'SET_FOLDER_MODAL_LOADING', payload: false });
@@ -665,7 +697,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
 
         return result;
       } catch (error) {
-        console.error('❌ Error creating folder:', error);
+        console.warn('Folder creation operation failed');
         dispatch({ type: 'SET_FOLDER_MODAL_LOADING', payload: false });
         throw error;
       }
@@ -708,8 +740,21 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     setSelectedModel: (model: string) => dispatch({ type: 'SET_SELECTED_MODEL', payload: model }),
 
     // Legacy actions (保持向后兼容)
-    savePromptAsTemplate: (name: string) => {
-      return Date.now().toString();
+    savePromptAsTemplate: async (title: string) => {
+      // Create a saved prompt from current prompt builder content
+      const result = await PromptService.createPrompt({
+        title: title,
+        description: 'Created from prompt builder',
+        content: state.promptBuilder.customText
+      });
+
+      if (!result.error && result.data) {
+        // Refresh data to show the new prompt
+        await refreshAllData();
+        return result.data.id;
+      }
+
+      throw new Error('Failed to save prompt as template');
     },
     movePromptToFolder: (promptId: string, folderId: string) => {
       // Will be implemented
