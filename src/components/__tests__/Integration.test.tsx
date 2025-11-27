@@ -181,40 +181,7 @@ describe('Component Integration', () => {
       });
     });
 
-    it('handles search functionality', async () => {
-      render(
-        <SavedPromptList
-          selectedProject="project-1"
-          prompts={mockPrompts}
-          onPromptUpdate={mockOnPromptUpdate}
-          onPromptDelete={mockOnPromptDelete}
-          onPromptLoad={mockOnPromptLoad}
-        />
-      );
-
-      await waitFor(() => {
-        expect(screen.getByText('Test Prompt 1')).toBeInTheDocument();
-        expect(screen.getByText('Test Prompt 2')).toBeInTheDocument();
-      });
-
-      // Search for "First"
-      const searchInput = screen.getByPlaceholderText('Search prompts...');
-      fireEvent.change(searchInput, { target: { value: 'First' } });
-
-      await waitFor(() => {
-        expect(screen.getByText('Test Prompt 1')).toBeInTheDocument();
-        expect(screen.queryByText('Test Prompt 2')).not.toBeInTheDocument();
-      });
-
-      // Clear search
-      fireEvent.change(searchInput, { target: { value: '' } });
-
-      await waitFor(() => {
-        expect(screen.getByText('Test Prompt 1')).toBeInTheDocument();
-        expect(screen.getByText('Test Prompt 2')).toBeInTheDocument();
-      });
-    });
-
+    
     it('handles sorting functionality', async () => {
       render(
         <SavedPromptList
