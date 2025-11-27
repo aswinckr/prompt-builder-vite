@@ -280,10 +280,16 @@ export function markdownToHtml(markdown: string): string {
 
     const processInlineFormatting = (text: string): string => {
       return text
+        // Combined bold and italic: ***text*** → <strong><em>text</em></strong>
+        .replace(/\*\*\*([^*]+)\*\*\*/g, '<strong><em>$1</em></strong>')
+        // Bold and italic: **_text_** or _**text**_ → <strong><em>text</em></strong>
+        .replace(/\*\*_([^_]+)_\*\*|_\*\*([^*]+)\*\*_/g, '<strong><em>$1$2</em></strong>')
         // Bold: **text** → <strong>text</strong>
         .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-        // Italic: *text* → <em>text</em> (not already bold)
-        .replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, '<em>$1</em>')
+        // Italic: *text* → <em>text</em> (not already processed)
+        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
+        // Italic: _text_ → <em>text</em> (not already processed)
+        .replace(/_([^_]+)_/g, '<em>$1</em>')
         // Underline: __text__ → <u>text</u>
         .replace(/__([^_]+)__/g, '<u>$1</u>')
         // Inline code: `code` → <code>code</code>

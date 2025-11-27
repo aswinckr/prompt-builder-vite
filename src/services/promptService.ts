@@ -311,13 +311,13 @@ export class PromptService {
   }
 
   // Subscribe to real-time prompt changes
-  static subscribeToPromptChanges(callback: (payload: any) => void) {
-    const user = supabase.auth.getUser()
+  static async subscribeToPromptChanges(callback: (payload: any) => void) {
+    const { data: { user } } = await supabase.auth.getUser()
     if (!user) return null
 
     return DatabaseService.createRealtimeSubscription(
       'prompts',
-      `user_id=eq.${(supabase.auth.getUser()).then}`,
+      `user_id=eq.${user.id}`,
       callback
     )
   }

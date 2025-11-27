@@ -16,6 +16,7 @@ import { SynchronizedLoading } from './ui/SynchronizedLoading';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 import { useAuthState } from '../contexts/AuthContext';
 import { Project } from '../services/projectService';
+import { isHtmlContent } from '../utils/contentFormatUtils';
 import { htmlToText } from '../utils/markdownUtils';
 
 // Extended project interface with type information
@@ -184,7 +185,7 @@ export function ContextLibrary() {
     if (prompt) {
       // Convert HTML content to plain text if needed
       const rawContent = prompt.content || '';
-      const textContent = rawContent.includes('<') ? htmlToText(rawContent) : rawContent;
+      const textContent = isHtmlContent(rawContent) ? htmlToText(rawContent) : rawContent;
 
       // Clear existing content and load the prompt content
       clearPromptBuilder();

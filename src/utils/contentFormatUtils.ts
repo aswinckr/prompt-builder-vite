@@ -4,31 +4,12 @@
  * Enhanced with validation and error handling from Task Group 4
  */
 
-import { htmlToText, markdownToHtml } from './markdownUtils';
-import {
-  validateHtmlContent,
-  validateContentForEditor,
-  validateContentForStorage,
-  recoverProblematicContent,
-  ValidationResult,
-  SanitizationOptions
-} from './contentValidationUtils';
+import { htmlToText, markdownToHtml, sanitizeHtml } from './markdownUtils';
+import { ContentFormat, ValidationResult, SanitizationOptions, ContentFormatValidation } from '../types/contentTypes';
+import { memoize } from './performanceUtils';
 
-/**
- * Content format types
- */
-export type ContentFormat = 'html' | 'plain-text' | 'markdown' | 'mixed' | 'unknown';
-
-/**
- * Content format validation result
- */
-export interface ContentFormatValidation {
-  format: ContentFormat;
-  confidence: number; // 0-1 scale
-  issues: string[];
-  isSanitized: boolean;
-  validationResult?: ValidationResult;
-}
+// Re-export ContentFormat for backward compatibility
+export type { ContentFormat } from '../types/contentTypes';
 
 /**
  * Robust HTML content detection
@@ -76,7 +57,7 @@ export function isHtmlContent(content: string): boolean {
  * Detect content format using multiple heuristics
  * Enhanced with validation and error handling
  */
-export function detectContentFormat(content: string): ContentFormatValidation {
+function _detectContentFormat(content: string): ContentFormatValidation {
   try {
     const trimmedContent = content?.trim() || '';
     const issues: string[] = [];
@@ -201,6 +182,9 @@ export function detectContentFormat(content: string): ContentFormatValidation {
   }
 }
 
+// Memoized version of detectContentFormat for performance optimization
+export const detectContentFormat = memoize(_detectContentFormat, (content) => content);
+
 /**
  * Convert content to HTML format for TipTapEditor
  * Handles different input formats appropriately with enhanced error handling
@@ -211,13 +195,10 @@ export function convertToHtml(content: string, format?: ContentFormat, options?:
       return { html: '', format: 'unknown' };
     }
 
-    // Validate content first
-    const validation = validateContentForEditor(content, format || 'unknown');
-
-    if (!validation.isValid && validation.severity === 'critical') {
-      console.warn('Content has critical validation issues, attempting recovery');
-      const recoveredContent = recoverProblematicContent(content, validation);
-      return convertToHtml(recoveredContent, format, options);
+    // Basic content validation
+    if (!content || content.length < 3) {
+      console.warn('Content is too short or empty');
+      return { html: content || '', format: 'unknown' };
     }
 
     // Detect format if not provided
@@ -227,9 +208,8 @@ export function convertToHtml(content: string, format?: ContentFormat, options?:
     try {
       switch (detectedFormat) {
         case 'html':
-          // Content is already HTML, validate and use
-          const htmlValidation = validateHtmlContent(content, options);
-          html = htmlValidation.sanitizedContent || content;
+          // Content is already HTML, sanitize and use
+          html = sanitizeHtml(content);
           break;
 
         case 'markdown':
@@ -258,12 +238,19 @@ export function convertToHtml(content: string, format?: ContentFormat, options?:
     }
 
     // Final validation of converted content
-    const finalValidation = validateHtmlContent(html, options);
+    const validationResult: ValidationResult = {
+      isValid: html.length > 0,
+      errors: html.length === 0 ? ['Content conversion failed'] : [],
+      warnings: [],
+      sanitizedContent: html,
+      detectedFormat: detectedFormat,
+      severity: html.length === 0 ? 'high' : 'low'
+    };
 
     return {
       html,
       format: detectedFormat,
-      validationResult: finalValidation
+      validationResult
     };
 
   } catch (error) {
@@ -341,7 +328,13 @@ export interface ContentFormatMetadata {
 export function analyzeContentForStorage(content: string): ContentFormatMetadata {
   try {
     const detection = detectContentFormat(content);
-    const storageValidation = validateContentForStorage(content);
+    const storageValidation: ValidationResult = {
+      isValid: content.length > 0 && content.length < 100000,
+      errors: content.length === 0 ? ['Content is empty'] : content.length >= 100000 ? ['Content too long for storage'] : [],
+      warnings: content.length > 50000 ? ['Content is long and may impact performance'] : [],
+      detectedFormat: detection.format,
+      severity: content.length === 0 ? 'high' : content.length >= 100000 ? 'medium' : 'low'
+    };
     const conversionNotes: string[] = [];
 
     if (detection.format !== 'html') {
@@ -395,7 +388,13 @@ export function processContentForStorage(content: string): {
     });
 
     // Validate final content
-    const finalValidation = validateContentForStorage(conversion.html);
+    const finalValidation: ValidationResult = {
+      isValid: conversion.html.length > 0 && conversion.html.length < 100000,
+      errors: conversion.html.length === 0 ? ['Final content is empty'] : conversion.html.length >= 100000 ? ['Final content too long for storage'] : [],
+      warnings: conversion.html.length > 50000 ? ['Final content is long and may impact performance'] : [],
+      detectedFormat: 'html',
+      severity: conversion.html.length === 0 ? 'high' : conversion.html.length >= 100000 ? 'medium' : 'low'
+    };
 
     return {
       processedContent: conversion.html,

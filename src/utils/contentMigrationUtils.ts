@@ -8,6 +8,23 @@ import { convertToHtml, detectContentFormat, analyzeContentForStorage, processCo
 import { validateContentForStorage } from './contentValidationUtils';
 
 /**
+ * Backup prompt data structure (from JSON backup)
+ */
+interface BackupPrompt {
+  id: string;
+  user_id?: string;
+  title: string;
+  description?: string;
+  content: string;
+  backupMetadata?: {
+    userId?: string;
+    createdAt?: string | Date;
+    updatedAt?: string | Date;
+    projectId?: string;
+  };
+}
+
+/**
  * Migration status tracking
  */
 export interface MigrationStatus {
@@ -313,7 +330,7 @@ export function rollbackMigration(backupData: string): SavedPrompt[] {
       throw new Error('Invalid backup format');
     }
 
-    return backup.prompts.map((prompt: any) => ({
+    return backup.prompts.map((prompt: BackupPrompt) => ({
       id: prompt.id,
       user_id: prompt.backupMetadata?.userId || prompt.user_id || 'unknown',
       title: prompt.title,

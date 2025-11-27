@@ -1,10 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { Modal } from './Modal';
 import { TipTapEditor } from './TipTapEditor';
 import { useToast } from '../contexts/ToastContext';
 import { SavedPrompt } from '../types/SavedPrompt';
 import { convertToHtml, detectContentFormat, validateContentCompatibility } from '../utils/contentFormatUtils';
+import { debounce } from '../utils/performanceUtils';
 
 interface EditPromptModalProps {
   isOpen: boolean;
@@ -43,6 +44,18 @@ export function EditPromptModal({
     isValid: boolean;
     issues: string[];
   }>({ isValid: true, issues: [] });
+
+  // Create debounced validation function to improve performance
+  const debouncedValidation = useCallback(
+    debounce((html: string) => {
+      const validation = validateContentCompatibility(html, 'html');
+      setContentValidation({
+        isValid: validation.isCompatible,
+        issues: validation.issues
+      });
+    }, 300), // 300ms delay
+    []
+  );
 
   // Initialize form when prompt changes
   useEffect(() => {
@@ -165,12 +178,8 @@ export function EditPromptModal({
   const handleContentUpdate = (newContent: EditorContent) => {
     setContent(newContent.html);
 
-    // Real-time validation of updated content
-    const validation = validateContentCompatibility(newContent.html, 'html');
-    setContentValidation({
-      isValid: validation.isCompatible,
-      issues: validation.issues
-    });
+    // Use debounced validation to improve performance
+    debouncedValidation(newContent.html);
   };
 
   const confirmDialog = showConfirmDialog && (

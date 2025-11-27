@@ -4,28 +4,59 @@
  */
 
 import { sanitizeHtml } from './markdownUtils';
-import { detectContentFormat, ContentFormat } from './contentFormatUtils';
+import { ContentFormat, ValidationResult, SanitizationOptions, ContentFormatValidation } from '../types/contentTypes';
 
 /**
- * Validation result interface
+ * Re-export types for convenience
  */
-export interface ValidationResult {
-  isValid: boolean;
-  errors: string[];
-  warnings: string[];
-  sanitizedContent?: string;
-  severity: 'low' | 'medium' | 'high' | 'critical';
-}
+export type { ValidationResult, SanitizationOptions, ContentFormatValidation } from '../types/contentTypes';
 
 /**
- * Content sanitization options
+ * Simple format detection to avoid circular dependency
  */
-export interface SanitizationOptions {
-  removeComments?: boolean;
-  removeEmptyElements?: boolean;
-  normalizeWhitespace?: boolean;
-  preserveFormatting?: boolean;
-  allowedTags?: string[];
+function simpleDetectContentFormat(content: string): { format: ContentFormat; confidence: number } {
+  const trimmed = content.trim();
+
+  if (!trimmed) {
+    return { format: 'unknown', confidence: 0 };
+  }
+
+  // Check for HTML patterns
+  const htmlTagRegex = /<\/?[a-z][\s\S]*>/i;
+  if (htmlTagRegex.test(trimmed)) {
+    const commonHtmlPatterns = [
+      /<p\b/i,
+      /<div\b/i,
+      /<strong\b/i,
+      /<em\b/i,
+      /<br\s*\/?>/i,
+      /<h[1-6]\b/i
+    ];
+
+    const htmlMatches = commonHtmlPatterns.filter(pattern => pattern.test(trimmed)).length;
+    const confidence = Math.min(0.9, htmlMatches * 0.3 + 0.3);
+
+    return { format: 'html', confidence };
+  }
+
+  // Check for Markdown patterns
+  const markdownPatterns = [
+    /^\#{1,6}\s+/m,      // Headers
+    /\*\*.*?\*\*/,       // Bold
+    /\*.*?\*/,           // Italic
+    /^\s*[-*+]\s+/m,     // Lists
+    /\[.*?\]\(.*?\)/,    // Links
+    /`.*?`/              // Inline code
+  ];
+
+  const markdownMatches = markdownPatterns.filter(pattern => pattern.test(trimmed)).length;
+  if (markdownMatches > 0) {
+    const confidence = Math.min(0.8, markdownMatches * 0.2 + 0.2);
+    return { format: 'markdown', confidence };
+  }
+
+  // Default to plain text
+  return { format: 'plain-text', confidence: 0.6 };
 }
 
 /**
@@ -117,9 +148,13 @@ export function validateHtmlContent(content: string, options?: SanitizationOptio
       severity = severity === 'low' ? 'low' : 'medium';
     }
 
-    // Validate variable syntax
+    // Validate variable syntax (more permissive to match actual usage)
     variables.forEach(variable => {
-      if (!/^\{\{[a-zA-Z_][a-zA-Z0-9_]*\}\}$/.test(variable)) {
+      // Allow most variable patterns but catch obviously broken ones
+      if (!/^\{\{[^{}]+\}\}$/.test(variable) ||
+          variable.includes('{{{{') ||
+          variable.includes('}}}}') ||
+          variable.trim() !== variable) {
         errors.push(`Invalid variable syntax: ${variable}`);
         if (severity !== 'critical') severity = 'high';
       }
@@ -169,7 +204,7 @@ export function validateContentForEditor(content: string, format: ContentFormat)
 
   try {
     // Format-specific validation
-    const formatDetection = detectContentFormat(content);
+    const formatDetection = simpleDetectContentFormat(content);
     if (formatDetection.format !== format && formatDetection.confidence > 0.8) {
       warnings.push(`Content appears to be ${formatDetection.format} but expected ${format}`);
       severity = 'low';
@@ -281,7 +316,7 @@ export function validateContentForStorage(content: string): ValidationResult {
     severity = getHigherSeverity(severity, htmlValidation.severity);
 
     // Business logic validation
-    const formatDetection = detectContentFormat(content);
+    const formatDetection = simpleDetectContentFormat(content);
     if (formatDetection.confidence < 0.3) {
       warnings.push('Content format could not be reliably detected');
       severity = getHigherSeverity(severity, 'medium');

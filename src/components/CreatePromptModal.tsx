@@ -4,7 +4,7 @@ import { TipTapEditor } from "./TipTapEditor";
 import { VariablePlaceholderHelper } from "./VariablePlaceholderHelper";
 import { useLibraryActions } from "../contexts/LibraryContext";
 import { useToast } from "../contexts/ToastContext";
-import { markdownToHtml } from "../utils/markdownUtils";
+import { convertToHtml } from "../utils/contentFormatUtils";
 
 interface CreatePromptModalProps {
   isOpen: boolean;
@@ -41,9 +41,9 @@ export function CreatePromptModal({
     if (isOpen && !isInitialized) {
       if (initialContent) {
         // Pre-populate content when saving from prompt builder
-        // Convert markdown/text content to HTML for the TipTapEditor
-        const htmlContent = markdownToHtml(initialContent);
-        setContent({ html: htmlContent, json: null, text: initialContent });
+        // Convert content to HTML for the TipTapEditor with proper format detection
+        const conversion = convertToHtml(initialContent);
+        setContent({ html: conversion.html, json: null, text: initialContent });
       } else {
         // Reset for manual modal opening
         setContent({ html: '', json: null, text: '' });
