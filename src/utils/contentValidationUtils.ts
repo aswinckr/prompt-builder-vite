@@ -98,7 +98,7 @@ export function validateHtmlContent(content: string, options?: SanitizationOptio
 
       if (openNonSelfClosing.length !== closeTags.length) {
         warnings.push('HTML tags may not be properly balanced');
-        if (severity !== 'critical') severity = 'medium';
+        if (severity === 'low' || severity === 'high') severity = 'medium';
       }
     }
 

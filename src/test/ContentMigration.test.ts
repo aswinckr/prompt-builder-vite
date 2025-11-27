@@ -19,7 +19,7 @@ describe('Content Migration Tests', () => {
   // Sample data for testing
   const samplePrompts: SavedPrompt[] = [
     {
-      id: '1',
+      user_id: 'test-user', id: '1',
       title: 'Plain Text Prompt',
       description: 'Simple plain text',
       content: 'This is a plain text prompt with {{variable}}.',
@@ -29,7 +29,7 @@ describe('Content Migration Tests', () => {
       tags: []
     },
     {
-      id: '2',
+      user_id: 'test-user', id: '2',
       title: 'HTML Prompt',
       description: 'Already HTML formatted',
       content: '<p>This is <strong>HTML</strong> content with {{variable}}.</p>',
@@ -39,7 +39,7 @@ describe('Content Migration Tests', () => {
       tags: []
     },
     {
-      id: '3',
+      user_id: 'test-user', id: '3',
       title: 'Markdown Prompt',
       description: 'Markdown formatted content',
       content: `# Title
@@ -57,7 +57,7 @@ Code: \`console.log('hello')\``,
       tags: []
     },
     {
-      id: '4',
+      user_id: 'test-user', id: '4',
       title: 'Mixed Content',
       description: 'Content with mixed formats',
       content: 'This has {{variables}} and <em>some HTML</em> but mostly plain text.',
@@ -67,7 +67,7 @@ Code: \`console.log('hello')\``,
       tags: []
     },
     {
-      id: '5',
+      user_id: 'test-user', id: '5',
       title: 'Empty Content',
       description: 'Empty prompt',
       content: '',
@@ -93,7 +93,7 @@ Code: \`console.log('hello')\``,
     test('should preserve variable placeholders during conversion', () => {
       const contentWithVars = 'Use {{name}}, {{email}}, and {{phone}} in this template.';
       const prompt: SavedPrompt = {
-        id: 'test-1',
+        user_id: 'test-user', id: 'test-1',
         title: 'Variable Test',
         description: 'Test variables',
         content: contentWithVars,
@@ -118,7 +118,7 @@ Second line with {{var1}}.
 Third line with {{var2}}.`;
 
       const prompt: SavedPrompt = {
-        id: 'test-2',
+        user_id: 'test-user', id: 'test-2',
         title: 'Multi-line Test',
         description: 'Multi-line content',
         content: multiLineText,
@@ -175,7 +175,7 @@ Third line with {{var2}}.`;
 
     test('should preserve migration metadata in backup', () => {
       const promptWithMetadata: SavedPrompt = {
-        id: 'test-metadata',
+        user_id: 'test-user', id: 'test-metadata',
         title: 'Metadata Test',
         description: 'Test',
         content: 'Test content',
@@ -208,7 +208,7 @@ Third line with {{var2}}.`;
 
     test('should detect content preservation issues', () => {
       const originalPrompt: SavedPrompt = {
-        id: 'corruption-test',
+        user_id: 'test-user', id: 'corruption-test',
         title: 'Corruption Test',
         description: 'Test corruption detection',
         content: 'This is original content with important data.',
@@ -220,7 +220,7 @@ Third line with {{var2}}.`;
 
       // Simulate a bad migration that loses content
       const badMigrationResult = {
-        id: 'corruption-test',
+        user_id: 'test-user', id: 'corruption-test',
         success: true,
         originalFormat: 'plain-text',
         finalFormat: 'html',
@@ -236,7 +236,7 @@ Third line with {{var2}}.`;
 
     test('should detect variable count mismatches', () => {
       const promptWithManyVars: SavedPrompt = {
-        id: 'var-test',
+        user_id: 'test-user', id: 'var-test',
         title: 'Variable Test',
         description: 'Test variable preservation',
         content: 'Use {{var1}}, {{var2}}, {{var3}} in this template.',
@@ -248,7 +248,7 @@ Third line with {{var2}}.`;
 
       // Simulate migration that loses a variable
       const incompleteMigrationResult = {
-        id: 'var-test',
+        user_id: 'test-user', id: 'var-test',
         success: true,
         originalFormat: 'plain-text',
         finalFormat: 'html',

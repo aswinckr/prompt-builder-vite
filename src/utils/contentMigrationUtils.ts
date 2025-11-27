@@ -153,7 +153,8 @@ export async function migratePromptBatch(
     enableBackup: true,
     dryRun: false,
     contentValidation: true
-  ): Promise<{
+  }
+): Promise<{
     results: MigrationResult[];
     status: MigrationStatus;
   }> {
@@ -314,6 +315,7 @@ export function rollbackMigration(backupData: string): SavedPrompt[] {
 
     return backup.prompts.map((prompt: any) => ({
       id: prompt.id,
+      user_id: prompt.backupMetadata?.userId || prompt.user_id || 'unknown',
       title: prompt.title,
       description: prompt.description,
       content: prompt.content,

@@ -218,6 +218,7 @@ Code: \`console.log('{{debug_var}}')\``
       const legacyPrompts: SavedPrompt[] = [
         {
           id: 'legacy-1',
+          user_id: 'test-user',
           title: 'Plain Text Legacy',
           description: 'Old plain text prompt',
           content: 'This is old plain text content with {{placeholder}}.',
@@ -228,6 +229,7 @@ Code: \`console.log('{{debug_var}}')\``
         },
         {
           id: 'legacy-2',
+          user_id: 'test-user',
           title: 'Malformed HTML Legacy',
           description: 'Old malformed HTML',
           content: '<div>Malformed content with <strong>bold</strong> and {{variable}}</div>',
@@ -238,6 +240,7 @@ Code: \`console.log('{{debug_var}}')\``
         },
         {
           id: 'legacy-3',
+          user_id: 'test-user',
           title: 'Already Valid HTML',
           description: 'Already correct format',
           content: '<p>Already valid <em>HTML</em> content with {{valid_var}}.</p>',
@@ -248,6 +251,7 @@ Code: \`console.log('{{debug_var}}')\``
         },
         {
           id: 'legacy-4',
+          user_id: 'test-user',
           title: 'Complex Mixed Content',
           description: 'Mixed format content',
           content: `# Title
@@ -297,6 +301,7 @@ Paragraph with **markdown** and {{var1}}.
       const problematicPrompts: SavedPrompt[] = [
         {
           id: 'problem-1',
+          user_id: 'test-user',
           title: 'Empty Content',
           description: 'No content to migrate',
           content: '',
@@ -307,6 +312,7 @@ Paragraph with **markdown** and {{var1}}.
         },
         {
           id: 'problem-2',
+          user_id: 'test-user',
           title: 'Very Long Content',
           description: 'Extremely long content',
           content: 'A'.repeat(100000) + ' with {{end_variable}}',
@@ -317,6 +323,7 @@ Paragraph with **markdown** and {{var1}}.
         },
         {
           id: 'problem-3',
+          user_id: 'test-user',
           title: 'Null Content',
           description: 'Null content handling',
           content: null as any,
@@ -427,7 +434,7 @@ Final content with {{final_variable}}.`;
 Thank you for your order {{order_number}}.
 
 We've processed your request for {{product_name}}.
-Total amount: ${{amount}}.
+Total amount: \${{amount}}.
 
 Best regards,
 {{agent_name}}`,
@@ -461,7 +468,7 @@ Use this API key: {{api_key}}
 - {{benefit_3}}
 
 ### Pricing
-Starting at ${{price}}/month
+Starting at \${{price}}/month
 
 ### Contact
 {{sales_email}} | {{phone_number}}`,

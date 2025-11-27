@@ -180,7 +180,7 @@ export class PromptService {
       };
 
       // Remove undefined/null values to avoid database issues
-      Object.keys(processedUpdateData).forEach(key => {
+      (Object.keys(processedUpdateData) as Array<keyof typeof processedUpdateData>).forEach(key => {
         if (processedUpdateData[key] === undefined) {
           delete processedUpdateData[key];
         }
