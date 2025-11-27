@@ -168,15 +168,30 @@ export class PromptService {
         return { data: null, error: 'User not authenticated' }
       }
 
+      // Only include fields that actually exist in the database and should be updatable
+      const processedUpdateData = {
+        title: updateData.title,
+        description: updateData.description,
+        content: updateData.content,
+        project_id: updateData.project_id,
+        folder: updateData.folder,
+        tags: updateData.tags && updateData.tags.length > 0 ? updateData.tags : null,
+        updated_at: new Date().toISOString()
+      };
+
+      // Remove undefined/null values to avoid database issues
+      (Object.keys(processedUpdateData) as Array<keyof typeof processedUpdateData>).forEach(key => {
+        if (processedUpdateData[key] === undefined) {
+          delete processedUpdateData[key];
+        }
+      });
+
       const { data, error } = await supabase
         .from('prompts')
-        .update({
-          ...updateData,
-          updated_at: new Date().toISOString()
-        })
+        .update(processedUpdateData)
         .eq('id', id)
         .eq('user_id', user.id)
-        .select()
+        .select('id, user_id, project_id, title, description, content, folder, tags, created_at, updated_at')
         .single()
 
       return await DatabaseService.handleResponse(
@@ -296,13 +311,13 @@ export class PromptService {
   }
 
   // Subscribe to real-time prompt changes
-  static subscribeToPromptChanges(callback: (payload: any) => void) {
-    const user = supabase.auth.getUser()
+  static async subscribeToPromptChanges(callback: (payload: any) => void) {
+    const { data: { user } } = await supabase.auth.getUser()
     if (!user) return null
 
     return DatabaseService.createRealtimeSubscription(
       'prompts',
-      `user_id=eq.${(supabase.auth.getUser()).then}`,
+      `user_id=eq.${user.id}`,
       callback
     )
   }

@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { X } from 'lucide-react';
 import { Modal } from './Modal';
 import { TipTapEditor } from './TipTapEditor';
 import { useToast } from '../contexts/ToastContext';
 import { SavedPrompt } from '../types/SavedPrompt';
+import { convertToHtml, detectContentFormat, validateContentCompatibility } from '../utils/contentFormatUtils';
+import { debounce } from '../utils/performanceUtils';
 
 interface EditPromptModalProps {
   isOpen: boolean;
@@ -32,17 +34,80 @@ export function EditPromptModal({
   const { showToast } = useToast();
 
   const [title, setTitle] = useState('');
+  const [description, setDescription] = useState('');
   const [content, setContent] = useState('');
+  const [originalContent, setOriginalContent] = useState('');
   const [hasChanges, setHasChanges] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [contentValidation, setContentValidation] = useState<{
+    isValid: boolean;
+    issues: string[];
+  }>({ isValid: true, issues: [] });
+
+  // Create debounced validation function to improve performance
+  const debouncedValidation = useCallback(
+    debounce((html: string) => {
+      const validation = validateContentCompatibility(html, 'html');
+      setContentValidation({
+        isValid: validation.isCompatible,
+        issues: validation.issues
+      });
+    }, 300), // 300ms delay
+    []
+  );
 
   // Initialize form when prompt changes
   useEffect(() => {
     if (prompt) {
       setTitle(prompt.title);
-      setContent(prompt.content || prompt.description || '');
-      setHasChanges(false);
+      setDescription(prompt.description || '');
+
+      // Handle both old plain text prompts and new HTML prompts
+      const rawContent = prompt.content || '';
+
+      try {
+        // Validate content compatibility with expected HTML format
+        const validation = validateContentCompatibility(rawContent, 'html');
+
+        let processedContent = '';
+        if (validation.isCompatible) {
+          // Content is already valid HTML, use as-is
+          processedContent = rawContent;
+        } else {
+          // Content needs conversion, use robust conversion utility
+          const conversion = convertToHtml(rawContent);
+          processedContent = conversion.html;
+
+          // Log conversion for debugging purposes
+          if (conversion.format !== 'html') {
+            console.info(`EditPromptModal: Converted ${conversion.format} to HTML for prompt "${prompt.title}"`);
+          }
+        }
+
+        // Additional validation to ensure we have valid content
+        const formatDetection = detectContentFormat(processedContent);
+        setContentValidation({
+          isValid: formatDetection.confidence > 0.5,
+          issues: formatDetection.issues
+        });
+
+        setContent(processedContent);
+        setOriginalContent(processedContent); // Store the processed content for change detection
+        setHasChanges(false);
+
+      } catch (error) {
+        console.error('EditPromptModal: Error processing content:', error);
+        // Fallback to simple HTML wrapping if conversion fails
+        const fallbackContent = `<p>${rawContent.replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`;
+        setContent(fallbackContent);
+        setOriginalContent(fallbackContent);
+        setContentValidation({
+          isValid: false,
+          issues: ['Content processing failed, using fallback formatting']
+        });
+        setHasChanges(false);
+      }
     }
   }, [prompt]);
 
@@ -50,10 +115,11 @@ export function EditPromptModal({
   useEffect(() => {
     if (prompt) {
       const titleChanged = title !== prompt.title;
-      const contentChanged = content !== (prompt.content || prompt.description || '');
-      setHasChanges(titleChanged || contentChanged);
+      const descriptionChanged = description !== (prompt.description || '');
+      const contentChanged = content !== originalContent;
+      setHasChanges(titleChanged || descriptionChanged || contentChanged);
     }
-  }, [title, content, prompt]);
+  }, [title, description, content, originalContent, prompt]);
 
   const handleSave = async () => {
     if (!title.trim()) {
@@ -61,19 +127,26 @@ export function EditPromptModal({
       return;
     }
 
+    // Validate content format before saving
+    const validation = validateContentCompatibility(content, 'html');
+    if (!validation.isCompatible && validation.issues.length > 0) {
+      showToast(`Content validation issues: ${validation.issues.join(', ')}`, 'warning');
+    }
+
     if (prompt) {
       setIsSubmitting(true);
       try {
         const promptData: Partial<SavedPrompt> = {
-          ...prompt,
           title: title.trim(),
-          content: content.trim(),
-          description: content.trim(), // Keep description for backward compatibility
-          updated_at: new Date(),
+          description: description.trim() || null,
+          content: content.trim(), // Save HTML content as-is from TipTapEditor
+          project_id: prompt.project_id || null,
+          folder: prompt.folder || null,
+          tags: prompt.tags || [],
         };
 
+  
         await onSave(promptData);
-        showToast(`Prompt '${title.trim()}' updated successfully`, 'success');
         onClose();
       } catch (error) {
         console.error('Failed to save prompt:', error);
@@ -104,6 +177,9 @@ export function EditPromptModal({
 
   const handleContentUpdate = (newContent: EditorContent) => {
     setContent(newContent.html);
+
+    // Use debounced validation to improve performance
+    debouncedValidation(newContent.html);
   };
 
   const confirmDialog = showConfirmDialog && (
@@ -160,6 +236,25 @@ export function EditPromptModal({
             )}
           </div>
 
+          {/* Description Field */}
+          <div>
+            <label htmlFor="prompt-description" className="block text-sm font-medium text-neutral-300 mb-2">
+              Description
+            </label>
+            <textarea
+              id="prompt-description"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Optional description about how to use this prompt..."
+              rows={3}
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
+              disabled={isSubmitting || isLoading}
+            />
+            <p className="mt-1 text-xs text-neutral-500">
+              Additional context about when and how to use this prompt
+            </p>
+          </div>
+
           {/* Content Editor */}
           <div>
             <label className="block text-sm font-medium text-neutral-300 mb-2">
@@ -171,6 +266,15 @@ export function EditPromptModal({
               editable={!isSubmitting && !isLoading}
               placeholder="Write your prompt content here..."
             />
+
+            {/* Content Validation Feedback */}
+            {!contentValidation.isValid && contentValidation.issues.length > 0 && (
+              <div className="mt-2 p-2 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                <p className="text-xs text-yellow-400">
+                  Content validation: {contentValidation.issues.join(', ')}
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Footer Actions */}

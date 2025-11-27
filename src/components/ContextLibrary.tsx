@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, AlertCircle, Loader2, Plus } from 'lucide-react';
 import { AppLogo } from './AppLogo';
 import { ProjectSidebar } from './ProjectSidebar';
@@ -15,6 +16,8 @@ import { SynchronizedLoading } from './ui/SynchronizedLoading';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 import { useAuthState } from '../contexts/AuthContext';
 import { Project } from '../services/projectService';
+import { isHtmlContent } from '../utils/contentFormatUtils';
+import { htmlToText } from '../utils/markdownUtils';
 
 // Extended project interface with type information
 interface ProjectWithType extends Project {
@@ -41,7 +44,10 @@ export function ContextLibrary() {
 
   // Get data from LibraryContext
   const { savedPrompts, promptProjects, datasetProjects, systemPromptProjects, systemDatasetProjects, loading, error, folderModal } = useLibraryState();
-  const { updateSavedPrompt, deleteSavedPrompt, createFolder, closeFolderModal, openFolderModal } = useLibraryActions();
+  const { updateSavedPrompt, deleteSavedPrompt, createFolder, closeFolderModal, openFolderModal, setCustomText, clearPromptBuilder } = useLibraryActions();
+
+  // Get navigation function
+  const navigate = useNavigate();
 
   // Combine all projects for sidebar with type information (system projects first) - memoized for performance
   const allProjects: ProjectWithType[] = useMemo(() => [
@@ -177,8 +183,18 @@ export function ContextLibrary() {
   const handlePromptLoad = (promptId: string) => {
     const prompt = savedPrompts?.find(p => p.id === promptId);
     if (prompt) {
-            // Here you could implement logic to load the prompt into the main editor
-      // For now, we'll just log it
+      // Convert HTML content to plain text if needed
+      const rawContent = prompt.content || '';
+      const textContent = isHtmlContent(rawContent) ? htmlToText(rawContent) : rawContent;
+
+      // Clear existing content and load the prompt content
+      clearPromptBuilder();
+      setCustomText(textContent);
+
+      // Add a small delay to ensure state is updated before navigation
+      Promise.resolve().then(() => {
+        navigate('/prompt');
+      });
     }
   };
 
