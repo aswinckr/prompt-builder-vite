@@ -30,7 +30,7 @@ export class GlobalSearchService {
   ): Promise<GlobalSearchResponse> {
     try {
       // Check cache first
-      const cachedResult = this.getCachedResult(query);
+      const cachedResult = this.getCachedResult(query, limit);
       if (cachedResult) {
         return cachedResult;
       }
@@ -44,7 +44,7 @@ export class GlobalSearchService {
           query: trimmedQuery,
           hasError: false
         };
-        this.cacheResult(trimmedQuery, emptyResponse);
+        this.cacheResult(trimmedQuery, limit, emptyResponse);
         return emptyResponse;
       }
 
@@ -78,7 +78,7 @@ export class GlobalSearchService {
       };
 
       // Cache the result
-      this.cacheResult(trimmedQuery, response);
+      this.cacheResult(trimmedQuery, limit, response);
 
       return response;
     } catch (error) {
@@ -178,8 +178,8 @@ export class GlobalSearchService {
   /**
    * Get cached result if valid
    */
-  private static getCachedResult(query: string): GlobalSearchResponse | null {
-    const cacheKey = query.toLowerCase().trim();
+  private static getCachedResult(query: string, limit: number): GlobalSearchResponse | null {
+    const cacheKey = `${query.toLowerCase().trim()}:${limit}`;
     const entry = this.cache.get(cacheKey);
 
     if (!entry) {
@@ -198,8 +198,8 @@ export class GlobalSearchService {
   /**
    * Cache search result
    */
-  private static cacheResult(query: string, response: GlobalSearchResponse): void {
-    const cacheKey = query.toLowerCase().trim();
+  private static cacheResult(query: string, limit: number, response: GlobalSearchResponse): void {
+    const cacheKey = `${query.toLowerCase().trim()}:${limit}`;
     const entry: SearchCacheEntry = {
       query,
       response,
