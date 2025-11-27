@@ -3,27 +3,39 @@ import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'r
 import { ContextLibrary } from './components/ContextLibrary';
 import { PromptBuilder } from './components/PromptBuilder';
 import { BottomTabNavigation } from './components/BottomTabNavigation';
+import { Header } from './components/Header';
 import { RouteTransition } from './components/ui/RouteTransition';
 import { LibraryProvider } from './contexts/LibraryContext';
 import { AuthProvider } from './contexts/AuthContext';
 import { ToastProvider } from './contexts/ToastContext';
 
 function AppContent() {
+  const location = useLocation();
+  const isMainRoute = location.pathname === '/prompt' || location.pathname === '/knowledge';
+
   return (
-    <div className="h-screen bg-neutral-900 overflow-hidden relative">
-      <Routes>
-        <Route path="/" element={<Navigate to="/prompt" replace />} />
-        <Route path="/prompt" element={
-          <RouteTransition>
-            <PromptBuilder />
-          </RouteTransition>
-        } />
-        <Route path="/knowledge" element={
-          <RouteTransition>
-            <ContextLibrary />
-          </RouteTransition>
-        } />
-      </Routes>
+    <div className="h-screen bg-neutral-900 overflow-hidden relative flex flex-col">
+      {/* Header - Only show on main routes */}
+      {isMainRoute && <Header />}
+
+      {/* Main Content */}
+      <div className="flex-1 overflow-hidden">
+        <Routes>
+          <Route path="/" element={<Navigate to="/prompt" replace />} />
+          <Route path="/prompt" element={
+            <RouteTransition>
+              <PromptBuilder />
+            </RouteTransition>
+          } />
+          <Route path="/knowledge" element={
+            <RouteTransition>
+              <ContextLibrary />
+            </RouteTransition>
+          } />
+        </Routes>
+      </div>
+
+      {/* Bottom Navigation */}
       <BottomTabNavigation />
     </div>
   );

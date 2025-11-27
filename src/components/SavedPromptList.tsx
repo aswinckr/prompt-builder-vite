@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Search, Calendar, Hash, Play, Edit, Trash2, FileText } from 'lucide-react';
+import { Calendar, Hash, Play, Edit, Trash2, FileText } from 'lucide-react';
 import { SavedPrompt } from '../types/SavedPrompt';
 import { EditPromptModal } from './EditPromptModal';
 import { ConfirmationModal } from './ConfirmationModal';
@@ -22,8 +22,7 @@ export function SavedPromptList({
   onPromptDelete,
   onPromptLoad
 }: SavedPromptListProps) {
-  const [searchQuery, setSearchQuery] = useState('');
-  const [selectedDate, setSelectedDate] = useState<string>('all');
+    const [selectedDate, setSelectedDate] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'updated' | 'created' | 'title'>('updated');
   const [editingPrompt, setEditingPrompt] = useState<SavedPrompt | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -40,16 +39,6 @@ export function SavedPromptList({
 
     // Filter by selected project
     filtered = filtered.filter(prompt => prompt.project_id === selectedProject);
-
-    // Filter by search query
-    if (searchQuery) {
-      const query = searchQuery.toLowerCase();
-      filtered = filtered.filter(prompt =>
-        prompt.title?.toLowerCase().includes(query) ||
-        prompt.description?.toLowerCase().includes(query) ||
-        prompt.tags.some(tag => tag.toLowerCase().includes(query))
-      );
-    }
 
     // Filter by date
     if (selectedDate !== 'all') {
@@ -87,7 +76,7 @@ export function SavedPromptList({
     });
 
     return filtered;
-  }, [prompts, selectedProject, searchQuery, selectedDate, sortBy]);
+  }, [prompts, selectedProject, selectedDate, sortBy]);
 
   const handleLoadPrompt = (promptId: string) => {
     onPromptLoad?.(promptId);
@@ -180,21 +169,6 @@ export function SavedPromptList({
       <div className="h-full flex flex-col">
         {/* Filters and Controls */}
         <div className="border-b border-neutral-700 p-6 space-y-4">
-          {/* Search Bar */}
-          <div className="relative">
-            <Search
-              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-neutral-500"
-              size={18}
-            />
-            <input
-              type="text"
-              placeholder="Search prompts..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg pl-10 pr-4 py-2.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-neutral-600 focus:ring-2 focus:ring-blue-500/20 transition-all"
-            />
-          </div>
-
           {/* Filter Controls */}
           <div className="flex flex-wrap items-center gap-4">
             {/* Date Filter */}
