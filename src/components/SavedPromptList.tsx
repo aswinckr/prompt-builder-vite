@@ -100,11 +100,10 @@ export function SavedPromptList({
       // Use LibraryContext action for consistency
       const result = await updateSavedPrompt(editingPrompt.id, promptToSave);
 
-      const crudResult = handleCrudResult(result, 'Prompt updated', promptToSave.title);
+      const crudResult = handleCrudResult(result, 'Prompt updated');
 
       if (crudResult.success) {
-        // Call the parent's update handler for backward compatibility
-        onPromptUpdate?.(promptToSave);
+        // Note: LibraryContext already handles data refresh via refreshAllData()
         showToast(crudResult.message, 'success');
         setEditingPrompt(null);
       } else {
@@ -267,7 +266,7 @@ export function SavedPromptList({
 
                   {/* Tags */}
                   <div className="flex flex-wrap gap-1 mb-3">
-                    {prompt.tags.map((tag) => (
+                    {prompt.tags && prompt.tags.map((tag) => (
                       <span
                         key={tag}
                         className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-neutral-700 text-neutral-300"

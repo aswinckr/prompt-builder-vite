@@ -93,7 +93,7 @@ export function CreatePromptModal({
       await createSavedPrompt({
         title: title.trim(),
         description: description.trim() || null,
-        content: content.text, // Use plain text instead of HTML
+        content: content.html, // Save as HTML to preserve formatting
         project_id: selectedProjectId || null, // Use the selected project ID
         tags: [], // Empty tags for now - could be added later
       });

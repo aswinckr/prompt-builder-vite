@@ -46,7 +46,7 @@ export const ContextBlock = React.memo(function ContextBlock({ block, isSelected
   return (
     <div
       data-block-id={block.id}
-      className={`h-full p-4 rounded-lg border transition-all text-left focus:outline-none focus:ring-2 focus:ring-blue-500/50 flex flex-col ${
+      className={`h-full p-4 rounded-lg border transition-all text-left focus:outline-none focus:ring-2 focus:ring-blue-500/50 flex flex-col cursor-pointer ${
         isSelected
           ? 'bg-blue-500/10 border-blue-500/30 shadow-lg'
           : 'bg-neutral-800 border-neutral-700 hover:bg-neutral-750 hover:border-neutral-600'
