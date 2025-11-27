@@ -5,7 +5,7 @@ import { vi } from 'vitest';
 import '@testing-library/jest-dom';
 import { AuthProvider, useAuthState, useAuthActions } from '../../contexts/AuthContext';
 import { ProfileModal } from '../ProfileModal';
-import { SearchBar } from '../SearchBar';
+import { GlobalSearch } from '../GlobalSearch';
 
 // Test wrapper component to access auth context
 function TestComponent() {
@@ -46,39 +46,31 @@ describe('Authentication Flow Integration', () => {
     expect(screen.getByTestId('auth-status')).toHaveTextContent('not authenticated');
   });
 
-  test('should render add button correctly', () => {
-    const mockOnAddKnowledge = vi.fn();
-
+  test('should render GlobalSearch correctly', () => {
     render(
       <AuthProvider>
-        <SearchBar
-          onAddKnowledge={mockOnAddKnowledge}
-          searchType="context"
-        />
+        <GlobalSearch />
       </AuthProvider>
     );
 
-    // The add button should be present when onAddKnowledge is provided
-    const addButton = screen.getByLabelText(/Add new knowledge context block/i);
-    expect(addButton).toBeInTheDocument();
+    // GlobalSearch should render with "Search everywhere" placeholder
+    expect(screen.getByPlaceholderText(/Search everywhere/i)).toBeInTheDocument();
   });
 
-  test('should handle add button click', async () => {
-    const mockOnAddKnowledge = vi.fn();
+  test('should handle GlobalSearch input', async () => {
     const user = userEvent.setup();
 
     render(
       <AuthProvider>
-        <SearchBar
-          onAddKnowledge={mockOnAddKnowledge}
-          searchType="context"
-        />
+        <GlobalSearch />
       </AuthProvider>
     );
 
-    const addButton = screen.getByLabelText(/Add new knowledge context block/i);
-    await user.click(addButton);
-    expect(mockOnAddKnowledge).toHaveBeenCalled();
+    const searchInput = screen.getByPlaceholderText(/Search everywhere/i);
+    await user.type(searchInput, 'test query');
+
+    // Input should accept text
+    expect(searchInput).toHaveValue('test query');
   });
 
   test('should render ProfileModal without crashing', () => {

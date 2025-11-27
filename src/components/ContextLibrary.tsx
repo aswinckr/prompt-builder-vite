@@ -4,7 +4,7 @@ import { AppLogo } from './AppLogo';
 import { ProjectSidebar } from './ProjectSidebar';
 import { ProfileButton } from './ProfileButton';
 import { ProfileModal } from './ProfileModal';
-import { SearchBar } from './SearchBar';
+import { GlobalSearch } from './GlobalSearch';
 import { CollapsibleTagSection } from './CollapsibleTagSection';
 import { ContextBlocksGrid } from './ContextBlocksGrid';
 import { SavedPromptList } from './SavedPromptList';
@@ -272,15 +272,38 @@ export function ContextLibrary() {
                   <ChevronRight className="w-4 h-4" />
                 </button>
 
-                {/* Search Bar - Responsive across all screen sizes */}
+                {/* Global Search - Responsive across all screen sizes */}
                 <div className="flex-1 min-w-0">
-                  <SearchBar
-                    showFullWidth={false}
-                    onAddKnowledge={getCurrentProjectType() === 'datasets' ? handleAddKnowledge : undefined}
-                    onAddPrompt={handleAddPrompt}
-                    searchType={getCurrentProjectType() === 'prompts' ? 'prompts' : 'context'}
-                  />
+                  <GlobalSearch />
                 </div>
+
+                {/* Add Buttons */}
+                {isAuthenticated && (
+                  <div className="flex gap-2">
+                    {getCurrentProjectType() === 'datasets' && (
+                      <button
+                        onClick={handleAddKnowledge}
+                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 whitespace-nowrap"
+                        aria-label="Add new knowledge context block"
+                      >
+                        <Plus size={16} />
+                        <span className="hidden sm:inline">Add Knowledge</span>
+                        <span className="sm:hidden">Add</span>
+                      </button>
+                    )}
+                    {getCurrentProjectType() === 'prompts' && (
+                      <button
+                        onClick={handleAddPrompt}
+                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 whitespace-nowrap"
+                        aria-label="Add new prompt template"
+                      >
+                        <Plus size={16} />
+                        <span className="hidden sm:inline">Add Prompt</span>
+                        <span className="sm:hidden">Add</span>
+                      </button>
+                    )}
+                  </div>
+                )}
             </div>
             </div>
 
