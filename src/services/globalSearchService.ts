@@ -36,18 +36,17 @@ export class GlobalSearchService {
       }
 
       // Handle empty query
-      if (!query || query.trim().length === 0) {
+      const trimmedQuery = query.trim();
+      if (trimmedQuery.length === 0) {
         const emptyResponse: GlobalSearchResponse = {
           results: [],
           totalResults: 0,
-          query: '',
+          query: trimmedQuery,
           hasError: false
         };
-        this.cacheResult(query, emptyResponse);
+        this.cacheResult(trimmedQuery, emptyResponse);
         return emptyResponse;
       }
-
-      const trimmedQuery = query.trim();
 
       // Execute searches in parallel
       const [promptSearchResult, contextSearchResult] = await Promise.allSettled([
@@ -79,7 +78,7 @@ export class GlobalSearchService {
       };
 
       // Cache the result
-      this.cacheResult(query, response);
+      this.cacheResult(trimmedQuery, response);
 
       return response;
     } catch (error) {

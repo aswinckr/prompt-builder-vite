@@ -100,10 +100,11 @@ export function GlobalSearch({
         event.preventDefault();
         setIsOpen(false);
         setHighlightedIndex(-1);
+        setQuery('');
         inputRef.current?.blur();
         break;
     }
-  }, [isOpen, flatResults, highlightedIndex]);
+  }, [isOpen, flatResults, highlightedIndex, setQuery]);
 
   // Handle result clicks - memoized for performance
   const handleResultClick = useCallback((result: SearchResult) => {
