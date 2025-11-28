@@ -57,13 +57,13 @@ export class ConversationMessageService {
     try {
       // Validate required fields
       if (!messageData.conversation_id) {
-        return { data: null, error: 'Conversation ID is required' }
+        throw new Error('Conversation ID is required');
       }
       if (!messageData.role || !['user', 'assistant', 'system'].includes(messageData.role)) {
-        return { data: null, error: 'Valid role is required (user, assistant, or system)' }
+        throw new Error('Valid role is required (user, assistant, or system)');
       }
       if (!messageData.content) {
-        return { data: null, error: 'Message content is required' }
+        throw new Error('Message content is required');
       }
 
       // Get the next message order for this conversation
@@ -91,7 +91,6 @@ export class ConversationMessageService {
         .single()
 
       if (error) {
-        console.error('Supabase error creating message:', error)
         return { data: null, error: `Database error: ${error.message}` }
       }
 
@@ -99,7 +98,6 @@ export class ConversationMessageService {
         DatabaseService.convertRow<ConversationMessage>(data)
       )
     } catch (err) {
-      console.error('Error in createMessage:', err)
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }
   }
@@ -269,6 +267,42 @@ export class ConversationMessageService {
       }
 
       return { data: data?.length || 0, error: null }
+    } catch (err) {
+      return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
+    }
+  }
+
+  // Update token count for the most recent user message in a conversation
+  static async updateUserMessageTokens(
+    conversationId: string,
+    tokenCount: number
+  ): Promise<DatabaseResponse<ConversationMessage>> {
+    try {
+      // Get the most recent user message in this conversation
+      const { data, error } = await supabase
+        .from('conversation_messages')
+        .select('*')
+        .eq('conversation_id', conversationId)
+        .eq('role', 'user')
+        .order('message_order', { ascending: false })
+        .limit(1)
+        .single()
+
+      if (error) {
+        return { data: null, error: `Failed to find user message: ${error.message}` }
+      }
+
+      // Update the token count for that message
+      const updateResult = await this.updateMessage(data.id, {
+        token_count: tokenCount,
+        metadata: {
+          ...data.metadata,
+          accurate_token_count: true,
+          token_source: 'api_usage_data'
+        }
+      })
+
+      return updateResult
     } catch (err) {
       return { data: null, error: err instanceof Error ? err.message : 'Unknown error' }
     }

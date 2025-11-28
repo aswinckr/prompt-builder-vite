@@ -102,7 +102,6 @@ export function ChatInterface({
         return result.data.id;
       }
     } catch (error) {
-      console.error('Failed to create conversation:', error);
       showToast('Failed to save conversation', 'error');
     }
     return null;
@@ -118,7 +117,6 @@ export function ChatInterface({
         // message_order is omitted - will be auto-calculated by the service
       });
     } catch (error) {
-      console.error('Failed to save message:', error);
       showToast('Failed to save message to conversation', 'error');
     }
   };
@@ -132,7 +130,6 @@ export function ChatInterface({
       let totalTokens;
       if (usageData && usageData.totalTokens) {
         totalTokens = usageData.totalTokens;
-        console.log('Using API token count:', totalTokens);
       } else {
         // Fallback: Calculate from actual message token counts in database
         // This is more accurate than local message estimates
@@ -140,16 +137,12 @@ export function ChatInterface({
           const messageResult = await ConversationMessageService.getMessagesByConversationId(conversationId);
           if (messageResult.data) {
             totalTokens = messageResult.data.reduce((sum, msg) => sum + (msg.token_count || 0), 0);
-            console.log('Using database-calculated token count:', totalTokens);
           } else {
             // Final fallback: use local message estimates
             totalTokens = messages.reduce((sum, msg) => sum + (msg.tokenCount || 0), 0);
-            console.log('Using local estimated token count:', totalTokens);
           }
         } catch (error) {
-          console.warn('Failed to get message token counts from database:', error);
           totalTokens = messages.reduce((sum, msg) => sum + (msg.tokenCount || 0), 0);
-          console.log('Using local estimated token count (fallback):', totalTokens);
         }
       }
 
@@ -159,14 +152,6 @@ export function ChatInterface({
                           selectedModel.includes('gemini') ? 0.00001 : 0.00002;
 
       const estimatedCost = totalTokens * costPerToken;
-
-      console.log('Updating conversation stats:', {
-        conversationId,
-        totalTokens,
-        executionDuration,
-        estimatedCost,
-        usageData
-      });
 
       const result = await updateConversation(conversationId, {
         token_usage: totalTokens,
@@ -182,13 +167,8 @@ export function ChatInterface({
           })
         }
       });
-
-      console.log('Conversation stats update result:', result);
     } catch (error) {
-      console.error('Failed to update conversation stats:', error);
-      if (error instanceof Error) {
-        console.error('Error details:', error.stack);
-      }
+      // Error handled silently - conversation stats update is non-critical
     }
   };
 
@@ -291,9 +271,7 @@ export function ChatInterface({
       try {
         // In Vercel AI SDK v5, usage might be a promise or direct property
         usageData = await Promise.resolve(result.usage);
-        console.log('Usage data captured:', usageData);
       } catch (error) {
-        console.warn('Failed to capture usage data:', error);
         usageData = null;
       }
 
@@ -310,11 +288,22 @@ export function ChatInterface({
           } : {}
         });
 
+        // Update user message token count with accurate API data
+        if (usageData && (usageData as any).promptTokens) {
+          try {
+            await ConversationMessageService.updateUserMessageTokens(
+              convId,
+              (usageData as any).promptTokens
+            );
+          } catch (error) {
+            // Silently handle the error - user message token update is non-critical
+          }
+        }
+
         // Update conversation statistics
         await updateConversationStats(convId, usageData);
       }
     } catch (error: any) {
-      console.error("Initial chat error:", error);
       setError(error.message || "Failed to generate response");
     } finally {
       setIsLoading(false);
@@ -417,9 +406,7 @@ export function ChatInterface({
       try {
         // In Vercel AI SDK v5, usage might be a promise or direct property
         usageData = await Promise.resolve(result.usage);
-        console.log('Usage data captured:', usageData);
       } catch (error) {
-        console.warn('Failed to capture usage data:', error);
         usageData = null;
       }
 
@@ -436,11 +423,22 @@ export function ChatInterface({
           } : {}
         });
 
+        // Update user message token count with accurate API data
+        if (usageData && (usageData as any).promptTokens) {
+          try {
+            await ConversationMessageService.updateUserMessageTokens(
+              conversationId,
+              (usageData as any).promptTokens
+            );
+          } catch (error) {
+            // Silently handle the error - user message token update is non-critical
+          }
+        }
+
         // Update conversation statistics
         await updateConversationStats(conversationId, usageData);
       }
     } catch (error: any) {
-      console.error("Chat error:", error);
       setError(error.message || "Failed to generate response");
 
       // Remove the empty assistant message if error occurred

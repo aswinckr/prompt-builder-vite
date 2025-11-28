@@ -917,7 +917,6 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         const result = await ConversationMessageService.createMessage(messageData);
         return result;
       } catch (error) {
-        console.error('Failed to create conversation message:', error);
         return { data: null, error: 'Failed to create conversation message' };
       }
     },

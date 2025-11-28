@@ -232,18 +232,20 @@ RETURNS TABLE (
 BEGIN
     RETURN QUERY
     SELECT
-        COUNT(*) as total_conversations,
-        COUNT(*) FILTER (WHERE is_favorite = true) as favorite_conversations,
-        COALESCE(message_stats.total_messages, 0) as total_messages,
+        COUNT(c.id) as total_conversations,
+        COUNT(c.id) FILTER (WHERE c.is_favorite = true) as favorite_conversations,
+        SUM(COALESCE(message_stats.total_messages, 0))::BIGINT as total_messages,
         COALESCE(SUM(c.token_usage), 0) as total_tokens,
         COALESCE(SUM(c.estimated_cost), 0) as total_cost
     FROM conversations c
     LEFT JOIN (
         SELECT
-            conversation_id,
+            cm.conversation_id,
             COUNT(*) as total_messages
-        FROM conversation_messages
-        GROUP BY conversation_id
+        FROM conversation_messages cm
+        JOIN conversations c_inner ON cm.conversation_id = c_inner.id
+        WHERE c_inner.user_id = user_uuid
+        GROUP BY cm.conversation_id
     ) message_stats ON c.id = message_stats.conversation_id
     WHERE c.user_id = user_uuid AND c.status = 'active';
 END;
@@ -257,5 +259,5 @@ GRANT EXECUTE ON FUNCTION search_conversations TO authenticated;
 GRANT EXECUTE ON FUNCTION get_conversation_stats TO authenticated;
 GRANT EXECUTE ON FUNCTION update_updated_at_column TO authenticated;
 
--- Grant usage on sequences for UUID generation
-GRANT USAGE ON SEQUENCE uuid_generate_v4() TO authenticated;
+-- Grant usage on UUID generation function
+GRANT EXECUTE ON FUNCTION uuid_generate_v4() TO authenticated;
