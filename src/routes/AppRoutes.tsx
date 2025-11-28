@@ -1,4 +1,5 @@
 export const ROUTES = {
   PROMPT: '/prompt',
-  KNOWLEDGE: '/knowledge'
+  KNOWLEDGE: '/knowledge',
+  HISTORY: '/history'
 };

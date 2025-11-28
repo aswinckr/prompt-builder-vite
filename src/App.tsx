@@ -2,6 +2,8 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { ContextLibrary } from './components/ContextLibrary';
 import { PromptBuilder } from './components/PromptBuilder';
+import { ConversationHistory } from './components/ConversationHistory';
+import { ConversationDetail } from './components/ConversationDetail';
 import { BottomTabNavigation } from './components/BottomTabNavigation';
 import { Header } from './components/Header';
 import { RouteTransition } from './components/ui/RouteTransition';
@@ -11,7 +13,8 @@ import { ToastProvider } from './contexts/ToastContext';
 
 function AppContent() {
   const location = useLocation();
-  const isMainRoute = location.pathname === '/prompt' || location.pathname === '/knowledge';
+  const isMainRoute = location.pathname === '/prompt' || location.pathname === '/knowledge' || location.pathname === '/history';
+  const isHistoryDetailRoute = location.pathname.startsWith('/history/');
 
   return (
     <div className="h-screen bg-neutral-900 overflow-hidden relative flex flex-col">
@@ -32,11 +35,21 @@ function AppContent() {
               <ContextLibrary />
             </RouteTransition>
           } />
+          <Route path="/history" element={
+            <RouteTransition>
+              <ConversationHistory />
+            </RouteTransition>
+          } />
+          <Route path="/history/:conversationId" element={
+            <RouteTransition>
+              <ConversationDetail />
+            </RouteTransition>
+          } />
         </Routes>
       </div>
 
-      {/* Bottom Navigation */}
-      <BottomTabNavigation />
+      {/* Bottom Navigation - Only show on main routes, not detail views */}
+      {!isHistoryDetailRoute && <BottomTabNavigation />}
     </div>
   );
 }
