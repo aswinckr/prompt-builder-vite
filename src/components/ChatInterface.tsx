@@ -186,7 +186,9 @@ export function ChatInterface({
       console.log('Conversation stats update result:', result);
     } catch (error) {
       console.error('Failed to update conversation stats:', error);
-      console.error('Error details:', error.stack);
+      if (error instanceof Error) {
+        console.error('Error details:', error.stack);
+      }
     }
   };
 
@@ -300,11 +302,11 @@ export function ChatInterface({
         await saveMessage(convId, {
           role: 'assistant',
           content: accumulatedContent,
-          token_count: usageData?.completionTokens || Math.round(accumulatedContent.length / 4), // Use API data or fallback
+          token_count: (usageData as any)?.completionTokens || Math.round(accumulatedContent.length / 4), // Use API data or fallback
           metadata: usageData ? {
-            prompt_tokens: usageData.promptTokens,
-            completion_tokens: usageData.completionTokens,
-            total_tokens: usageData.totalTokens
+            prompt_tokens: (usageData as any).promptTokens,
+            completion_tokens: (usageData as any).completionTokens,
+            total_tokens: (usageData as any).totalTokens
           } : {}
         });
 
@@ -426,11 +428,11 @@ export function ChatInterface({
         await saveMessage(conversationId, {
           role: 'assistant',
           content: accumulatedContent,
-          token_count: usageData?.completionTokens || Math.round(accumulatedContent.length / 4), // Use API data or fallback
+          token_count: (usageData as any)?.completionTokens || Math.round(accumulatedContent.length / 4), // Use API data or fallback
           metadata: usageData ? {
-            prompt_tokens: usageData.promptTokens,
-            completion_tokens: usageData.completionTokens,
-            total_tokens: usageData.totalTokens
+            prompt_tokens: (usageData as any).promptTokens,
+            completion_tokens: (usageData as any).completionTokens,
+            total_tokens: (usageData as any).totalTokens
           } : {}
         });
 
