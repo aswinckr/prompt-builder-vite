@@ -295,8 +295,25 @@ export function ChatInterface({
               convId,
               (usageData as any).promptTokens
             );
+
+            // Update the UI to reflect accurate token counts
+            setMessages(prev => {
+              const userMessages = prev.filter(m => m.role === 'user');
+              const lastUserMessage = userMessages[userMessages.length - 1];
+
+              return prev.map(msg => {
+                if (msg.role === 'user' && lastUserMessage && msg.id === lastUserMessage.id) {
+                  return {
+                    ...msg,
+                    tokenCount: (usageData as any).promptTokens
+                  };
+                }
+                return msg;
+              });
+            });
           } catch (error) {
             // Silently handle the error - user message token update is non-critical
+            console.warn('Failed to update user message token count:', error);
           }
         }
 

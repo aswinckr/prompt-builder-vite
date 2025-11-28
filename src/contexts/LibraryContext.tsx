@@ -884,22 +884,28 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         if (result.error) {
           dispatch({ type: 'SET_CONVERSATION_ERROR', payload: result.error });
         } else if (result.data) {
-          // Convert search results to Conversation format
+          // Get the current user to populate user_id
+          const user = await DatabaseService.getUser();
+
+          // Convert search results to Conversation format with proper defaults
           const conversations = result.data.map(searchResult => ({
             id: searchResult.id,
-            user_id: '', // Will be populated by the service
+            user_id: user?.id || '',
             title: searchResult.title,
             description: searchResult.description,
             model_name: searchResult.model_name,
-            model_provider: '',
+            model_provider: 'openai', // Default provider - should be updated based on actual data
             status: 'active' as const,
             is_favorite: searchResult.is_favorite,
-            token_usage: 0,
-            execution_duration_ms: 0,
-            estimated_cost: 0,
-            original_prompt_content: '',
-            context_block_ids: [],
-            metadata: {},
+            token_usage: 0, // Search results don't include token usage
+            execution_duration_ms: 0, // Search results don't include duration
+            estimated_cost: 0, // Search results don't include cost
+            original_prompt_content: '', // Search results don't include original content
+            context_block_ids: [], // Search results don't include context blocks
+            metadata: {
+              search_rank: searchResult.rank,
+              is_search_result: true
+            },
             created_at: searchResult.created_at,
             updated_at: searchResult.updated_at
           }));
