@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { ChatMessage } from "./ChatMessage";
 import { TypingIndicator } from "./TypingIndicator";
 import { AIPromptInput } from "./AIPromptInput";
+import { ConversationMessageService } from '../services/conversationMessageService';
 import {
   X,
   Square,
@@ -12,16 +13,22 @@ import {
   Loader2,
   AlertCircle,
   Send,
+  Star,
+  MessageSquare,
 } from "lucide-react";
 import { generateUUID } from "../utils/chat";
 import { streamText } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { useLibraryActions } from "../contexts/LibraryContext";
+import { useToast } from "../contexts/ToastContext";
+import { ConversationMessage } from "../types/Conversation";
 
 interface ChatMessageData {
   id: string;
   role: "user" | "assistant";
   content: string;
   createdAt?: Date;
+  tokenCount?: number;
 }
 
 interface ChatInterfaceProps {
@@ -29,7 +36,6 @@ interface ChatInterfaceProps {
   selectedModel: string;
   isOpen: boolean;
   onClose: () => void;
-  onSave: (conversation: any) => void;
 }
 
 export function ChatInterface({
@@ -37,7 +43,6 @@ export function ChatInterface({
   selectedModel,
   isOpen,
   onClose,
-  onSave,
 }: ChatInterfaceProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
@@ -47,6 +52,11 @@ export function ChatInterface({
   const [hasStreamingStarted, setHasStreamingStarted] = useState(false);
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
+  const [conversationId, setConversationId] = useState<string | null>(null);
+  const [executionStartTime, setExecutionStartTime] = useState<number>(Date.now());
+
+  const { createConversation, createConversationMessage, updateConversation } = useLibraryActions();
+  const { showToast } = useToast();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -69,10 +79,103 @@ export function ChatInterface({
     "gpt-4o-mini": "openai/gpt-4o-mini",
   };
 
+  // Create conversation when first message is about to be sent
+  const createNewConversation = async () => {
+    try {
+      const title = formattedPrompt.length > 50
+        ? `${formattedPrompt.substring(0, 50)}...`
+        : formattedPrompt;
+
+      const result = await createConversation({
+        title,
+        model_name: selectedModel,
+        model_provider: 'openrouter',
+        original_prompt_content: formattedPrompt,
+        metadata: {
+          started_at: new Date().toISOString(),
+          interface: 'chat_interface'
+        }
+      });
+
+      if (result.data) {
+        setConversationId(result.data.id);
+        return result.data.id;
+      }
+    } catch (error) {
+      showToast('Failed to save conversation', 'error');
+    }
+    return null;
+  };
+
+  // Save a message to the database
+  const saveMessage = async (conversationId: string, messageData: Omit<ConversationMessage, 'id' | 'conversation_id' | 'created_at' | 'updated_at' | 'message_order'>) => {
+    try {
+      // Let the ConversationMessageService handle message_order automatically
+      await createConversationMessage({
+        conversation_id: conversationId,
+        ...messageData
+        // message_order is omitted - will be auto-calculated by the service
+      });
+    } catch (error) {
+      showToast('Failed to save message to conversation', 'error');
+    }
+  };
+
+  // Update conversation with execution statistics
+  const updateConversationStats = async (conversationId: string, usageData?: any) => {
+    try {
+      const executionDuration = Date.now() - executionStartTime;
+
+      // Use accurate token counts from API if available, otherwise calculate from message database
+      let totalTokens;
+      if (usageData && usageData.totalTokens) {
+        totalTokens = usageData.totalTokens;
+      } else {
+        // Fallback: Calculate from actual message token counts in database
+        // This is more accurate than local message estimates
+        try {
+          const messageResult = await ConversationMessageService.getMessagesByConversationId(conversationId);
+          if (messageResult.data) {
+            totalTokens = messageResult.data.reduce((sum, msg) => sum + (msg.token_count || 0), 0);
+          } else {
+            // Final fallback: use local message estimates
+            totalTokens = messages.reduce((sum, msg) => sum + (msg.tokenCount || 0), 0);
+          }
+        } catch (error) {
+          totalTokens = messages.reduce((sum, msg) => sum + (msg.tokenCount || 0), 0);
+        }
+      }
+
+      // Estimate cost (more accurate with real token data)
+      const costPerToken = selectedModel.includes('gpt-4') ? 0.00003 :
+                          selectedModel.includes('claude') ? 0.000015 :
+                          selectedModel.includes('gemini') ? 0.00001 : 0.00002;
+
+      const estimatedCost = totalTokens * costPerToken;
+
+      const result = await updateConversation(conversationId, {
+        token_usage: totalTokens,
+        execution_duration_ms: executionDuration,
+        estimated_cost: estimatedCost,
+        metadata: {
+          completed_at: new Date().toISOString(),
+          message_count: messages.length,
+          ...(usageData && {
+            prompt_tokens: usageData.promptTokens,
+            completion_tokens: usageData.completionTokens,
+            model_provided_usage: true
+          })
+        }
+      });
+    } catch (error) {
+      // Error handled silently - conversation stats update is non-critical
+    }
+  };
+
   // Initialize with the prompt and automatically send the first message
   useEffect(() => {
     if (formattedPrompt && messages.length === 0 && isOpen) {
-      // Automatically trigger the first AI response
+      // Auto-create conversation when chat opens
       setTimeout(() => {
         handleFirstResponse();
       }, 500);
@@ -83,7 +186,11 @@ export function ChatInterface({
     try {
       setError(null);
       setIsLoading(true);
-      setHasStreamingStarted(false); // Reset streaming state
+      setHasStreamingStarted(false);
+      setExecutionStartTime(Date.now());
+
+      // Create conversation for this chat session
+      const convId = await createNewConversation();
 
       // Prepare messages with context
       const conversationMessages = [
@@ -102,6 +209,16 @@ export function ChatInterface({
       };
       setMessages([userMessage]);
 
+      // Save user message to database
+      if (convId) {
+        await saveMessage(convId, {
+          role: 'user',
+          content: formattedPrompt,
+          token_count: Math.round(formattedPrompt.length / 4), // Rough estimation - will be updated after API response
+          metadata: {}
+        });
+      }
+
       const controller = new AbortController();
       setAbortController(controller);
 
@@ -116,6 +233,7 @@ export function ChatInterface({
 
       let accumulatedContent = "";
       const assistantId = generateUUID();
+      let usageData = null;
 
       for await (const delta of result.textStream) {
         if (controller.signal.aborted) {
@@ -149,18 +267,60 @@ export function ChatInterface({
         });
       }
 
-      if (!controller.signal.aborted) {
-        // Final update to ensure the message is complete
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantId
-              ? { ...msg, content: accumulatedContent }
-              : msg
-          )
-        );
+      // Capture usage data after streaming is complete
+      try {
+        // In Vercel AI SDK v5, usage might be a promise or direct property
+        usageData = await Promise.resolve(result.usage);
+      } catch (error) {
+        usageData = null;
+      }
+
+      if (!controller.signal.aborted && convId) {
+        // Save final assistant message to database
+        await saveMessage(convId, {
+          role: 'assistant',
+          content: accumulatedContent,
+          token_count: (usageData as any)?.completionTokens || Math.round(accumulatedContent.length / 4), // Use API data or fallback
+          metadata: usageData ? {
+            prompt_tokens: (usageData as any).promptTokens,
+            completion_tokens: (usageData as any).completionTokens,
+            total_tokens: (usageData as any).totalTokens
+          } : {}
+        });
+
+        // Update user message token count with accurate API data
+        if (usageData && (usageData as any).promptTokens) {
+          try {
+            await ConversationMessageService.updateUserMessageTokens(
+              convId,
+              (usageData as any).promptTokens
+            );
+
+            // Update the UI to reflect accurate token counts
+            setMessages(prev => {
+              const userMessages = prev.filter(m => m.role === 'user');
+              const lastUserMessage = userMessages[userMessages.length - 1];
+
+              return prev.map(msg => {
+                if (msg.role === 'user' && lastUserMessage && msg.id === lastUserMessage.id) {
+                  return {
+                    ...msg,
+                    tokenCount: (usageData as any).promptTokens
+                  };
+                }
+                return msg;
+              });
+            });
+          } catch (error) {
+            // Silently handle the error - user message token update is non-critical
+            console.warn('Failed to update user message token count:', error);
+          }
+        }
+
+        // Update conversation statistics
+        await updateConversationStats(convId, usageData);
       }
     } catch (error: any) {
-      console.error("Initial chat error:", error);
       setError(error.message || "Failed to generate response");
     } finally {
       setIsLoading(false);
@@ -175,7 +335,7 @@ export function ChatInterface({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim() || isLoading) return;
+    if (!input.trim() || isLoading || !conversationId) return;
 
     const userMessage: ChatMessageData = {
       id: generateUUID(),
@@ -188,9 +348,17 @@ export function ChatInterface({
     setInput("");
     setError(null);
     setIsLoading(true);
-    setHasStreamingStarted(false); // Reset streaming state
+    setHasStreamingStarted(false);
 
     try {
+      // Save user message to database
+      await saveMessage(conversationId, {
+        role: 'user',
+        content: userMessage.content,
+        token_count: Math.round(userMessage.content.length / 4), // Rough estimation - will be updated after API response
+        metadata: {}
+      });
+
       // Prepare messages with context
       let conversationMessages = messages.map((msg) => ({
         role: msg.role as "user" | "assistant" | "system",
@@ -217,6 +385,7 @@ export function ChatInterface({
 
       let accumulatedContent = "";
       const assistantId = generateUUID();
+      let usageData = null;
 
       for await (const delta of result.textStream) {
         if (controller.signal.aborted) {
@@ -250,18 +419,43 @@ export function ChatInterface({
         });
       }
 
+      // Capture usage data after streaming is complete
+      try {
+        // In Vercel AI SDK v5, usage might be a promise or direct property
+        usageData = await Promise.resolve(result.usage);
+      } catch (error) {
+        usageData = null;
+      }
+
       if (!controller.signal.aborted) {
-        // Final update to ensure the message is complete
-        setMessages((prev) =>
-          prev.map((msg) =>
-            msg.id === assistantId
-              ? { ...msg, content: accumulatedContent }
-              : msg
-          )
-        );
+        // Save final assistant message to database
+        await saveMessage(conversationId, {
+          role: 'assistant',
+          content: accumulatedContent,
+          token_count: (usageData as any)?.completionTokens || Math.round(accumulatedContent.length / 4), // Use API data or fallback
+          metadata: usageData ? {
+            prompt_tokens: (usageData as any).promptTokens,
+            completion_tokens: (usageData as any).completionTokens,
+            total_tokens: (usageData as any).totalTokens
+          } : {}
+        });
+
+        // Update user message token count with accurate API data
+        if (usageData && (usageData as any).promptTokens) {
+          try {
+            await ConversationMessageService.updateUserMessageTokens(
+              conversationId,
+              (usageData as any).promptTokens
+            );
+          } catch (error) {
+            // Silently handle the error - user message token update is non-critical
+          }
+        }
+
+        // Update conversation statistics
+        await updateConversationStats(conversationId, usageData);
       }
     } catch (error: any) {
-      console.error("Chat error:", error);
       setError(error.message || "Failed to generate response");
 
       // Remove the empty assistant message if error occurred
@@ -312,25 +506,21 @@ export function ChatInterface({
         .join("\n\n");
 
       await navigator.clipboard.writeText(textToCopy);
+      showToast('Conversation copied to clipboard', 'success');
     } catch (error) {
-      console.error("Failed to copy text:", error);
+      showToast('Failed to copy conversation', 'error');
     }
   };
 
-  const handleSave = () => {
-    const conversationData = {
-      id: generateUUID(),
-      messages: messages.map((msg) => ({
-        role: msg.role,
-        content: msg.content,
-        timestamp: msg.createdAt || new Date(),
-      })),
-      model: selectedModel,
-      context: formattedPrompt,
-      timestamp: new Date().toISOString(),
-    };
+  const handleToggleFavorite = async () => {
+    if (!conversationId) return;
 
-    onSave(conversationData);
+    try {
+      // This would integrate with the toggle conversation favorite action
+      showToast('Toggle favorite feature coming soon', 'info');
+    } catch (error) {
+      showToast('Failed to update favorite status', 'error');
+    }
   };
 
   const handleRetry = () => {
@@ -343,6 +533,12 @@ export function ChatInterface({
     if (isLoading) {
       stop();
     }
+
+    // Update conversation stats before closing if we have a conversation
+    if (conversationId) {
+      updateConversationStats(conversationId);
+    }
+
     onClose();
   };
 
@@ -373,9 +569,20 @@ export function ChatInterface({
       >
         {/* Header */}
         <div className="flex items-center justify-between border-b border-neutral-800/50 p-4">
-          <h2 id="chat-panel-title" className="text-lg font-medium">
-            AI Chat
-          </h2>
+          <div className="flex items-center gap-3">
+            <h2 id="chat-panel-title" className="text-lg font-medium">
+              AI Chat
+            </h2>
+            {conversationId && (
+              <button
+                onClick={() => window.open(`/history/${conversationId}`, '_blank')}
+                className="p-1.5 hover:bg-neutral-700 rounded-lg text-neutral-400 hover:text-white transition-colors"
+                title="View in history"
+              >
+                <MessageSquare className="h-4 w-4" />
+              </button>
+            )}
+          </div>
           <div className="flex items-center gap-2">
             {/* Control buttons */}
             {isLoading ? (
@@ -407,13 +614,15 @@ export function ChatInterface({
                 >
                   <Copy className="h-4 w-4" />
                 </button>
-                <button
-                  onClick={handleSave}
-                  className="rounded-lg bg-green-500/10 p-2 text-green-400 transition-colors hover:bg-green-500/20"
-                  aria-label="Save conversation"
-                >
-                  <Save className="h-4 w-4" />
-                </button>
+                {conversationId && (
+                  <button
+                    onClick={handleToggleFavorite}
+                    className="rounded-lg bg-neutral-800/50 p-2 text-neutral-400 transition-colors hover:bg-neutral-800/70"
+                    aria-label="Toggle favorite"
+                  >
+                    <Star className="h-4 w-4" />
+                  </button>
+                )}
               </>
             )}
 
@@ -441,6 +650,12 @@ export function ChatInterface({
               <span className="text-sm">AI is thinking...</span>
             </div>
           )}
+          {conversationId && (
+            <div className="flex items-center gap-2 text-neutral-500 text-xs">
+              <Loader2 className="h-3 w-3" />
+              <span>Auto-saving conversation</span>
+            </div>
+          )}
         </div>
 
         {/* Messages area */}
@@ -460,6 +675,7 @@ export function ChatInterface({
                     <Loader2 className="h-8 w-8 animate-spin" />
                   </div>
                 </div>
+                <p className="text-sm">Initializing conversation...</p>
               </div>
             )}
 
@@ -474,12 +690,17 @@ export function ChatInterface({
               value={input}
               onChange={setInput}
               onSubmit={handleSubmit}
-              disabled={isLoading}
+              disabled={isLoading || !conversationId}
               isLoading={isLoading}
               placeholder="Type your message..."
               minHeight={48}
               maxHeight={164}
             />
+            {!conversationId && !isLoading && (
+              <p className="text-xs text-neutral-500 mt-2 text-center">
+                Conversation will be saved automatically
+              </p>
+            )}
           </div>
         </div>
       </div>

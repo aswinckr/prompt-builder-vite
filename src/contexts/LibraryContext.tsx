@@ -1,11 +1,14 @@
 import React, { createContext, useContext, useReducer, useEffect, ReactNode, useRef, useCallback } from 'react';
 import { ContextBlock } from '../types/ContextBlock';
 import { SavedPrompt } from '../types/SavedPrompt';
+import { Conversation, ConversationFilters, ConversationListOptions, CreateConversationMessageData } from '../types/Conversation';
 import { ContextService } from '../services/contextService';
 import { DatabaseResponse, RealtimeSubscription, RealtimeEventPayload } from '../services/databaseService';
 import { DatabaseService } from '../services/databaseService';
 import { PromptService } from '../services/promptService';
 import { ProjectService, Project } from '../services/projectService';
+import { ConversationService } from '../services/conversationService';
+import { ConversationMessageService } from '../services/conversationMessageService';
 import { useAuthState } from './AuthContext';
 import { CHAT, TEMPORARY } from '../utils/constants';
 import { SYNC_CONSTANTS } from '../constants/sync';
@@ -30,6 +33,7 @@ interface LibraryState {
   contextSelection: ContextSelectionState;
   contextBlocks: ContextBlock[];
   savedPrompts: SavedPrompt[];
+  conversations: Conversation[];
   promptProjects: Project[];
   datasetProjects: Project[];
   systemPromptProjects: Project[];
@@ -37,6 +41,10 @@ interface LibraryState {
   loading: boolean;
   error: string | null;
   syncLoading: boolean; // New state for synchronization loading
+  // Conversation state
+  conversationLoading: boolean;
+  conversationError: string | null;
+  conversationFilters: ConversationFilters;
   // Folder modal state
   folderModal: {
     isOpen: boolean;
@@ -90,6 +98,14 @@ type LibraryAction =
   // Chat actions
   | { type: 'SET_CHAT_PANEL_OPEN'; payload: boolean }
   | { type: 'SET_SELECTED_MODEL'; payload: string }
+  // Conversation actions
+  | { type: 'SET_CONVERSATIONS'; payload: Conversation[] }
+  | { type: 'SET_CONVERSATION_LOADING'; payload: boolean }
+  | { type: 'SET_CONVERSATION_ERROR'; payload: string | null }
+  | { type: 'SET_CONVERSATION_FILTERS'; payload: ConversationFilters }
+  | { type: 'CREATE_CONVERSATION'; payload: Conversation }
+  | { type: 'UPDATE_CONVERSATION'; payload: { id: string; conversationData: Partial<Conversation> } }
+  | { type: 'DELETE_CONVERSATION'; payload: string }
 
 const initialState: LibraryState = {
   promptBuilder: {
@@ -105,6 +121,7 @@ const initialState: LibraryState = {
   },
   contextBlocks: [],
   savedPrompts: [],
+  conversations: [],
   promptProjects: [],
   datasetProjects: [],
   systemPromptProjects: [],
@@ -112,6 +129,10 @@ const initialState: LibraryState = {
   loading: false,
   error: null,
   syncLoading: false,
+  // Conversation state
+  conversationLoading: false,
+  conversationError: null,
+  conversationFilters: {},
   folderModal: {
     isOpen: false,
     defaultType: 'prompts',
@@ -349,6 +370,49 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
           selectedModel: action.payload
         }
       };
+    // Conversation cases
+    case 'SET_CONVERSATIONS':
+      return {
+        ...state,
+        conversations: action.payload,
+        conversationLoading: false,
+        conversationError: null
+      };
+    case 'SET_CONVERSATION_LOADING':
+      return {
+        ...state,
+        conversationLoading: action.payload
+      };
+    case 'SET_CONVERSATION_ERROR':
+      return {
+        ...state,
+        conversationError: action.payload,
+        conversationLoading: false
+      };
+    case 'SET_CONVERSATION_FILTERS':
+      return {
+        ...state,
+        conversationFilters: action.payload
+      };
+    case 'CREATE_CONVERSATION':
+      return {
+        ...state,
+        conversations: [action.payload, ...state.conversations]
+      };
+    case 'UPDATE_CONVERSATION':
+      return {
+        ...state,
+        conversations: state.conversations.map(conversation =>
+          conversation.id === action.payload.id
+            ? { ...conversation, ...action.payload.conversationData }
+            : conversation
+        )
+      };
+    case 'DELETE_CONVERSATION':
+      return {
+        ...state,
+        conversations: state.conversations.filter(conversation => conversation.id !== action.payload)
+      };
     default:
       return state;
   }
@@ -393,9 +457,10 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
               dispatch({ type: 'SET_SYNC_LOADING', payload: true });
 
               // Parallel loading of all data types
-              const [contextBlocksResult, savedPromptsResult, promptProjectsResult, datasetProjectsResult] = await Promise.all([
+              const [contextBlocksResult, savedPromptsResult, conversationsResult, promptProjectsResult, datasetProjectsResult] = await Promise.all([
                 ContextService.getContextBlocks(),
                 PromptService.getPrompts(),
+                ConversationService.getConversations(),
                 ProjectService.getPromptProjects(),
                 ProjectService.getDatasetProjects()
               ]);
@@ -406,6 +471,9 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
               }
               if (savedPromptsResult.data) {
                 dispatch({ type: 'SET_SAVED_PROMPTS', payload: savedPromptsResult.data });
+              }
+              if (conversationsResult.data) {
+                dispatch({ type: 'SET_CONVERSATIONS', payload: conversationsResult.data });
               }
               if (promptProjectsResult.data) {
                 dispatch({ type: 'SET_PROMPT_PROJECTS', payload: promptProjectsResult.data });
@@ -436,9 +504,10 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       await ProjectService.ensureUnsortedFolders();
 
       // Load all user data in parallel
-      const [contextBlocksResult, savedPromptsResult, promptProjectsResult, datasetProjectsResult, systemPromptProjectsResult, systemDatasetProjectsResult] = await Promise.all([
+      const [contextBlocksResult, savedPromptsResult, conversationsResult, promptProjectsResult, datasetProjectsResult, systemPromptProjectsResult, systemDatasetProjectsResult] = await Promise.all([
         ContextService.getContextBlocks(),
         PromptService.getPrompts(),
+        ConversationService.getConversations(),
         ProjectService.getUserProjects('prompt'),
         ProjectService.getUserProjects('dataset'),
         ProjectService.getSystemProjects('prompt'),
@@ -448,6 +517,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       // Set the user's data, even if it's empty (this is normal for new users)
       dispatch({ type: 'SET_CONTEXT_BLOCKS', payload: contextBlocksResult.data || [] });
       dispatch({ type: 'SET_SAVED_PROMPTS', payload: savedPromptsResult.data || [] });
+      dispatch({ type: 'SET_CONVERSATIONS', payload: conversationsResult.data || [] });
       dispatch({ type: 'SET_PROMPT_PROJECTS', payload: promptProjectsResult.data || [] });
       dispatch({ type: 'SET_DATASET_PROJECTS', payload: datasetProjectsResult.data || [] });
       dispatch({ type: 'SET_SYSTEM_PROMPT_PROJECTS', payload: systemPromptProjectsResult.data || [] });
@@ -457,6 +527,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       const errors = [
         contextBlocksResult.error,
         savedPromptsResult.error,
+        conversationsResult.error,
         promptProjectsResult.error,
         datasetProjectsResult.error,
         systemPromptProjectsResult.error,
@@ -485,7 +556,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     }
 
     // Filter events by table and trigger refresh for relevant changes
-    const supportedTables = ['context_blocks', 'prompts', 'prompt_projects', 'dataset_projects'];
+    const supportedTables = ['context_blocks', 'prompts', 'conversations', 'prompt_projects', 'dataset_projects'];
 
     if (supportedTables.includes(payload.table)) {
       // Trigger a debounced refresh when real-time events are received
@@ -546,6 +617,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         // Clear all user data when not authenticated
         dispatch({ type: 'SET_CONTEXT_BLOCKS', payload: [] });
         dispatch({ type: 'SET_SAVED_PROMPTS', payload: [] });
+        dispatch({ type: 'SET_CONVERSATIONS', payload: [] });
         dispatch({ type: 'SET_PROMPT_PROJECTS', payload: [] });
         dispatch({ type: 'SET_DATASET_PROJECTS', payload: [] });
         dispatch({ type: 'SET_SYSTEM_PROMPT_PROJECTS', payload: [] });
@@ -738,6 +810,122 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     // Chat actions
     setChatPanelOpen: (open: boolean) => dispatch({ type: 'SET_CHAT_PANEL_OPEN', payload: open }),
     setSelectedModel: (model: string) => dispatch({ type: 'SET_SELECTED_MODEL', payload: model }),
+
+    // Conversation actions
+    setConversations: (conversations: Conversation[]) => dispatch({ type: 'SET_CONVERSATIONS', payload: conversations }),
+    setConversationLoading: (loading: boolean) => dispatch({ type: 'SET_CONVERSATION_LOADING', payload: loading }),
+    setConversationError: (error: string | null) => dispatch({ type: 'SET_CONVERSATION_ERROR', payload: error }),
+    setConversationFilters: (filters: ConversationFilters) => dispatch({ type: 'SET_CONVERSATION_FILTERS', payload: filters }),
+
+    loadConversations: async (options?: ConversationListOptions) => {
+      dispatch({ type: 'SET_CONVERSATION_LOADING', payload: true });
+      dispatch({ type: 'SET_CONVERSATION_ERROR', payload: null });
+
+      try {
+        const result = await ConversationService.getConversations(options);
+        if (result.error) {
+          dispatch({ type: 'SET_CONVERSATION_ERROR', payload: result.error });
+        } else if (result.data) {
+          dispatch({ type: 'SET_CONVERSATIONS', payload: result.data });
+        }
+      } catch (error) {
+        dispatch({ type: 'SET_CONVERSATION_ERROR', payload: 'Failed to load conversations' });
+      }
+    },
+
+    createConversation: async (conversationData: any) => {
+      try {
+        const result = await ConversationService.createConversation(conversationData);
+        if (result.error) {
+          dispatch({ type: 'SET_CONVERSATION_ERROR', payload: result.error });
+        } else if (result.data) {
+          dispatch({ type: 'CREATE_CONVERSATION', payload: result.data });
+        }
+        return result;
+      } catch (error) {
+        dispatch({ type: 'SET_CONVERSATION_ERROR', payload: 'Failed to create conversation' });
+        return { data: null, error: 'Failed to create conversation' };
+      }
+    },
+
+    updateConversation: async (id: string, conversationData: Partial<Conversation>) => {
+      try {
+        const result = await ConversationService.updateConversation(id, conversationData);
+        if (result.error) {
+          dispatch({ type: 'SET_CONVERSATION_ERROR', payload: result.error });
+        } else if (result.data) {
+          dispatch({ type: 'UPDATE_CONVERSATION', payload: { id, conversationData } });
+        }
+        return result;
+      } catch (error) {
+        dispatch({ type: 'SET_CONVERSATION_ERROR', payload: 'Failed to update conversation' });
+        return { data: null, error: 'Failed to update conversation' };
+      }
+    },
+
+    deleteConversation: async (id: string) => {
+      try {
+        const result = await ConversationService.deleteConversation(id);
+        if (result.error) {
+          dispatch({ type: 'SET_CONVERSATION_ERROR', payload: result.error });
+        } else {
+          dispatch({ type: 'DELETE_CONVERSATION', payload: id });
+        }
+        return result;
+      } catch (error) {
+        dispatch({ type: 'SET_CONVERSATION_ERROR', payload: 'Failed to delete conversation' });
+        return { data: null, error: 'Failed to delete conversation' };
+      }
+    },
+
+    searchConversations: async (query: string) => {
+      try {
+        const result = await ConversationService.searchConversations(query);
+        if (result.error) {
+          dispatch({ type: 'SET_CONVERSATION_ERROR', payload: result.error });
+        } else if (result.data) {
+          // Get the current user to populate user_id
+          const user = await DatabaseService.getUser();
+
+          // Convert search results to Conversation format with proper defaults
+          const conversations = result.data.map(searchResult => ({
+            id: searchResult.id,
+            user_id: user?.id || '',
+            title: searchResult.title,
+            description: searchResult.description,
+            model_name: searchResult.model_name,
+            model_provider: 'openai', // Default provider - should be updated based on actual data
+            status: 'active' as const,
+            is_favorite: searchResult.is_favorite,
+            token_usage: 0, // Search results don't include token usage
+            execution_duration_ms: 0, // Search results don't include duration
+            estimated_cost: 0, // Search results don't include cost
+            original_prompt_content: '', // Search results don't include original content
+            context_block_ids: [], // Search results don't include context blocks
+            metadata: {
+              search_rank: searchResult.rank,
+              is_search_result: true
+            },
+            created_at: searchResult.created_at,
+            updated_at: searchResult.updated_at
+          }));
+          dispatch({ type: 'SET_CONVERSATIONS', payload: conversations });
+        }
+        return result;
+      } catch (error) {
+        dispatch({ type: 'SET_CONVERSATION_ERROR', payload: 'Failed to search conversations' });
+        return { data: null, error: 'Failed to search conversations' };
+      }
+    },
+
+    createConversationMessage: async (messageData: CreateConversationMessageData) => {
+      try {
+        const result = await ConversationMessageService.createMessage(messageData);
+        return result;
+      } catch (error) {
+        return { data: null, error: 'Failed to create conversation message' };
+      }
+    },
 
     // Legacy actions (保持向后兼容)
     savePromptAsTemplate: async (title: string) => {

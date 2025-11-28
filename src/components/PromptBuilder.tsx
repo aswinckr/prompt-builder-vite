@@ -122,7 +122,6 @@ export function PromptBuilder() {
             selectedModel={chat.selectedModel}
             isOpen={chat.isChatPanelOpen}
             onClose={() => setChatPanelOpen(false)}
-            onSave={handleSaveChat}
           />
         )}
 

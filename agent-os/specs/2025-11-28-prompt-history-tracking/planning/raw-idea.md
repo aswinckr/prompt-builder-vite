@@ -1,0 +1,3 @@
+# Raw Idea: Prompt Chat History Tracking Feature
+
+Initialize a new spec for storing complete chat history when users run prompts using AI models from the /prompt tab. The feature should track the entire conversation exchange (user prompt + AI response + follow-up messages) and store metadata like AI model used, token usage/cost, execution duration, and context blocks used. Users should be able to go back and continue chat history from any point. It should be accessible from the main UI as a History tab with search, filtering, favorites, and conversation management capabilities. Complete history retention with no automatic cleanup.
