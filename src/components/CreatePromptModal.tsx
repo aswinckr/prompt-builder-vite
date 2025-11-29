@@ -6,6 +6,24 @@ import { useLibraryActions } from "../contexts/LibraryContext";
 import { useToast } from "../contexts/ToastContext";
 import { convertToHtml } from "../utils/contentFormatUtils";
 
+/**
+ * Props for the CreatePromptModal component
+ * @interface CreatePromptModalProps
+ * @property {boolean} isOpen - Whether the modal is currently open
+ * @property {() => void} onClose - Callback function to close the modal
+ * @property {string | null} [selectedProjectId] - Optional project ID to associate the prompt with
+ * @property {string} [initialContent] - Optional initial content for the prompt (when saving from prompt builder)
+ *
+ * @example
+ * ```tsx
+ * <CreatePromptModal
+ *   isOpen={isModalOpen}
+ *   onClose={() => setIsModalOpen(false)}
+ *   selectedProjectId="project-123"
+ *   initialContent="Pre-populated prompt content"
+ * />
+ * ```
+ */
 interface CreatePromptModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -14,7 +32,16 @@ interface CreatePromptModalProps {
 }
 
 /**
- * Modal for creating new prompt templates or saving assembled prompts
+ * Modal component for creating new prompt templates or saving assembled prompts
+ *
+ * Features:
+ * - Rich text editing with TipTapEditor
+ * - Variable placeholder support
+ * - Content format detection and conversion
+ * - Loading states and error handling
+ * - Toast notifications for user feedback
+ *
+ * @component
  */
 export function CreatePromptModal({
   isOpen,

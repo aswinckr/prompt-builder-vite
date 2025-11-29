@@ -7,7 +7,7 @@ interface HeaderProps {
 export function Header({ className = "" }: HeaderProps) {
   return (
     <header
-      className={`sticky top-0 z-50 border-b border-border bg-background/80 backdrop-blur-md ${className}`}
+      className={`sticky top-0 z-[var(--z-sticky)] border-b border-border bg-background/80 backdrop-blur-md ${className}`}
     >
       {/* Empty header - can be used for future header content */}
     </header>

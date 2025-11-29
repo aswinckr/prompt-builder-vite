@@ -49,6 +49,21 @@
     --font-mono: monospace;
     --letter-spacing: 0.025em;
     --tracking-normal: 0.025em;
+
+    /* Z-index scale for consistent layering */
+    --z-dropdown: 10;
+    --z-sticky: 20;
+    --z-fixed: 30;
+    --z-overlay-backdrop: 40;
+    --z-overlay-content: 50;
+    --z-toast: 100;
+    --z-tooltip: 1000;
+    --z-modal: 9999;
+
+    /* Animation duration standardization */
+    --duration-fast: 0.15s;
+    --duration-normal: 0.3s;
+    --duration-slow: 0.5s;
   }
 
   .dark {
@@ -98,6 +113,21 @@
 
     /* Shadow definitions for glow effects */
     --shadow-color: 263 70% 60%; /* Purple shadow color base */
+
+    /* Z-index scale for consistent layering */
+    --z-dropdown: 10;
+    --z-sticky: 20;
+    --z-fixed: 30;
+    --z-overlay-backdrop: 40;
+    --z-overlay-content: 50;
+    --z-toast: 100;
+    --z-tooltip: 1000;
+    --z-modal: 9999;
+
+    /* Animation duration standardization */
+    --duration-fast: 0.15s;
+    --duration-normal: 0.3s;
+    --duration-slow: 0.5s;
   }
 
   /* Custom Typography defaults */
@@ -267,34 +297,34 @@
   }
 
   .animate-fadeIn {
-    animation: fadeIn 0.2s ease-out;
+    animation: fadeIn var(--duration-normal) ease-out;
   }
   .animate-fadeOut {
-    animation: fadeOut 0.2s ease-out;
+    animation: fadeOut var(--duration-normal) ease-out;
   }
   .animate-slideInFromLeft {
-    animation: slideInFromLeft 0.3s ease-out;
+    animation: slideInFromLeft var(--duration-normal) ease-out;
   }
   .animate-slideOutToLeft {
-    animation: slideOutToLeft 0.3s ease-out;
+    animation: slideOutToLeft var(--duration-normal) ease-out;
   }
   .animate-slideInFromRight {
-    animation: slideInFromRight 0.3s ease-out;
+    animation: slideInFromRight var(--duration-normal) ease-out;
   }
   .animate-slideOutToRight {
-    animation: slideOutToRight 0.3s ease-out;
+    animation: slideOutToRight var(--duration-normal) ease-out;
   }
   .animate-slideInFromTop {
-    animation: slideInFromTop 0.3s ease-out;
+    animation: slideInFromTop var(--duration-normal) ease-out;
   }
   .animate-slideOutToTop {
-    animation: slideOutToTop 0.3s ease-out;
+    animation: slideOutToTop var(--duration-normal) ease-out;
   }
   .animate-slideInFromBottom {
-    animation: slideInFromBottom 0.3s ease-out;
+    animation: slideInFromBottom var(--duration-normal) ease-out;
   }
   .animate-slideOutToBottom {
-    animation: slideOutToBottom 0.3s ease-out;
+    animation: slideOutToBottom var(--duration-normal) ease-out;
   }
 
   .nav-tab-no-outline {
