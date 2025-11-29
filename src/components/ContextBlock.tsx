@@ -1,6 +1,9 @@
 import React from 'react';
 import { Hash, Edit, Trash2 } from 'lucide-react';
 import { ContextBlock as ContextBlockType } from '../types/ContextBlock';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface ContextBlockProps {
   block: ContextBlockType;
@@ -44,12 +47,12 @@ export const ContextBlock = React.memo(function ContextBlock({ block, isSelected
   };
 
   return (
-    <div
+    <Card
       data-block-id={block.id}
-      className={`h-full p-4 rounded-lg border transition-all text-left focus:outline-none focus:ring-2 focus:ring-blue-500/50 flex flex-col cursor-pointer ${
+      className={`h-full cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 ${
         isSelected
-          ? 'bg-blue-500/10 border-blue-500/30 shadow-lg'
-          : 'bg-neutral-800 border-neutral-700 hover:bg-neutral-750 hover:border-neutral-600'
+          ? 'border-primary/30 bg-primary/5 shadow-lg'
+          : 'hover:border-primary/30 hover:bg-muted/50'
       }`}
       role="gridcell"
       aria-selected={isSelected}
@@ -58,71 +61,70 @@ export const ContextBlock = React.memo(function ContextBlock({ block, isSelected
       onClick={handleClick}
       onKeyDown={handleKeyDown}
     >
-      {/* Header */}
-      <div className="flex items-start justify-between mb-3 flex-shrink-0">
-        <h3 className="font-medium text-white line-clamp-2 leading-tight flex-1">
+      <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
+        <h3 className="font-medium line-clamp-2 leading-tight flex-1">
           {block.title}
         </h3>
-        <div className="flex items-center gap-2 flex-shrink-0 ml-2">
-          {/* Delete Icon */}
+        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
           {onDelete && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleDeleteClick}
-              className="p-1 text-neutral-400 hover:text-red-400 transition-colors rounded hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+              className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
               aria-label={`Delete ${block.title}`}
             >
-              <Trash2 size={14} />
-            </button>
+              <Trash2 size={12} />
+            </Button>
           )}
-          {/* Edit Icon */}
           {onEdit && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={handleEditClick}
-              className="p-1 text-neutral-400 hover:text-blue-400 transition-colors rounded hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+              className="h-6 w-6 p-0 text-primary hover:text-primary hover:bg-primary/10"
               aria-label={`Edit ${block.title}`}
             >
-              <Edit size={14} />
-            </button>
+              <Edit size={12} />
+            </Button>
           )}
-          {/* Selection Indicator */}
           {isSelected && (
-            <div className="w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center">
-              <span className="text-white text-xs">✓</span>
+            <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+              <span className="text-primary-foreground text-xs">✓</span>
             </div>
           )}
         </div>
-      </div>
+      </CardHeader>
 
-      {/* Content Preview - takes up remaining space */}
-      <div className="flex-1 mb-4">
-        <p className="text-sm text-neutral-300 line-clamp-3 leading-relaxed">
-          {block.content}
-        </p>
-      </div>
+      <CardContent className="flex flex-col flex-1">
+        {/* Content Preview - takes up remaining space */}
+        <div className="flex-1 mb-4">
+          <p className="text-sm line-clamp-3 leading-relaxed">
+            {block.content}
+          </p>
+        </div>
 
-      {/* Tags - at bottom */}
-      <div className="flex flex-wrap gap-1 flex-shrink-0">
-        {block.tags.slice(0, 3).map((tag) => (
-          <span
-            key={tag}
-            className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-neutral-700 text-neutral-300"
-          >
-            <Hash size={10} className="text-neutral-400" />
-            {tag}
-          </span>
-        ))}
-        {block.tags.length > 3 && (
-          <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs bg-neutral-700 text-neutral-400">
-            +{block.tags.length - 3}
-          </span>
-        )}
-      </div>
+        {/* Tags - at bottom */}
+        <div className="flex flex-wrap gap-1 flex-shrink-0 mb-2">
+          {block.tags.slice(0, 3).map((tag) => (
+            <Badge key={tag} variant="secondary" className="text-xs">
+              <Hash size={8} className="mr-1" />
+              {tag}
+            </Badge>
+          ))}
+          {block.tags.length > 3 && (
+            <Badge variant="outline" className="text-xs">
+              +{block.tags.length - 3}
+            </Badge>
+          )}
+        </div>
 
-      {/* Help text for keyboard shortcuts */}
-      <div className="mt-2 text-xs text-neutral-500 opacity-0 hover:opacity-100 transition-opacity">
-        Press <kbd className="px-1 py-0.5 bg-neutral-700 rounded text-neutral-300">E</kbd> to edit,
-        <kbd className="px-1 py-0.5 bg-neutral-700 rounded text-neutral-300 ml-1">D</kbd> to delete
-      </div>
-    </div>
+        {/* Help text for keyboard shortcuts */}
+        <div className="text-xs text-muted-foreground opacity-0 hover:opacity-100 transition-opacity">
+          Press <kbd className="px-1 py-0.5 bg-muted rounded text-xs">E</kbd> to edit,
+          <kbd className="px-1 py-0.5 bg-muted rounded text-xs ml-1">D</kbd> to delete
+        </div>
+      </CardContent>
+    </Card>
   );
 });

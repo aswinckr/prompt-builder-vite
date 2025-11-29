@@ -1,8 +1,40 @@
-import React, { useEffect, useRef } from 'react';
-import { X, CheckCircle, AlertCircle, AlertTriangle, Info } from 'lucide-react';
+import React, { useEffect } from 'react';
+import { CheckCircle, AlertCircle, AlertTriangle, Info } from 'lucide-react';
+import {
+  Toast as ShadcnToast,
+  ToastClose,
+  ToastDescription,
+  ToastTitle,
+} from "@/components/ui/toast";
 
+/**
+ * Toast notification variant types
+ * @typedef {'success' | 'error' | 'warning' | 'info'} ToastVariant
+ */
 export type ToastVariant = 'success' | 'error' | 'warning' | 'info';
 
+/**
+ * Props for the Toast component
+ * @interface ToastProps
+ * @property {string} id - Unique identifier for the toast instance
+ * @property {string} message - The message to display in the toast
+ * @property {ToastVariant} [variant='info'] - Visual variant of the toast
+ * @property {number} [duration=5000] - Auto-dismiss duration in milliseconds (0 to disable)
+ * @property {boolean} isVisible - Whether the toast should be visible
+ * @property {(id: string) => void} onDismiss - Callback function when toast is dismissed
+ *
+ * @example
+ * ```tsx
+ * <Toast
+ *   id="unique-toast-id"
+ *   message="Operation completed successfully!"
+ *   variant="success"
+ *   duration={3000}
+ *   isVisible={true}
+ *   onDismiss={(id) => console.log('Toast dismissed:', id)}
+ * />
+ * ```
+ */
 export interface ToastProps {
   id: string;
   message: string;
@@ -14,6 +46,7 @@ export interface ToastProps {
 
 /**
  * Toast notification component with auto-dismiss and manual dismiss
+ * Now using Shadcn Toast for modern styling
  */
 export const Toast = React.memo(function Toast({
   id,
@@ -23,103 +56,60 @@ export const Toast = React.memo(function Toast({
   isVisible,
   onDismiss,
 }: ToastProps) {
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-
   useEffect(() => {
     if (isVisible && duration > 0) {
-      timeoutRef.current = setTimeout(() => {
+      const timer = setTimeout(() => {
         onDismiss(id);
       }, duration);
+      return () => clearTimeout(timer);
     }
-
-    return () => {
-      if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current);
-      }
-    };
   }, [isVisible, duration, id, onDismiss]);
 
-  const handleDismiss = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-    }
-    onDismiss(id);
-  };
-
-  const getVariantStyles = () => {
+  const getVariantProps = () => {
     switch (variant) {
       case 'success':
         return {
-          bg: 'bg-green-500/10 border-green-500/20',
-          text: 'text-green-400',
+          title: "Success",
           icon: CheckCircle,
-          iconColor: 'text-green-400',
+          className: "border-green-500/20 text-green-400",
         };
       case 'error':
         return {
-          bg: 'bg-red-500/10 border-red-500/20',
-          text: 'text-red-400',
+          title: "Error",
           icon: AlertCircle,
-          iconColor: 'text-red-400',
+          className: "border-destructive/20 text-destructive",
         };
       case 'warning':
         return {
-          bg: 'bg-yellow-500/10 border-yellow-500/20',
-          text: 'text-yellow-400',
+          title: "Warning",
           icon: AlertTriangle,
-          iconColor: 'text-yellow-400',
+          className: "border-yellow-500/20 text-yellow-400",
         };
       case 'info':
       default:
         return {
-          bg: 'bg-blue-500/10 border-blue-500/20',
-          text: 'text-blue-400',
+          title: "Info",
           icon: Info,
-          iconColor: 'text-blue-400',
+          className: "border-blue-500/20 text-blue-400",
         };
     }
   };
-
-  const styles = getVariantStyles();
-  const Icon = styles.icon;
 
   if (!isVisible) {
     return null;
   }
 
+  const { icon: Icon, className } = getVariantProps();
+
   return (
-    <div
-      className={`
-        ${styles.bg} ${styles.text}
-        border rounded-lg shadow-lg backdrop-blur-sm
-        p-4 mb-3 min-w-[320px] max-w-md
-        transform transition-all duration-300 ease-in-out
-        animate-in slide-in-from-right-full
-        flex items-start gap-3
-      `}
-      role="alert"
-      aria-live="polite"
-    >
-      <Icon
-        size={18}
-        className={`${styles.iconColor} flex-shrink-0 mt-0.5`}
-        aria-hidden="true"
-      />
-      <p className="flex-1 text-sm font-medium leading-relaxed">
-        {message}
-      </p>
-      <button
-        onClick={handleDismiss}
-        className={`
-          ${styles.text} opacity-70 hover:opacity-100
-          transition-opacity focus:outline-none focus:opacity-100
-          flex-shrink-0 p-0.5 rounded hover:bg-white/5
-          focus:ring-2 focus:ring-white/10
-        `}
-        aria-label="Dismiss notification"
-      >
-        <X size={16} />
-      </button>
-    </div>
+    <ShadcnToast className={className} open={isVisible} onOpenChange={(open) => !open && onDismiss(id)}>
+      <div className="flex items-start gap-3">
+        <Icon className="h-4 w-4 mt-0.5" />
+        <div className="flex-1">
+          <ToastDescription>{message}</ToastDescription>
+        </div>
+        <ToastClose onClick={() => onDismiss(id)} />
+      </div>
+    </ShadcnToast>
   );
 });

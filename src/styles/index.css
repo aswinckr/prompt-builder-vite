@@ -2,57 +2,185 @@
 @tailwind components;
 @tailwind utilities;
 
-/* CSS variables for shadcn components */
 @layer base {
   :root {
+    /* Light Mode */
     --background: 0 0% 100%;
     --foreground: 240 10% 3.9%;
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --accent: 240 5% 96%;
-    --accent-foreground: 240 6% 10%;
-    --muted: 240 4% 96%;
-    --muted-foreground: 240 4% 46%;
+    --primary: 262 83% 58%;
+    --primary-foreground: 0 0% 98%;
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 262 83% 58%;
     --radius: 0.5rem;
+
+    /* Sidebar Light */
+    --sidebar: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 262 83% 58%;
+
+    /* Charts */
+    --chart-1: 12 76% 61%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+
+    /* Typography */
+    --font-sans: Outfit, sans-serif;
+    --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-mono: monospace;
+    --letter-spacing: 0.025em;
+    --tracking-normal: 0.025em;
+
+    /* Z-index scale for consistent layering */
+    --z-dropdown: 10;
+    --z-sticky: 20;
+    --z-fixed: 30;
+    --z-overlay-backdrop: 40;
+    --z-overlay-content: 50;
+    --z-toast: 100;
+    --z-tooltip: 1000;
+    --z-modal: 9999;
+
+    /* Animation duration standardization */
+    --duration-fast: 0.15s;
+    --duration-normal: 0.3s;
+    --duration-slow: 0.5s;
   }
 
   .dark {
-    --background: 240 10% 3.9%;
+    /* Dark Mode - Supabase + Purple Glow */
+    --background: 260 14% 4%; /* Deepest Purple/Black */
     --foreground: 0 0% 98%;
-    --popover: 240 10% 3.9%;
+    --card: 260 14% 6%; /* Slightly lighter */
+    --card-foreground: 0 0% 98%;
+    --popover: 260 14% 6%;
     --popover-foreground: 0 0% 98%;
-    --accent: 240 3% 15%;
+
+    --primary: 263 70% 60%; /* Vibrant Purple Glow */
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 260 10% 12%; /* Dark subtle grey-purple */
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 260 10% 12%;
+    --muted-foreground: 260 5% 65%;
+
+    --accent: 260 10% 15%; /* Lighter interaction state */
     --accent-foreground: 0 0% 98%;
-    --muted: 240 3% 15%;
-    --muted-foreground: 240 5% 64%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 260 10% 12%;
+    --input: 260 10% 12%;
+    --ring: 263 70% 60%;
+
+    /* Sidebar Dark - blend with background but distinguish slightly */
+    --sidebar: 260 14% 4%;
+    --sidebar-foreground: 260 5% 70%;
+    --sidebar-primary: 263 70% 60%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 260 10% 12%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 260 10% 12%;
+    --sidebar-ring: 263 70% 60%;
+
+    /* Charts */
+    --chart-1: 263 70% 60%;
+    --chart-2: 173 58% 39%;
+    --chart-3: 197 37% 24%;
+    --chart-4: 43 74% 66%;
+    --chart-5: 27 87% 67%;
+
+    /* Shadow definitions for glow effects */
+    --shadow-color: 263 70% 60%; /* Purple shadow color base */
+
+    /* Z-index scale for consistent layering */
+    --z-dropdown: 10;
+    --z-sticky: 20;
+    --z-fixed: 30;
+    --z-overlay-backdrop: 40;
+    --z-overlay-content: 50;
+    --z-toast: 100;
+    --z-tooltip: 1000;
+    --z-modal: 9999;
+
+    /* Animation duration standardization */
+    --duration-fast: 0.15s;
+    --duration-normal: 0.3s;
+    --duration-slow: 0.5s;
+  }
+
+  /* Custom Typography defaults */
+  .theme {
+    --font-sans: Outfit, sans-serif;
+    --font-mono: monospace;
+    --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
     --radius: 0.5rem;
+    --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
+    --tracking-tight: calc(var(--tracking-normal) - 0.025em);
+    --tracking-wide: calc(var(--tracking-normal) + 0.025em);
+    --tracking-wider: calc(var(--tracking-normal) + 0.05em);
+    --tracking-widest: calc(var(--tracking-normal) + 0.1em);
+  }
+
+  body {
+    letter-spacing: var(--tracking-normal);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
   }
 }
 
 /* Global Search Highlighting Styles */
 @layer components {
   .text-highlight {
-    background-color: rgb(var(--highlight-bg));
-    color: rgb(var(--highlight-fg));
+    background-color: hsl(var(--highlight-bg));
+    color: hsl(var(--highlight-fg));
     padding: 0 1px;
     border-radius: 1px;
     font-weight: 500;
   }
 
-  /* For dark theme (neutral-600/neutral-400 as specified) */
+  /* Dark mode highlight - glowing purple tint */
   .dark .text-highlight {
-    --highlight-bg: 82 30% 40%; /* neutral-600 */
-    --highlight-fg: 215 20% 65%; /* neutral-400 */
+    --highlight-bg: 263 50% 20%;
+    --highlight-fg: 263 90% 85%;
   }
 
-  /* For light theme fallback */
+  /* Light mode highlight */
   .text-highlight {
-    --highlight-bg: 220 13% 91%;
-    --highlight-fg: 220 9% 46%;
+    --highlight-bg: 50 100% 90%;
+    --highlight-fg: 0 0% 20%;
   }
 }
 
-/* Additional global search specific utilities */
+/* Utilities */
 @layer utilities {
   .line-clamp-2 {
     display: -webkit-box;
@@ -68,7 +196,7 @@
     overflow: hidden;
   }
 
-  /* Scrollbar styling for search results dropdown */
+  /* Scrollbar styling */
   .custom-scrollbar::-webkit-scrollbar {
     width: 6px;
   }
@@ -78,124 +206,129 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: rgba(156, 163, 175, 0.3);
+    @apply bg-muted;
     border-radius: 3px;
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(156, 163, 175, 0.5);
+    @apply bg-muted-foreground/30;
   }
-}
 
-/* Drawer animations */
-@layer utilities {
+  /* Animations from previous file */
   @keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 1;
+    }
   }
-
   @keyframes fadeOut {
-    from { opacity: 1; }
-    to { opacity: 0; }
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
   }
-
   @keyframes slideInFromLeft {
-    from { transform: translateX(-100%); }
-    to { transform: translateX(0); }
+    from {
+      transform: translateX(-100%);
+    }
+    to {
+      transform: translateX(0);
+    }
   }
-
   @keyframes slideOutToLeft {
-    from { transform: translateX(0); }
-    to { transform: translateX(-100%); }
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-100%);
+    }
   }
-
   @keyframes slideInFromRight {
-    from { transform: translateX(100%); }
-    to { transform: translateX(0); }
+    from {
+      transform: translateX(100%);
+    }
+    to {
+      transform: translateX(0);
+    }
   }
-
   @keyframes slideOutToRight {
-    from { transform: translateX(0); }
-    to { transform: translateX(100%); }
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(100%);
+    }
   }
-
   @keyframes slideInFromTop {
-    from { transform: translateY(-100%); }
-    to { transform: translateY(0); }
+    from {
+      transform: translateY(-100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
-
   @keyframes slideOutToTop {
-    from { transform: translateY(0); }
-    to { transform: translateY(-100%); }
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(-100%);
+    }
   }
-
   @keyframes slideInFromBottom {
-    from { transform: translateY(100%); }
-    to { transform: translateY(0); }
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
   }
-
   @keyframes slideOutToBottom {
-    from { transform: translateY(0); }
-    to { transform: translateY(100%); }
+    from {
+      transform: translateY(0);
+    }
+    to {
+      transform: translateY(100%);
+    }
   }
 
   .animate-fadeIn {
-    animation: fadeIn 0.2s ease-out;
+    animation: fadeIn var(--duration-normal) ease-out;
   }
-
   .animate-fadeOut {
-    animation: fadeOut 0.2s ease-out;
+    animation: fadeOut var(--duration-normal) ease-out;
   }
-
   .animate-slideInFromLeft {
-    animation: slideInFromLeft 0.3s ease-out;
+    animation: slideInFromLeft var(--duration-normal) ease-out;
   }
-
   .animate-slideOutToLeft {
-    animation: slideOutToLeft 0.3s ease-out;
+    animation: slideOutToLeft var(--duration-normal) ease-out;
   }
-
   .animate-slideInFromRight {
-    animation: slideInFromRight 0.3s ease-out;
+    animation: slideInFromRight var(--duration-normal) ease-out;
   }
-
   .animate-slideOutToRight {
-    animation: slideOutToRight 0.3s ease-out;
+    animation: slideOutToRight var(--duration-normal) ease-out;
   }
-
   .animate-slideInFromTop {
-    animation: slideInFromTop 0.3s ease-out;
+    animation: slideInFromTop var(--duration-normal) ease-out;
   }
-
   .animate-slideOutToTop {
-    animation: slideOutToTop 0.3s ease-out;
+    animation: slideOutToTop var(--duration-normal) ease-out;
   }
-
   .animate-slideInFromBottom {
-    animation: slideInFromBottom 0.3s ease-out;
+    animation: slideInFromBottom var(--duration-normal) ease-out;
   }
-
   .animate-slideOutToBottom {
-    animation: slideOutToBottom 0.3s ease-out;
+    animation: slideOutToBottom var(--duration-normal) ease-out;
   }
 
-  /* Navigation tab styles */
   .nav-tab-no-outline {
     outline: none !important;
     box-shadow: none !important;
-  }
-
-  .nav-tab-no-outline:focus {
-    outline: none !important;
-    box-shadow: none !important;
-  }
-
-  .nav-tab-no-outline:focus-visible {
-    outline: none !important;
-    box-shadow: none !important;
-  }
-
-  .nav-tab-no-outline::-moz-focus-inner {
-    border: 0 !important;
   }
 }

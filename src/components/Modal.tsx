@@ -1,6 +1,12 @@
 import React from 'react';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { X } from 'lucide-react';
-import { Portal } from './ui/Portal';
+import { Button } from "@/components/ui/button";
 
 interface ModalProps {
   isOpen: boolean;
@@ -17,6 +23,7 @@ interface ModalProps {
 
 /**
  * Reusable Modal component with consistent behavior and accessibility
+ * Now built on top of Shadcn Dialog for modern styling
  */
 export function Modal({
   isOpen,
@@ -30,81 +37,63 @@ export function Modal({
   closeOnEscape = true,
   'aria-labelledby': ariaLabelledby,
 }: ModalProps) {
-  const modalId = ariaLabelledby || `modal-title-${title.replace(/\s+/g, '-').toLowerCase()}`;
-
-  const handleKeyDown = (event: React.KeyboardEvent) => {
-    if (closeOnEscape && event.key === 'Escape') {
-      event.preventDefault();
-      onClose();
+  // Map size to Shadcn Dialog max-width classes
+  const getSizeClass = () => {
+    switch (size) {
+      case 'sm':
+        return 'max-w-sm';
+      case 'md':
+        return 'max-w-md';
+      case 'lg':
+        return 'max-w-lg';
+      case 'xl':
+        return 'max-w-xl';
+      case 'full':
+        return 'max-w-full mx-4';
+      default:
+        return 'max-w-md';
     }
   };
-
-  const handleOverlayClick = (event: React.MouseEvent) => {
-    if (closeOnOverlayClick && event.target === event.currentTarget) {
-      onClose();
-    }
-  };
-
-  // Size classes for desktop
-  const sizeClasses = {
-    sm: 'max-w-sm',
-    md: 'max-w-md',
-    lg: 'max-w-lg',
-    xl: 'max-w-xl',
-    full: 'max-w-full mx-4'
-  };
-
-  // Container classes for centering - higher z-index to appear above everything
-  const containerClasses = 'fixed inset-0 bg-black/50 z-[99999] flex items-center justify-center p-4';
-
-  // Modal size and behavior classes - ensure proper positioning
-  const modalClasses = mobileBehavior === 'fullscreen'
-    ? `${sizeClasses[size]} w-full h-full md:h-auto md:max-h-[90vh] md:rounded-lg md:w-auto md:h-auto relative`
-    : `${sizeClasses[size]} w-full max-h-[90vh] relative`;
-
-  if (!isOpen) {
-    return null;
-  }
 
   return (
-    <Portal>
-      <div
-        className={containerClasses}
-        onClick={handleOverlayClick}
-        onKeyDown={handleKeyDown}
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={modalId}
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <DialogContent
+        className={`${getSizeClass()} ${mobileBehavior === 'fullscreen' ? 'h-full md:h-auto md:max-h-[90vh]' : 'max-h-[90vh]'}`}
+        onPointerDownOutside={(e) => {
+          if (!closeOnOverlayClick) {
+            e.preventDefault();
+          }
+        }}
+        onEscapeKeyDown={(e) => {
+          if (!closeOnEscape) {
+            e.preventDefault();
+          }
+        }}
+        aria-labelledby={ariaLabelledby}
       >
-      <div
-        className={`
-          ${modalClasses}
-          bg-neutral-800 border border-neutral-700 shadow-xl
-          flex flex-col overflow-hidden
-        `}
-      >
-        {/* Modal Header */}
-        <div className="flex items-center justify-between p-6 border-b border-neutral-700 bg-neutral-800/95">
-          <h2 id={modalId} className="text-lg font-semibold text-white truncate">
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+          <DialogTitle
+            id={ariaLabelledby || `modal-title-${title.replace(/\s+/g, '-').toLowerCase()}`}
+            className="text-lg font-semibold truncate"
+          >
             {title}
-          </h2>
+          </DialogTitle>
           {showCloseButton && (
-            <button
+            <Button
+              variant="ghost"
+              size="sm"
               onClick={onClose}
-              className="p-1 rounded-md hover:bg-neutral-700 text-neutral-400 hover:text-neutral-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 shrink-0 ml-4"
+              className="h-8 w-8 p-0 hover:bg-muted"
               aria-label="Close modal"
             >
-              <X size={20} />
-            </button>
+              <X className="h-4 w-4" />
+            </Button>
           )}
-        </div>
-
-        {/* Modal Content */}
+        </DialogHeader>
         <div className="flex-1 overflow-y-auto">
           {children}
         </div>
-      </div>
-      </div>
-    </Portal>
+      </DialogContent>
+    </Dialog>
   );
 }

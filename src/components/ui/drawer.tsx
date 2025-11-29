@@ -1,6 +1,12 @@
 import React from 'react';
-import * as Dialog from '@radix-ui/react-dialog';
-import { Cross2Icon } from '@radix-ui/react-icons';
+import { X } from 'lucide-react';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { cn } from '../../lib/utils';
 
 interface DrawerProps {
@@ -10,7 +16,8 @@ interface DrawerProps {
   children: React.ReactNode;
   className?: string;
   side?: 'left' | 'right' | 'top' | 'bottom';
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full' | 'wide';
+  description?: string;
 }
 
 export function Drawer({
@@ -20,77 +27,73 @@ export function Drawer({
   children,
   className = '',
   side = 'left',
-  size = 'md'
+  size = 'md',
+  description
 }: DrawerProps) {
-  const getSizeClasses = () => {
-    switch (size) {
-      case 'sm':
-        return side === 'left' || side === 'right' ? 'w-80' : 'h-64';
-      case 'md':
-        return side === 'left' || side === 'right' ? 'w-96' : 'h-80';
-      case 'lg':
-        return side === 'left' || side === 'right' ? 'w-[28rem]' : 'h-96';
-      case 'xl':
-        return side === 'left' || side === 'right' ? 'w-[32rem]' : 'h-[28rem]';
-      case 'full':
-        return side === 'left' || side === 'right' ? 'w-screen max-w-md' : 'h-screen';
-      default:
-        return side === 'left' || side === 'right' ? 'w-96' : 'h-80';
-    }
-  };
-
-  const getSideClasses = () => {
-    switch (side) {
-      case 'left':
-        return 'left-0 top-0 h-full data-[state=open]:animate-slideInFromLeft data-[state=closed]:animate-slideOutToLeft';
-      case 'right':
-        return 'right-0 top-0 h-full data-[state=open]:animate-slideInFromRight data-[state=closed]:animate-slideOutToRight';
-      case 'top':
-        return 'top-0 left-0 w-full data-[state=open]:animate-slideInFromTop data-[state=closed]:animate-slideOutToTop';
-      case 'bottom':
-        return 'bottom-0 left-0 w-full data-[state=open]:animate-slideInFromBottom data-[state=closed]:animate-slideOutToBottom';
-      default:
-        return 'left-0 top-0 h-full data-[state=open]:animate-slideInFromLeft data-[state=closed]:animate-slideOutToLeft';
+  // Map size to Sheet content width/height classes
+  const getSizeClass = () => {
+    if (side === 'left' || side === 'right') {
+      switch (size) {
+        case 'sm':
+          return 'w-80';
+        case 'md':
+          return 'w-96';
+        case 'lg':
+          return 'w-[28rem]';
+        case 'xl':
+          return 'w-[32rem]';
+        case 'full':
+          return 'w-full max-w-md';
+        case 'wide':
+          return '';
+        default:
+          return 'w-96';
+      }
+    } else {
+      switch (size) {
+        case 'sm':
+          return 'h-64';
+        case 'md':
+          return 'h-80';
+        case 'lg':
+          return 'h-96';
+        case 'xl':
+          return 'h-[28rem]';
+        case 'full':
+          return 'h-screen';
+        default:
+          return 'h-80';
+      }
     }
   };
 
   return (
-    <Dialog.Root open={isOpen} onOpenChange={onClose}>
-      <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 data-[state=open]:animate-fadeIn data-[state=closed]:animate-fadeOut" />
-        <Dialog.Content
-          className={cn(
-            'fixed z-50 bg-neutral-900 border border-neutral-700 shadow-2xl',
-            'focus:outline-none',
-            getSizeClasses(),
-            getSideClasses(),
-            className
+    <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent
+        side={side}
+        className={cn(getSizeClass(), className, 'bg-neutral-900', {
+          'w-full sm:!w-[40vw] sm:!max-w-none': size === 'wide' && (side === 'left' || side === 'right')
+        })}
+      >
+        <div className="flex items-center justify-between">
+          {(title || description) && (
+            <SheetHeader className="flex-1">
+              {title && <SheetTitle className="text-white">{title}</SheetTitle>}
+              {description && <SheetDescription>{description}</SheetDescription>}
+            </SheetHeader>
           )}
-        >
-          {/* Header */}
-          {(title || side === 'left' || side === 'right') && (
-            <div className="flex items-center justify-between p-4 border-b border-neutral-700">
-              {title && (
-                <Dialog.Title className="text-lg font-semibold text-white">
-                  {title}
-                </Dialog.Title>
-              )}
-              <Dialog.Close className="text-neutral-400 hover:text-white transition-colors">
-                <Cross2Icon className="w-5 h-5" />
-              </Dialog.Close>
-            </div>
-          )}
-
-          {/* Content */}
-          <div className={cn(
-            'overflow-y-auto',
-            side === 'left' || side === 'right' ? 'h-full' : 'max-h-[80vh]',
-            title ? 'h-[calc(100%-4rem)]' : 'h-full'
-          )}>
-            {children}
-          </div>
-        </Dialog.Content>
-      </Dialog.Portal>
-    </Dialog.Root>
+          <button
+            onClick={onClose}
+            className="p-2 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+            aria-label="Close"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <div className="mt-6 overflow-y-auto h-full">
+          {children}
+        </div>
+      </SheetContent>
+    </Sheet>
   );
 }

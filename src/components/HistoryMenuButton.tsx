@@ -1,6 +1,7 @@
 import React, { useState, ReactNode } from 'react';
 import { Drawer } from './ui/drawer';
 import { SimplifiedConversationHistory } from './SimplifiedConversationHistory';
+import { Button } from '@/components/ui/button';
 import { MotionHighlight } from './ui/shadcn-io/motion-highlight';
 
 interface HistoryMenuButtonProps {
@@ -28,16 +29,18 @@ export function HistoryMenuButton({
       {/* History Button with MotionHighlight */}
       <div className={`z-20 ${containerClassName}`}>
         <MotionHighlight defaultValue={defaultValue} className="flex">
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             data-value={defaultValue}
             onClick={openDrawer}
-            className={`flex items-center justify-center w-10 h-10 bg-neutral-200 hover:bg-neutral-300 rounded-full text-neutral-900 hover:text-neutral-700 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-900 ${className}`}
+            className={`h-9 w-9 ${className}`}
             aria-label="Open conversation history"
             title="Conversation History"
             data-testid={dataTestId}
           >
             {icon}
-          </button>
+          </Button>
         </MotionHighlight>
       </div>
 
@@ -47,10 +50,9 @@ export function HistoryMenuButton({
         onClose={closeDrawer}
         title="Conversation History"
         side="left"
-        size="md"
+        size="wide"
       >
         <SimplifiedConversationHistory
-          title="Conversation History"
           className="flex flex-col bg-neutral-900"
         />
       </Drawer>

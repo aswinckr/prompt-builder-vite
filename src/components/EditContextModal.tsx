@@ -4,6 +4,8 @@ import { TipTapEditor } from "./TipTapEditor";
 import { useLibraryState, useLibraryActions } from "../contexts/LibraryContext";
 import { useToast } from "../contexts/ToastContext";
 import { ContextBlock } from "../types/ContextBlock";
+import { convertToHtml } from "../utils/contentFormatUtils";
+import { htmlToText } from "../utils/markdownUtils";
 
 interface EditContextModalProps {
   isOpen: boolean;
@@ -40,11 +42,25 @@ export function EditContextModal({
       const block = contextBlocks.find(b => b.id === blockId);
       if (block) {
         setTitle(block.title);
-        setContent({
-          html: block.content,
-          json: null,
-          text: block.content
-        });
+
+        // Process content with proper format detection and conversion
+        try {
+          const processedContent = convertToHtml(block.content);
+          setContent({
+            html: processedContent.html,
+            json: null,
+            text: htmlToText(processedContent.html) // Extract plain text from processed HTML
+          });
+        } catch (error) {
+          console.error('Error processing content for editing:', error);
+          // Fallback to direct assignment if processing fails
+          setContent({
+            html: block.content,
+            json: null,
+            text: block.content
+          });
+        }
+
         setOriginalData(block);
         setHasChanges(false);
         setError(''); // Clear any previous errors
@@ -56,7 +72,19 @@ export function EditContextModal({
   useEffect(() => {
     if (originalData) {
       const titleChanged = title.trim() !== originalData.title.trim();
-      const contentChanged = content.text.trim() !== originalData.content.trim();
+
+      // For content comparison, convert current HTML content back to text and compare with original
+      let contentChanged = false;
+      try {
+        const currentPlainText = htmlToText(content.html);
+        const originalProcessedText = htmlToText(convertToHtml(originalData.content).html);
+        contentChanged = currentPlainText.trim() !== originalProcessedText.trim();
+      } catch (error) {
+        console.error('Error comparing content changes:', error);
+        // Fallback to basic text comparison
+        contentChanged = content.text.trim() !== originalData.content.trim();
+      }
+
       setHasChanges(titleChanged || contentChanged);
     }
   }, [title, content, originalData]);

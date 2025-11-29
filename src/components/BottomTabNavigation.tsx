@@ -1,9 +1,9 @@
-import React from 'react';
-import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Library, Sparkles } from 'lucide-react';
-import { ROUTES } from '../routes/AppRoutes';
-import { useLibraryState } from '../contexts/LibraryContext';
-import { MotionHighlight } from './ui/shadcn-io/motion-highlight';
+import React from "react";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
+import { Library, Sparkles } from "lucide-react";
+import { ROUTES } from "../routes/AppRoutes";
+import { useLibraryState } from "../contexts/LibraryContext";
+import { MotionHighlight } from "./ui/shadcn-io/motion-highlight";
 
 export function BottomTabNavigation() {
   const location = useLocation();
@@ -23,8 +23,8 @@ export function BottomTabNavigation() {
   const defaultValue = isBuilderActive ? ROUTES.PROMPT : ROUTES.KNOWLEDGE;
 
   return (
-    <div className="fixed bottom-4 md:bottom-6 left-1/2 transform -translate-x-1/2 z-40">
-      <div className="flex items-center bg-neutral-200 rounded-full p-1 shadow-lg max-w-[90vw] md:max-w-none">
+    <div className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 transform md:bottom-6">
+      <div className="flex max-w-[90vw] items-center rounded-full border border-primary/20 bg-muted/80 p-1 shadow-glow-sm backdrop-blur-md md:max-w-none">
         <MotionHighlight
           defaultValue={defaultValue}
           className="flex items-center gap-1"
@@ -39,10 +39,10 @@ export function BottomTabNavigation() {
             role="tab"
             aria-selected={isBuilderActive}
             aria-controls="prompt-builder-panel"
-            className="nav-tab-no-outline flex items-center gap-2 px-3 md:px-4 h-8 rounded-full text-sm font-medium transition-colors duration-200 ease-out no-underline data-[active=true]:text-white data-[active=true]:font-medium text-neutral-900 cursor-pointer justify-center"
-            style={{ willChange: 'color', backfaceVisibility: 'hidden' }}
+            className="nav-tab-no-outline flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full px-3 text-sm font-medium text-muted-foreground no-underline transition-colors duration-200 ease-out hover:text-foreground data-[active=true]:font-medium data-[active=true]:text-primary-foreground md:px-4"
+            style={{ willChange: "color", backfaceVisibility: "hidden" }}
           >
-            <Sparkles className="w-4 h-4" />
+            <Sparkles className="h-4 w-4" />
             <span>Prompt</span>
           </NavLink>
 
@@ -52,10 +52,10 @@ export function BottomTabNavigation() {
             role="tab"
             aria-selected={isKnowledgeActive}
             aria-controls="context-library-panel"
-            className="nav-tab-no-outline flex items-center gap-2 px-3 md:px-4 h-8 rounded-full text-sm font-medium transition-colors duration-200 ease-out no-underline data-[active=true]:text-white data-[active=true]:font-medium text-neutral-900 cursor-pointer justify-center"
-            style={{ willChange: 'color', backfaceVisibility: 'hidden' }}
+            className="nav-tab-no-outline flex h-8 cursor-pointer items-center justify-center gap-2 rounded-full px-3 text-sm font-medium text-muted-foreground no-underline transition-colors duration-200 ease-out hover:text-foreground data-[active=true]:font-medium data-[active=true]:text-primary-foreground md:px-4"
+            style={{ willChange: "color", backfaceVisibility: "hidden" }}
           >
-            <Library className="w-4 h-4" />
+            <Library className="h-4 w-4" />
             <span>Knowledge</span>
           </NavLink>
         </MotionHighlight>

@@ -79,10 +79,10 @@ export function ConversationDetail() {
           <h2 className="text-xl font-semibold text-white mb-2">Conversation not found</h2>
           <p className="text-neutral-400 mb-4">The conversation you're looking for doesn't exist or you don't have access to it.</p>
           <button
-            onClick={() => navigate('/history')}
+            onClick={() => navigate('/prompt')}
             className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
           >
-            Back to History
+            Back
           </button>
         </div>
       </div>
@@ -188,11 +188,11 @@ export function ConversationDetail() {
         <div className="p-6">
           {/* Back Navigation */}
           <Link
-            to="/history"
+            to="/prompt"
             className="inline-flex items-center gap-2 text-neutral-400 hover:text-white transition-colors mb-4"
           >
             <ArrowLeft className="w-4 h-4" />
-            Back to History
+            Back
           </Link>
 
           {/* Title and Actions */}
