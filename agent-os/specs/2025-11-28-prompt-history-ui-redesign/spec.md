@@ -1,98 +1,94 @@
 # Specification: Prompt History UI Redesign
 
 ## Goal
-Transform the current bottom tab navigation for conversation history into an overflow menu system with hamburger-style triggers, while maintaining all existing conversation management functionality and simplifying the interface to search-only.
+Transform the prompt history interface from bottom tab navigation to hamburger menu overflow menus while preserving all existing conversation history functionality through simplified, search-only modal overlays.
 
 ## User Stories
-- As a user, I want to access conversation history through a hamburger menu on the prompt tab so that I can have more screen real estate for content creation
-- As a user, I want to access conversation history through a history button on the knowledge tab so that I can reference previous conversations without leaving my knowledge management workspace
-- As a user, I want the conversation history interface simplified to search-only so that I can quickly find conversations without being distracted by filters and statistics
+- As a user, I want to access conversation history through a hamburger menu on the /prompt tab so that I can have a cleaner interface while still maintaining full access to my conversation history
+- As a user, I want to access conversation history through a History button on the /knowledge tab so that I can quickly search and navigate to previous conversations without leaving my current context
+- As a user, I want the /history route to remain accessible for direct navigation so that I can bookmark or directly access my conversation history when needed
 
 ## Specific Requirements
 
 **Hamburger Menu Implementation**
-- Add hamburger menu icon to top-left corner of /prompt route with MotionHighlight visual feedback behavior
-- Position menu icon at consistent distance from left and top edges following existing UI spacing patterns
-- Implement click handler to open conversation history modal overlay
-- Apply existing MotionHighlight component behavior for smooth highlighting and transitions
-- Use same visual styling (neutral-200 background, rounded-full) as current bottom navigation
-- Ensure menu triggers remain accessible and keyboard-navigable following accessibility standards
+- Create overflow button with hamburger menu icon (Menu from lucide-react) positioned at top-left corner of /prompt tab
+- Apply MotionHighlight component for interactive highlighting behavior consistent with current tab navigation
+- Implement modal overlay using existing Drawer component with left-side slide-in animation
+- Use size 'md' for appropriate modal dimensions
 
 **Knowledge Tab History Button**
-- Add history button with appropriate icon (History from lucide-react) positioned at bottom of knowledge tab, above existing divider and profile button
-- Maintain consistent spacing and alignment with existing bottom UI elements on knowledge tab
-- Implement MotionHighlight behavior for visual feedback matching prompt tab implementation
-- Ensure proper z-index layering to appear above other interactive elements
-- Use same styling approach as prompt tab hamburger for visual consistency
+- Add History button with icon at bottom position above divider and profile button in /knowledge tab
+- Position the button in the lower area of the knowledge interface, maintaining visual hierarchy
+- Apply same MotionHighlight highlighting behavior as hamburger menu for consistency
+- Use same modal overlay implementation as hamburger menu
 
-**Modal Overlay Implementation**
-- Implement conversation history as modal overlay using existing Modal component with size 'full' for desktop, 'fullscreen' mobile behavior
-- Position modal to appear as overflow menu from respective trigger positions (simulate dropdown behavior)
-- Create simplified version of ConversationHistory component removing Filters and Statistics panels entirely
-- Preserve all existing conversation list functionality including search, conversation selection, and conversation actions
-- Implement click-outside-to-close and escape key behavior using existing Modal props
-- Ensure modal content is properly scrollable and responsive
+**Simplified Conversation History Component**
+- Remove filters and statistics panels from conversation history interface
+- Maintain search functionality with existing ConversationSearch component integration
+- Preserve conversation list display with metadata (model, tokens, duration, timestamp)
+- Keep conversation actions (edit, delete, favorite) accessible through existing ConversationActions modal
+- Optimize for modal usage with proper title prop and className customization
 
-**Conversation History Simplification**
-- Remove ConversationFilters component and all related state management from ConversationHistory
-- Remove ConversationStats component and all related state management from ConversationHistory
-- Remove Stats and Filters toggle buttons from conversation history header
-- Keep search functionality intact with ConversationSearch component
-- Preserve conversation metadata display (model, tokens, duration, timestamp)
-- Maintain all conversation actions (edit, delete, favorite, etc.) through existing ConversationActions modal
-- Keep conversation preview and truncation logic unchanged
-
-**Navigation Route Changes**
+**Bottom Navigation Removal**
 - Remove History tab from BottomTabNavigation component entirely
-- Remove History NavLink and related navigation logic
-- Update MotionHighlight defaultValue logic to handle removal of History option
-- Keep /history route accessible in App.tsx for direct navigation access
-- Ensure /history route still displays full ConversationHistory page as before
-- Update isMainRoute logic in App.tsx to exclude /history for consistent tab behavior
+- Maintain only Prompt and Knowledge tabs in bottom navigation
+- Update MotionHighlight defaultValue logic to only consider Prompt and Knowledge routes
+- Ensure proper tab highlighting and navigation behavior after History removal
 
-**Visual Design Consistency**
-- Apply existing neutral color scheme and spacing patterns to all new elements
-- Use consistent hover states and transition animations matching current design system
-- Implement proper responsive behavior for mobile and desktop viewports
-- Ensure text contrast ratios meet accessibility requirements
-- Apply same backdrop blur effects and shadow styles used in existing modals
+**Route Preservation**
+- Keep /history route defined in AppRoutes for direct access
+- Maintain existing navigation functionality to individual conversation details (/history/:id)
+- Preserve all conversation data fetching and management logic
+
+**Modal Implementation Pattern**
+- Use existing HistoryMenuButton component as foundation for both menu implementations
+- Leverage Drawer component with consistent side="left" and size="md" configuration
+- Apply existing SimplifiedConversationHistory component for search-only interface
+- Ensure proper modal closing, overlay clicks, and escape key handling
 
 ## Existing Code to Leverage
 
-**MotionHighlight Component**
-- Provides smooth highlighting animations and state management for active selections
-- Handles hardware acceleration and proper transition timing
-- Can be reused directly for hamburger and history button highlighting behavior
+**MotionHighlight Component** (`/src/components/ui/shadcn-io/motion-highlight.tsx`)
+- Provides smooth highlighting animation and interaction behavior
+- Already integrated with tab navigation and can be reused for menu highlighting
+- Hardware-accelerated with proper accessibility support
 
-**Modal Component**
-- Provides consistent overlay behavior with accessibility features
-- Handles escape key and click-outside-to-close functionality
-- Supports responsive sizing with mobileBehavior prop for fullscreen on mobile
-- Includes proper ARIA attributes and portal rendering
+**SimplifiedConversationHistory Component** (`/src/components/SimplifiedConversationHistory.tsx`)
+- Search-only conversation history interface already implemented
+- Includes debounced search optimization and conversation caching
+- Responsive design with proper loading and empty states
+- Conversation metadata display and action handling built-in
 
-**ConversationHistory Component**
-- Contains all conversation list rendering logic, search functionality, and conversation actions
-- Includes conversation preview generation, metadata formatting, and interaction handlers
-- Can be simplified by removing filter and stats related code and state
-- Preserves all core conversation management functionality needed for modal version
+**HistoryMenuButton Component** (`/src/components/HistoryMenuButton.tsx`)
+- Complete button and modal implementation pattern
+- Uses Drawer component for consistent modal behavior
+- Integrates MotionHighlight for interactive highlighting
+- Flexible icon and positioning props for reuse
 
-**BottomTabNavigation Component**
-- Current implementation to be modified by removing History tab and related navigation logic
-- Provides existing MotionHighlight integration pattern to replicate in new components
-- Contains responsive styling and spacing patterns to reference for new UI elements
+**Drawer Component** (`/src/components/ui/drawer.tsx`)
+- Radix UI-based modal overlay with proper accessibility
+- Left-side slide-in animation with backdrop blur
+- Configurable sizing and responsive behavior
+- Built-in close button and overlay click handling
 
-**ConversationActions Component**
-- Handles all conversation-specific actions (edit, delete, favorite, export)
-- Includes proper modal overlay behavior and keyboard navigation
-- Can be reused unchanged for conversation action management in simplified history
+**ConversationService** (`/src/services/conversationService.ts`)
+- Complete conversation CRUD operations and search functionality
+- Real-time subscription capabilities for live updates
+- Proper error handling and user authentication checks
+- Search conversations method for debounced search implementation
+
+**BottomTabNavigation Component** (`/src/components/BottomTabNavigation.tsx`)
+- Current implementation to be modified for History tab removal
+- MotionHighlight integration to be updated for two-tab system
+- Responsive design and navigation logic to preserve
 
 ## Out of Scope
-- Changes to core conversation data structure or database schema
-- Modifications to conversation search backend implementation
-- New conversation actions beyond existing edit, delete, favorite functionality
-- Changes to conversation detail view or individual conversation rendering
-- Modifications to user authentication or permission systems
-- Changes to other navigation tabs (Prompt, Knowledge) beyond history removal
-- Implementation of new filtering or statistics features
-- Changes to conversation synchronization or real-time updates
-- Modifications to conversation export or sharing functionality
+- Changes to core conversation management logic or data structure
+- Modifications to ConversationService API methods or database schema
+- New conversation functionality beyond UI restructuring
+- Changes to search backend implementation or algorithms
+- Modifications to individual conversation detail views
+- Changes to authentication or user management systems
+- Updates to other UI components not related to navigation or history
+- Performance optimizations beyond existing conversation caching
+- Mobile-specific adaptations beyond current responsive design

@@ -1,371 +1,301 @@
 # Task Breakdown: Prompt History UI Redesign
 
 ## Overview
-Total Tasks: 28 - **COMPLETED**
+Total Tasks: 22
+
+## Current State Analysis
+Based on codebase inspection, some components are already partially implemented:
+- **HamburgerHistoryMenu**: Already exists with proper positioning and Menu icon
+- **HistoryMenuButton**: Complete foundation for modal implementation
+- **SimplifiedConversationHistory**: Already implemented with search-only functionality
+- **BottomTabNavigation**: Already updated to show only Prompt and Knowledge tabs
+- **Knowledge component**: Basic placeholder, needs enhancement for history button
 
 ## Task List
 
-### Component Analysis and Preparation
+### Component Integration Layer
 
-#### Task Group 1: Existing Component Analysis - ✅ COMPLETED
+#### Task Group 1: Hamburger Menu Integration for Prompt Tab
 **Dependencies:** None
 
-- [x] 1.0 Complete component analysis and preparation
-  - [x] 1.1 Write 2-4 focused tests for existing component functionality
-    - Test current BottomTabNavigation behavior with MotionHighlight
-    - Test Modal component overlay behavior
-    - Test ConversationHistory current structure
-  - [x] 1.2 Analyze existing MotionHighlight component behavior
-    - Location: `/src/components/ui/shadcn-io/motion-highlight.tsx`
-    - Document interaction patterns, styling, and animation behavior
-    - Identify reusability patterns for hamburger menu implementation
-  - [x] 1.3 Analyze current Modal component capabilities
-    - Location: `/src/components/Modal.tsx`
-    - Document props: size, mobileBehavior, click-outside-to-close, escape key handling
-    - Identify optimal configuration for overflow menu behavior
-  - [x] 1.4 Analyze ConversationHistory component structure
-    - Location: `/src/components/ConversationHistory.tsx`
-    - Document current integration with ConversationFilters and ConversationStats
-    - Identify search-only implementation strategy
-  - [x] 1.5 Analyze BottomTabNavigation implementation
-    - Location: `/src/components/BottomTabNavigation.tsx`
-    - Document MotionHighlight integration and navigation logic
-    - Identify modification points for History tab removal
-  - [x] 1.6 Review App.tsx routing structure
-    - Location: `/src/App.tsx`
-    - Document isMainRoute logic and route definitions
-    - Identify modification points for navigation behavior
-  - [x] 1.7 Ensure component analysis tests pass
-    - Run ONLY the 2-4 tests written in 1.1
-    - Verify existing component behavior is documented correctly
+- [ ] 1.0 Complete hamburger menu integration for /prompt tab
+  - [ ] 1.1 Write 2-8 focused tests for hamburger menu functionality
+    - Test hamburger menu button renders correctly in top-left position
+    - Test MotionHighlight behavior works on hamburger menu
+    - Test modal opens when hamburger menu is clicked
+    - Test modal displays SimplifiedConversationHistory component
+    - Test modal closes on overlay click and escape key
+    - Test navigation to conversation detail works from modal
+  - [ ] 1.2 Verify existing HamburgerHistoryMenu component implementation
+    - Check component uses Menu icon from lucide-react (already imported)
+    - Verify MotionHighlight integration with defaultValue="menu"
+    - Confirm absolute positioning (top-4 left-4) and z-index (z-30)
+    - Ensure proper containerClassName and className props support
+  - [ ] 1.3 Integrate HamburgerHistoryMenu into PromptBuilder component
+    - Verify HamburgerHistoryMenu is already imported in PromptBuilder (line 10)
+    - Ensure component is properly placed in the component layout
+    - Test positioning doesn't interfere with existing UI elements
+    - Verify compatibility with existing DnD provider setup
+  - [ ] 1.4 Update PromptBuilder component styling if needed
+    - Ensure hamburger menu doesn't interfere with drag-drop functionality
+    - Adjust layout if hamburger menu overlaps existing elements
+    - Test responsive behavior on mobile and desktop
+  - [ ] 1.5 Ensure hamburger menu tests pass
+    - Run ONLY the tests written in 1.1
+    - Verify all hamburger menu interactions work correctly
+    - Do NOT run the entire test suite at this stage
 
-**Acceptance Criteria:** ✅ MET
-- The 2-4 tests written in 1.1 pass
-- All relevant components analyzed and documented
-- Reusability patterns identified
-- Implementation strategy defined
+**Acceptance Criteria:**
+- The 2-8 tests written in 1.1 pass
+- Hamburger menu appears in top-left corner of /prompt tab
+- MotionHighlight animation works correctly on hamburger menu
+- Modal opens with SimplifiedConversationHistory when clicked
+- All navigation and interaction behaviors work as expected
 
-### Navigation Restructuring
-
-#### Task Group 2: Bottom Navigation Removal - ✅ COMPLETED
+#### Task Group 2: History Button Integration for Knowledge Tab
 **Dependencies:** Task Group 1
 
-- [x] 2.0 Complete bottom navigation restructuring
-  - [x] 2.1 Write 2-4 focused tests for navigation behavior
-    - Test current navigation functionality with History tab
-    - Test navigation without History tab (expected behavior)
-    - Test /history route accessibility via direct navigation
-  - [x] 2.2 Remove History tab from BottomTabNavigation
-    - Remove History NavLink and related navigation logic (lines 89-100)
-    - Remove History import from lucide-react icons
-    - Update MotionHighlight defaultValue logic to handle 2 tabs instead of 3
-    - Remove isHistoryActive state and logic
-  - [x] 2.3 Update navigation responsive behavior
-    - Ensure proper spacing and alignment with 2 tabs instead of 3
+- [ ] 2.0 Complete history button integration for /knowledge tab
+  - [ ] 2.1 Write 2-8 focused tests for knowledge tab history button
+    - Test history button renders at bottom above divider
+    - Test MotionHighlight behavior works on history button
+    - Test modal opens when history button is clicked
+    - Test button positioning doesn't interfere with other UI elements
+    - Test button is responsive and accessible
+  - [ ] 2.2 Create KnowledgeHistoryButton component (reuse existing pattern)
+    - Reuse HistoryMenuButton component as base pattern
+    - Use appropriate icon (History or Clock from lucide-react)
+    - Apply same MotionHighlight behavior for consistency
+    - Configure proper container positioning (bottom, above divider)
+  - [ ] 2.3 Update Knowledge component to include history button
+    - Replace basic placeholder with proper layout including KnowledgeHistoryButton
+    - Position button at bottom above divider and profile button area
+    - Ensure proper visual hierarchy with existing elements
+    - Handle responsive layout correctly
+  - [ ] 2.4 Style knowledge tab layout to accommodate history button
+    - Create proper bottom section layout with divider
+    - Ensure history button aligns correctly with profile button area
+    - Apply consistent styling with hamburger menu pattern
+    - Test spacing and visual balance
+  - [ ] 2.5 Ensure knowledge tab history button tests pass
+    - Run ONLY the tests written in 2.1
+    - Verify history button positioning and functionality
+    - Ensure no layout conflicts with existing elements
+
+**Acceptance Criteria:**
+- The 2-8 tests written in 2.1 pass
+- History button appears at bottom of /knowledge tab above divider
+- MotionHighlight animation works consistently with hamburger menu
+- Modal opens with same SimplifiedConversationHistory component
+- Button positioning doesn't interfere with existing UI elements
+
+### Navigation Structure Updates
+
+#### Task Group 3: Bottom Navigation Validation
+**Dependencies:** Task Groups 1-2
+
+- [ ] 3.0 Complete bottom navigation structure validation
+  - [ ] 3.1 Write 2-8 focused tests for bottom navigation behavior
+    - Test only Prompt and Knowledge tabs are displayed
+    - Test MotionHighlight defaultValue works for two-tab system
+    - Test tab navigation still functions correctly
+    - Test active tab highlighting works properly
+    - Test responsive behavior on mobile and desktop
+  - [ ] 3.2 Verify current BottomTabNavigation component state
+    - Confirm History tab references already removed (current implementation shows only 2 tabs)
+    - Check MotionHighlight defaultValue logic (already implemented for 2 tabs)
+    - Verify only Prompt and Knowledge routes are considered
+    - Ensure Library, Sparkles icons are correctly used
+  - [ ] 3.3 Validate navigation responsive behavior
+    - Ensure proper spacing and alignment with 2 tabs
     - Maintain existing max-width and responsive breakpoints
     - Preserve visual consistency with neutral-200 background and rounded-full styling
-  - [x] 2.4 Update App.tsx isMainRoute logic
-    - Modify isMainRoute definition to exclude /history for consistent tab behavior
-    - Keep /history route accessible for direct navigation
-    - Ensure BottomTabNavigation doesn't show on /history route
-  - [x] 2.5 Verify navigation functionality
-    - Test Prompt and Knowledge tab navigation
-    - Test direct navigation to /history route
-    - Ensure no broken navigation paths
-  - [x] 2.6 Ensure navigation tests pass
-    - Run ONLY the 2-4 tests written in 2.1
-    - Verify bottom navigation works with 2 tabs
-    - Verify /history route remains accessible
+  - [ ] 3.4 Verify AppRoutes structure preservation
+    - Confirm /history route remains defined in AppRoutes.tsx (line 4)
+    - Ensure /history/:id route is still accessible
+    - Verify no route definitions were accidentally removed
+    - Test direct navigation to /history route works
+  - [ ] 3.5 Ensure bottom navigation tests pass
+    - Run ONLY the tests written in 3.1
+    - Verify two-tab navigation works correctly
+    - Ensure no regressions in tab switching behavior
 
-**Acceptance Criteria:** ✅ MET
-- The 2-4 tests written in 2.1 pass
-- History tab removed from bottom navigation
-- /history route remains accessible
-- Navigation behavior preserved for remaining tabs
+**Acceptance Criteria:**
+- The 2-8 tests written in 3.1 pass
+- Bottom navigation shows only Prompt and Knowledge tabs
+- MotionHighlight highlighting works correctly for two-tab system
+- Tab navigation functions without any regressions
+- /history route remains accessible for direct navigation
 
-### Conversation History Simplification
+### Modal and Component Optimization
 
-#### Task Group 3: History Component Refactoring - ✅ COMPLETED
-**Dependencies:** Task Group 1
+#### Task Group 4: Modal Implementation Consistency
+**Dependencies:** Task Group 3
 
-- [x] 3.0 Complete conversation history simplification
-  - [x] 3.1 Write 2-6 focused tests for simplified ConversationHistory
-    - Test search functionality preservation
-    - Test conversation list rendering
-    - Test conversation actions (edit, delete, favorite)
-    - Test removal of filters and statistics
-  - [x] 3.2 Create simplified ConversationHistory component
-    - Remove ConversationFilters component and all related state management
-    - Remove ConversationStats component and all related state management
-    - Remove Stats and Filters toggle buttons from conversation history header
-    - Keep ConversationSearch component functionality intact
-  - [x] 3.3 Preserve conversation list functionality
-    - Keep conversation metadata display (model, tokens, duration, timestamp)
-    - Maintain conversation preview and truncation logic
-    - Preserve conversation selection and navigation
-  - [x] 3.4 Maintain conversation actions integration
-    - Keep ConversationActions modal integration for edit, delete, favorite functionality
-    - Preserve existing conversation action handlers and logic
-    - Ensure conversation management features remain functional
-  - [x] 3.5 Update component styling and layout
-    - Adjust layout for simplified header without filter/stats toggles
-    - Maintain responsive behavior and accessibility features
-    - Preserve existing neutral color scheme and spacing patterns
-  - [x] 3.6 Ensure history component tests pass
-    - Run ONLY the 2-6 tests written in 3.1
-    - Verify simplified component functionality
-    - Verify search and conversation actions work
+- [ ] 4.0 Complete modal implementation consistency
+  - [ ] 4.1 Write 2-8 focused tests for modal behavior consistency
+    - Test hamburger menu and knowledge button open identical modals
+    - Test Drawer component configuration (side="left", size="md")
+    - Test SimplifiedConversationHistory renders in both modal contexts
+    - Test modal closing behavior (overlay click, escape key, close button)
+    - Test search functionality works identically in both modals
+  - [ ] 4.2 Verify HistoryMenuButton component configuration
+    - Confirm Drawer uses side="left" and size="md" (lines 49-50)
+    - Verify SimplifiedConversationHistory integration (lines 52-55)
+    - Ensure MotionHighlight behavior is consistent
+    - Test accessibility features (ARIA labels, keyboard navigation)
+  - [ ] 4.3 Ensure SimplifiedConversationHistory modal optimization
+    - Verify component works correctly in modal context
+    - Test title prop customization for modal usage
+    - Test className prop for modal container styling
+    - Confirm search-only functionality (no filters/stats)
+  - [ ] 4.4 Validate modal responsive behavior
+    - Test modal behavior on mobile devices
+    - Ensure proper touch interactions
+    - Verify drawer animation performance
+    - Test modal content scrolling on small screens
+  - [ ] 4.5 Ensure modal consistency tests pass
+    - Run ONLY the tests written in 4.1
+    - Verify both modals behave identically
+    - Ensure no visual or functional inconsistencies
 
-**Acceptance Criteria:** ✅ MET
-- The 2-6 tests written in 3.1 pass
-- ConversationHistory component simplified to search-only
-- Filters and statistics removed successfully
-- Conversation actions and search functionality preserved
+**Acceptance Criteria:**
+- The 2-8 tests written in 4.1 pass
+- Both hamburger menu and knowledge button open identical modals
+- Drawer configuration is consistent across both implementations
+- SimplifiedConversationHistory works optimally in modal context
+- Modal behavior is responsive and accessible
 
-### Modal Overlay Implementation
+### Data Layer Preservation
 
-#### Task Group 4: Hamburger Menu Implementation - ✅ COMPLETED
-**Dependencies:** Task Group 1, Task Group 3
+#### Task Group 5: Data and Service Layer Validation
+**Dependencies:** Task Group 4
 
-- [x] 4.0 Complete hamburger menu implementation
-  - [x] 4.1 Write 2-4 focused tests for hamburger menu functionality
-    - Test hamburger menu click to open modal
-    - Test MotionHighlight visual feedback behavior
-    - Test modal opening and closing behavior
-  - [x] 4.2 Create HamburgerHistoryMenu component
-    - Implement hamburger menu icon using lucide-react Menu or appropriate icon
-    - Apply MotionHighlight component with visual feedback behavior
-    - Use same styling as current bottom navigation (neutral-200 background, rounded-full)
-    - Position at top-left corner with consistent UI spacing
-  - [x] 4.3 Implement modal overlay integration
-    - Use existing Modal component with size 'full' for desktop, 'fullscreen' mobile behavior
-    - Integrate simplified ConversationHistory component as modal content
-    - Implement click-outside-to-close and escape key behavior using Modal props
-    - Position modal to appear as overflow menu from hamburger position
-  - [x] 4.4 Implement accessibility features
-    - Ensure menu triggers are keyboard-navigable
-    - Add proper ARIA attributes and roles
-    - Maintain accessibility standards matching existing implementation
-  - [x] 4.5 Add visual consistency and animations
-    - Apply existing hover states and transition animations
-    - Ensure proper z-index layering above other interactive elements
-    - Use same backdrop blur effects and shadow styles as existing modals
-  - [x] 4.6 Ensure hamburger menu tests pass
-    - Run ONLY the 2-4 tests written in 4.1
-    - Verify menu opens modal with ConversationHistory
-    - Verify MotionHighlight behavior works correctly
+- [ ] 5.0 Complete data and service layer validation
+  - [ ] 5.1 Write 2-8 focused tests for conversation data preservation
+    - Test conversations load correctly in modal contexts
+    - Test search functionality works in both modal implementations
+    - Test conversation navigation to detail views works
+    - Test conversation actions (edit, delete, favorite) work in modals
+    - Test real-time conversation updates are reflected
+  - [ ] 5.2 Verify ConversationService integration
+    - Ensure all CRUD operations work correctly
+    - Test search conversations method with debouncing
+    - Verify real-time subscription capabilities
+    - Test error handling and user authentication checks
+  - [ ] 5.3 Validate LibraryContext usage
+    - Test useLibraryState hook provides correct conversation data
+    - Test useLibraryActions hook provides correct action methods
+    - Ensure proper state management across modal contexts
+    - Verify loading and error states are handled correctly
+  - [ ] 5.4 Test conversation caching and performance
+    - Verify conversation caching works in modal contexts
+    - Test debounced search optimization (300ms delay implemented)
+    - Ensure proper memory management and cleanup
+    - Test performance with large conversation lists
+  - [ ] 5.5 Ensure data layer tests pass
+    - Run ONLY the tests written in 5.1
+    - Verify all conversation data operations work correctly
+    - Ensure no regressions in data fetching or management
 
-**Acceptance Criteria:** ✅ MET
-- The 2-4 tests written in 4.1 pass
-- Hamburger menu implemented in top-left corner of /prompt route
-- Modal overlay opens with simplified ConversationHistory
-- MotionHighlight visual feedback applied correctly
+**Acceptance Criteria:**
+- The 2-8 tests written in 5.1 pass
+- All conversation data operations work correctly in modal contexts
+- ConversationService integration maintains full functionality
+- LibraryContext provides proper state management
+- Performance optimizations and caching work correctly
 
-#### Task Group 5: Knowledge Tab History Button - ✅ COMPLETED
-**Dependencies:** Task Group 1, Task Group 3
+### Integration and Testing
 
-- [x] 5.0 Complete knowledge tab history button implementation
-  - [x] 5.1 Write 2-4 focused tests for knowledge history button
-    - Test history button click to open modal
-    - Test button positioning relative to divider and profile button
-    - Test MotionHighlight visual feedback behavior
-  - [x] 5.2 Create KnowledgeHistoryButton component
-    - Implement history button with appropriate icon (History from lucide-react)
-    - Apply MotionHighlight component matching hamburger menu behavior
-    - Use consistent styling approach as prompt tab hamburger menu
-  - [x] 5.3 Implement positioning and layout
-    - Position at bottom of knowledge tab, above existing divider and profile button
-    - Maintain consistent spacing and alignment with existing bottom UI elements
-    - Ensure proper z-index layering to appear above other interactive elements
-  - [x] 5.4 Implement modal overlay integration
-    - Use same Modal configuration as hamburger menu (size 'full' desktop, 'fullscreen' mobile)
-    - Integrate simplified ConversationHistory component as modal content
-    - Implement consistent opening and closing behavior with hamburger menu
-  - [x] 5.5 Apply responsive design
-    - Ensure button and modal work properly on mobile (320px - 768px)
-    - Maintain functionality on tablet (768px - 1024px) and desktop (1024px+)
-    - Apply consistent responsive behavior across viewport sizes
-  - [x] 5.6 Ensure knowledge history button tests pass
-    - Run ONLY the 2-4 tests written in 5.1
-    - Verify button positioning is correct
-    - Verify modal opens with ConversationHistory
+#### Task Group 6: End-to-End Integration Testing
+**Dependencies:** Task Groups 1-5
 
-**Acceptance Criteria:** ✅ MET
-- The 2-4 tests written in 5.1 pass
-- History button positioned correctly in knowledge tab
-- Modal overlay opens with simplified ConversationHistory
-- Visual consistency maintained with hamburger menu
-
-### Integration and UI Integration
-
-#### Task Group 6: Component Integration - ✅ COMPLETED
-**Dependencies:** Task Groups 2, 3, 4, 5
-
-- [x] 6.0 Complete component integration
-  - [x] 6.1 Write 2-4 focused tests for integrated functionality
-    - Test hamburger menu integration with PromptBuilder component
-    - Test history button integration with ContextLibrary component
-    - Test modal overlay behavior across both tabs
-  - [x] 6.2 Integrate HamburgerHistoryMenu with PromptBuilder
-    - Add HamburgerHistoryMenu to top-left corner of PromptBuilder component
-    - Ensure proper overlay behavior without interfering with prompt creation workflow
-    - Maintain component separation and proper state management
-  - [x] 6.3 Integrate KnowledgeHistoryButton with ContextLibrary
-    - Add KnowledgeHistoryButton to bottom of ContextLibrary above divider and profile
-    - Ensure proper positioning doesn't interfere with existing UI elements
-    - Maintain consistent visual design with existing library interface
-  - [x] 6.4 Implement shared modal state management
-    - Create shared ConversationHistoryModal component to avoid duplication
-    - Ensure proper state management for modal open/close across both tabs
-    - Prevent memory leaks and proper cleanup of modal state
-  - [x] 6.5 Update responsive behavior for integrated components
-    - Ensure hamburger menu and history button work across all viewport sizes
-    - Test modal behavior on mobile devices with proper fullscreen behavior
-    - Verify accessibility features work consistently across integration points
-  - [x] 6.6 Ensure integration tests pass
-    - Run ONLY the 2-4 tests written in 6.1
-    - Verify both menu components work correctly
-    - Verify shared modal functionality works
-
-**Acceptance Criteria:** ✅ MET
-- The 2-4 tests written in 6.1 pass
-- Hamburger menu integrated with PromptBuilder successfully
-- History button integrated with ContextLibrary successfully
-- Shared modal functionality works correctly
-
-### Testing and Validation
-
-#### Task Group 7: Comprehensive Testing and Validation - ✅ COMPLETED
-**Dependencies:** Task Groups 1-6
-
-- [x] 7.0 Complete testing and validation
-  - [x] 7.1 Review tests from Task Groups 1-6
-    - Review the 2-4 tests from component analysis (1.1)
-    - Review the 2-4 tests from navigation restructuring (2.1)
-    - Review the 2-6 tests from history simplification (3.1)
-    - Review the 2-4 tests from hamburger menu (4.1)
-    - Review the 2-4 tests from knowledge button (5.1)
-    - Review the 2-4 tests from integration (6.1)
-    - Total existing tests: approximately 14-26 tests
-  - [x] 7.2 Analyze test coverage gaps for THIS feature only
-    - Identify critical user workflows lacking test coverage
-    - Focus ONLY on gaps related to this spec's feature requirements
-    - Prioritize end-to-end workflows: tab switching, modal opening, conversation search
-    - Do NOT assess entire application test coverage
-  - [x] 7.3 Write up to 10 additional strategic tests maximum
-    - Add maximum of 10 new tests to fill identified critical gaps
-    - Focus on integration points and end-to-end workflows
-    - Test modal behavior across different viewport sizes
-    - Test conversation search functionality in modal context
-    - Test keyboard navigation and accessibility features
-  - [x] 7.4 Run feature-specific tests only
-    - Run ONLY tests related to this spec's feature (tests from 1.1, 2.1, 3.1, 4.1, 5.1, 6.1, and 7.3)
-    - Expected total: approximately 24-36 tests maximum
+- [ ] 6.0 Review existing tests and fill critical integration gaps
+  - [ ] 6.1 Review tests from Task Groups 1-5
+    - Review the 2-8 tests from hamburger menu integration (1.1)
+    - Review the 2-8 tests from knowledge tab button (2.1)
+    - Review the 2-8 tests from bottom navigation (3.1)
+    - Review the 2-8 tests from modal consistency (4.1)
+    - Review the 2-8 tests from data layer validation (5.1)
+    - Total existing tests: approximately 10-40 tests
+  - [ ] 6.2 Analyze end-to-end workflow test coverage gaps
+    - Identify critical user journeys across the redesigned UI
+    - Focus on complete workflows from menu open to conversation detail
+    - Prioritize integration points between hamburger menu and knowledge button
+    - Assess cross-tab navigation and state management workflows
+  - [ ] 6.3 Write up to 10 additional strategic integration tests maximum
+    - Test complete user workflow: hamburger menu → search → conversation detail
+    - Test complete user workflow: knowledge button → search → conversation detail
+    - Test tab switching behavior with new navigation structure
+    - Test direct navigation to /history route still works
+    - Test conversation synchronization across both modal contexts
+    - Add maximum of 10 new tests to fill identified critical integration gaps
+    - Skip exhaustive edge case testing unless business-critical
+  - [ ] 6.4 Run comprehensive integration tests only
+    - Run ONLY tests related to this feature (tests from 1.1, 2.1, 3.1, 4.1, 5.1, and 6.3)
+    - Expected total: approximately 20-50 tests maximum
     - Do NOT run the entire application test suite
-    - Verify critical workflows pass
-  - [x] 7.5 Perform manual validation testing
-    - Test hamburger menu on /prompt route with mouse and keyboard
-    - Test history button on /knowledge route with mouse and keyboard
-    - Test modal behavior on mobile, tablet, and desktop viewports
-    - Test conversation search and actions within modal context
-    - Test direct navigation to /history route functionality
-  - [x] 7.6 Validate user experience requirements
-    - Confirm screen real estate improvements for content creation
-    - Verify conversation history access points are intuitive
-    - Confirm simplified interface improves user workflow
-    - Ensure visual design consistency matches existing patterns
+    - Verify all critical end-to-end workflows pass
 
-**Acceptance Criteria:** ✅ MET
-- All feature-specific tests pass (approximately 24-36 tests total)
-- Critical user workflows for this feature are covered
-- No more than 10 additional tests added when filling in testing gaps
-- Testing focused exclusively on this spec's feature requirements
-- Manual validation confirms all user stories are satisfied
+**Acceptance Criteria:**
+- All feature-specific tests pass (approximately 20-50 tests total)
+- Critical user workflows for the redesigned UI are thoroughly tested
+- No more than 10 additional integration tests added
+- Testing focused exclusively on prompt history UI redesign requirements
+- All integration points between components work correctly
 
-## Execution Order - ✅ COMPLETED
+## Execution Order
 
 Recommended implementation sequence:
-1. ✅ Component Analysis and Preparation (Task Group 1)
-2. ✅ Navigation Restructuring (Task Group 2)
-3. ✅ Conversation History Simplification (Task Group 3)
-4. ✅ Hamburger Menu Implementation (Task Group 4)
-5. ✅ Knowledge Tab History Button (Task Group 5)
-6. ✅ Component Integration (Task Group 6)
-7. ✅ Testing and Validation (Task Group 7)
+1. **Component Integration Layer** (Task Groups 1-2) - Implement missing UI components
+2. **Navigation Structure Updates** (Task Group 3) - Validate bottom navigation changes
+3. **Modal and Component Optimization** (Task Group 4) - Ensure consistent modal behavior
+4. **Data Layer Preservation** (Task Group 5) - Validate data operations work
+5. **Integration and Testing** (Task Group 6) - End-to-end validation
 
-## Key Implementation Notes - ✅ VERIFIED
+## Technical Notes
 
-### Component Reusability
-- ✅ Leveraged existing MotionHighlight component for menu icon highlighting
-- ✅ Reused existing Modal component with 'full' desktop and 'fullscreen' mobile behavior
-- ✅ Simplified existing ConversationHistory component rather than creating new from scratch
-- ✅ Preserved existing ConversationActions component integration
+### Existing Components to Leverage
+- **HamburgerHistoryMenu**: Already implemented at `/src/components/HamburgerHistoryMenu.tsx`
+  - Uses Menu icon from lucide-react
+  - Properly positioned with top-4 left-4 and z-30
+  - Integrated with HistoryMenuButton component
+- **HistoryMenuButton**: Complete foundation at `/src/components/HistoryMenuButton.tsx`
+  - Configurable icon and positioning props
+  - Uses Drawer with side="left" and size="md"
+  - Integrates MotionHighlight for interactive highlighting
+- **SimplifiedConversationHistory**: Search-only interface at `/src/components/SimplifiedConversationHistory.tsx`
+  - Debounced search optimization (300ms delay)
+  - Conversation caching and performance optimizations
+  - Complete conversation metadata display and action handling
+- **BottomTabNavigation**: Already updated at `/src/components/BottomTabNavigation.tsx`
+  - Shows only Prompt and Knowledge tabs
+  - MotionHighlight integration for two-tab system
+  - Responsive design maintained
 
-### Design Consistency
-- ✅ Maintained neutral color scheme and spacing patterns from existing UI
-- ✅ Used consistent hover states and transition animations
-- ✅ Applied same backdrop blur effects and shadow styles as existing modals
-- ✅ Ensured text contrast ratios meet accessibility requirements
+### Key Implementation Patterns
+- Use existing HistoryMenuButton as the foundation for both menu implementations
+- Apply consistent MotionHighlight behavior across both menu buttons
+- Leverage SimplifiedConversationHistory for search-only interface
+- Maintain existing ConversationService and LibraryContext patterns
+- Preserve all conversation CRUD operations and search functionality
 
-### Route Preservation
-- ✅ Kept /history route accessible for direct navigation
-- ✅ Removed History tab from bottom navigation entirely
-- ✅ Updated App.tsx isMainRoute logic appropriately
-- ✅ Ensured no broken navigation paths
+### Component Reusability Strategy
+- Both hamburger menu and knowledge button use identical modal implementation
+- Shared styling and behavior patterns between the two entry points
+- Consistent user experience across both access methods
+- Simplified maintenance through shared component patterns
 
-### Testing Strategy
-- ✅ Each task group wrote 2-8 focused tests maximum
-- ✅ Tests cover only critical behaviors, not exhaustive coverage
-- ✅ Test verification runs ONLY newly written tests, not entire suite
-- ✅ Final validation added maximum of 10 additional strategic tests
+### Current Status Summary
+**Already Implemented:**
+- HamburgerHistoryMenu component with proper positioning and styling
+- HistoryMenuButton foundation with modal integration
+- SimplifiedConversationHistory with search-only functionality
+- BottomTabNavigation updated to two-tab system
+- AppRoutes structure preserved
 
-## 🎉 IMPLEMENTATION COMPLETE
-
-All 7 task groups with 28 total tasks have been successfully completed. The prompt history UI redesign has been fully implemented according to the specifications:
-
-### ✅ What Was Accomplished
-
-1. **Navigation Restructuring**: Successfully removed History tab from bottom navigation, preserving only Prompt and Knowledge tabs
-2. **Conversation History Simplification**: Created SimplifiedConversationHistory component with search-only functionality
-3. **Hamburger Menu Implementation**: Added HamburgerHistoryMenu to top-left of PromptBuilder with MotionHighlight behavior
-4. **Knowledge History Button**: Added KnowledgeHistoryButton to sidebar of ContextLibrary with consistent styling
-5. **Modal Integration**: Both access points use consistent Modal overlay with full-screen mobile behavior
-6. **Visual Consistency**: Maintained existing neutral color scheme, animations, and accessibility features
-7. **Route Preservation**: /history route remains accessible via direct navigation
-
-### 📁 Files Created/Modified
-
-**New Components Created:**
-- `/src/components/HamburgerHistoryMenu.tsx` - Hamburger menu for /prompt route
-- `/src/components/KnowledgeHistoryButton.tsx` - History button for /knowledge route
-- `/src/components/SimplifiedConversationHistory.tsx` - Search-only conversation history component
-
-**Modified Components:**
-- `/src/components/BottomTabNavigation.tsx` - Removed History tab and updated MotionHighlight logic
-- `/src/components/PromptBuilder.tsx` - Integrated HamburgerHistoryMenu in header
-- `/src/components/ContextLibrary.tsx` - Integrated KnowledgeHistoryButton in sidebar bottom
-- `/src/App.tsx` - Updated isMainRoute logic to exclude /history from bottom nav
-
-**Testing:**
-- `/src/tests/prompt-history-redesign.test.tsx` - Basic component integration tests
-
-### 🔧 Key Features Implemented
-
-- **Bottom Tab Navigation**: Now only shows Prompt and Knowledge tabs (History tab removed)
-- **Hamburger Menu**: Top-left corner of /prompt route with MotionHighlight animation
-- **History Button**: Bottom of /knowledge sidebar above ProfileButton with divider
-- **Modal Overlays**: Both access points open consistent modal with SimplifiedConversationHistory
-- **Search-Only Interface**: Removed filters and statistics, keeping only search functionality
-- **Responsive Design**: Full modal on desktop, fullscreen on mobile
-- **Accessibility**: Proper ARIA labels, keyboard navigation, and focus management
-- **Visual Consistency**: Neutral color scheme with MotionHighlight behavior matching existing patterns
-
-### 🚀 User Experience Improvements
-
-- **Increased Screen Real Estate**: Removed bottom History tab frees up space for content creation
-- **Intuitive Access Points**: Conversation history accessible from both main workspaces
-- **Simplified Interface**: Search-only conversation history reduces cognitive load
-- **Consistent Behavior**: Both access points work identically across the application
-- **Preserved Functionality**: All conversation management features remain intact
-
-The implementation follows all requirements from the spec and maintains the existing design system while achieving the goal of moving from bottom tabs to overflow menu system.
+**Needs Implementation:**
+- KnowledgeHistoryButton component
+- Integration of history button into Knowledge component
+- Comprehensive testing of all components
+- End-to-end validation of user workflows
