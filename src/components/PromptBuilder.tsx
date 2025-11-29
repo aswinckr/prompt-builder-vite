@@ -7,6 +7,7 @@ import { PromptBuilderContent } from "./PromptBuilderContent";
 import { UserProfile } from "./UserProfile";
 import { ModelSelector } from "./ModelSelector";
 import { ProfileModal } from "./ProfileModal";
+import { HamburgerHistoryMenu } from "./HamburgerHistoryMenu";
 import { SynchronizedLoading } from "./ui/SynchronizedLoading";
 import { ErrorBoundary } from "./ErrorBoundary";
 import { useLibraryState, useLibraryActions } from "../contexts/LibraryContext";
@@ -98,11 +99,14 @@ export function PromptBuilder() {
         <div className="flex h-full flex-col bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 text-neutral-100">
         {/* Header with Model Selector and Actions */}
         <div className="flex items-center justify-between border-b border-neutral-800/50 p-4 backdrop-blur-sm">
-          {/* Left side - Model Selector */}
-          <ModelSelector
-            selectedModel={chat.selectedModel}
-            onModelChange={handleModelChange}
-          />
+          {/* Left side - Hamburger History Menu and Model Selector */}
+          <div className="flex items-center gap-3">
+            <HamburgerHistoryMenu />
+            <ModelSelector
+              selectedModel={chat.selectedModel}
+              onModelChange={handleModelChange}
+            />
+          </div>
 
           {/* Right side - Prompt Actions */}
           <div className="flex items-center gap-3">

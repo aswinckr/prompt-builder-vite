@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, AlertCircle, Loader2, Plus } from 'lucide-re
 import { AppLogo } from './AppLogo';
 import { ProjectSidebar } from './ProjectSidebar';
 import { ProfileButton } from './ProfileButton';
+import { KnowledgeHistoryButton } from './KnowledgeHistoryButton';
 import { ProfileModal } from './ProfileModal';
 import { GlobalSearch } from './GlobalSearch';
 import { CollapsibleTagSection } from './CollapsibleTagSection';
@@ -263,9 +264,13 @@ export function ContextLibrary() {
           </div>
         )}
 
-        {/* Profile Button - Only show when sidebar is expanded */}
+        {/* Bottom Section - History Button and Profile Button */}
         {contextLibrarySidebarExpanded && (
-          <div className="p-4">
+          <div className="border-t border-neutral-700 p-4 space-y-3">
+            {/* History Button */}
+            <KnowledgeHistoryButton />
+
+            {/* Profile Button */}
             <ProfileButton onClick={handleProfileClick} />
           </div>
         )}
