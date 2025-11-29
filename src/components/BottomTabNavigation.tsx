@@ -10,32 +10,6 @@ export function BottomTabNavigation() {
   const navigate = useNavigate();
   const { contextSelection } = useLibraryState();
 
-  // Add custom CSS to remove all outlines
-  React.useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .nav-tab-no-outline {
-        outline: none !important;
-        box-shadow: none !important;
-      }
-      .nav-tab-no-outline:focus {
-        outline: none !important;
-        box-shadow: none !important;
-      }
-      .nav-tab-no-outline:focus-visible {
-        outline: none !important;
-        box-shadow: none !important;
-      }
-      .nav-tab-no-outline::-moz-focus-inner {
-        border: 0 !important;
-      }
-    `;
-    document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
   // Hide tabs when multiple blocks are selected
   if (contextSelection.selectedBlockIds.length > 0) {
     return null;

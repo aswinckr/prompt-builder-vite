@@ -1,11 +1,28 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Calendar, MessageSquare, Cpu, Clock, TrendingUp, MoreHorizontal, ChevronRight, Star } from 'lucide-react';
+import { Search, Calendar, MessageSquare, Cpu, Clock, TrendingUp, MoreHorizontal, ChevronRight, Star, AlertCircle } from 'lucide-react';
 import { Conversation } from '../types/Conversation';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 import { ConversationSearch } from './ConversationSearch';
 import { ConversationActions } from './ConversationActions';
 import { formatDistanceToNow } from 'date-fns';
+
+// Custom hook for debouncing
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  React.useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 interface SimplifiedConversationHistoryProps {
   // Optional prop to customize title for modal usage
@@ -24,17 +41,21 @@ export function SimplifiedConversationHistory({
 
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
+  const [navigationError, setNavigationError] = useState<string | null>(null);
+
+  // Debounce search query to improve performance
+  const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
   // Filter and sort conversations (search only)
   const filteredConversations = useMemo(() => {
     let filtered = [...(conversations || [])];
 
-    // Apply search filter
-    if (searchQuery.trim()) {
+    // Apply search filter using debounced query
+    if (debouncedSearchQuery.trim()) {
       filtered = filtered.filter(conv =>
-        conv.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        conv.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        conv.model_name.toLowerCase().includes(searchQuery.toLowerCase())
+        conv.title.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        conv.description?.toLowerCase().includes(debouncedSearchQuery.toLowerCase()) ||
+        conv.model_name.toLowerCase().includes(debouncedSearchQuery.toLowerCase())
       );
     }
 
@@ -42,18 +63,39 @@ export function SimplifiedConversationHistory({
     filtered.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
 
     return filtered;
-  }, [conversations, searchQuery]);
+  }, [conversations, debouncedSearchQuery]);
 
-  const handleConversationClick = (conversationId: string) => {
-    navigate(`/history/${conversationId}`);
-  };
-
-  const handleSearch = async (query: string) => {
-    setSearchQuery(query);
-    if (query.trim()) {
-      await searchConversations(query);
+  const handleConversationClick = useCallback(async (conversationId: string) => {
+    try {
+      setNavigationError(null);
+      navigate(`/history/${conversationId}`);
+    } catch (error) {
+      console.error('Navigation failed:', error);
+      setNavigationError('Failed to navigate to conversation. Please try again.');
+      // Auto-dismiss error after 5 seconds
+      setTimeout(() => setNavigationError(null), 5000);
     }
-  };
+  }, [navigate]);
+
+  const handleSearch = useCallback((query: string) => {
+    setSearchQuery(query);
+  }, []);
+
+  const handleMoreButtonClick = useCallback((e: React.MouseEvent, conversation: Conversation) => {
+    e.stopPropagation();
+    setSelectedConversation(conversation);
+  }, []);
+
+  const handleActionsModalClose = useCallback(() => {
+    setSelectedConversation(null);
+  }, []);
+
+  // Effect to trigger search when debounced query changes
+  React.useEffect(() => {
+    if (debouncedSearchQuery.trim()) {
+      searchConversations(debouncedSearchQuery);
+    }
+  }, [debouncedSearchQuery, searchConversations]);
 
   const getConversationPreview = (conversation: Conversation) => {
     // Show first 100 characters of description or original prompt
@@ -84,6 +126,14 @@ export function SimplifiedConversationHistory({
               </p>
             </div>
           </div>
+
+          {/* Navigation Error Alert */}
+          {navigationError && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg flex items-center gap-2 max-w-xl">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span className="text-sm">{navigationError}</span>
+            </div>
+          )}
 
           {/* Search Bar */}
           <div className="relative max-w-xl">
@@ -152,10 +202,7 @@ export function SimplifiedConversationHistory({
 
                     <div className="flex items-center gap-2 ml-4">
                       <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setSelectedConversation(conversation);
-                        }}
+                        onClick={(e) => handleMoreButtonClick(e, conversation)}
                         className="p-1.5 hover:bg-neutral-600 rounded-md text-neutral-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <MoreHorizontal className="w-4 h-4" />
@@ -211,7 +258,7 @@ export function SimplifiedConversationHistory({
         <ConversationActions
           conversation={selectedConversation}
           isOpen={!!selectedConversation}
-          onClose={() => setSelectedConversation(null)}
+          onClose={handleActionsModalClose}
         />
       )}
     </div>
