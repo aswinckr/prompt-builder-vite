@@ -24,7 +24,7 @@ export function ContextDropdown({ className = '', variant = 'default' }: Context
 
   const handleAddTextBlock = () => {
     const newBlock = createTemporaryBlock({
-      title: 'Text Block',
+      title: '',
       content: '',
       tags: [],
       project_id: null

@@ -4,11 +4,65 @@
 
 /* Font declarations */
 @font-face {
-  font-family: 'Departure Mono';
-  src: url('/fonts/DepartureMono-Regular.woff2') format('woff2'),
-       url('/fonts/DepartureMono-Regular.woff') format('woff'),
-       url('/fonts/DepartureMono-Regular.otf') format('opentype');
+  font-family: 'Ronzino';
+  src: url('/fonts/Ronzino-Regular.woff2') format('woff2'),
+       url('/fonts/Ronzino-Regular.otf') format('opentype');
   font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ronzino';
+  src: url('/fonts/Ronzino-Medium.woff2') format('woff2'),
+       url('/fonts/Ronzino-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ronzino';
+  src: url('/fonts/Ronzino-Bold.woff2') format('woff2'),
+       url('/fonts/Ronzino-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ronzino';
+  src: url('/fonts/Ronzino-Oblique.woff2') format('woff2'),
+       url('/fonts/Ronzino-Oblique.otf') format('opentype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Aujournuit font for title */
+@font-face {
+  font-family: 'Aujournuit';
+  src: url('/fonts/Aujournuit-Regular.woff2') format('woff2'),
+       url('/fonts/Aujournuit-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aujournuit';
+  src: url('/fonts/Aujournuit-Airy.woff2') format('woff2'),
+       url('/fonts/Aujournuit-Airy.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aujournuit';
+  src: url('/fonts/Aujournuit-Densed.woff2') format('woff2'),
+       url('/fonts/Aujournuit-Densed.otf') format('opentype');
+  font-weight: 600;
   font-style: normal;
   font-display: swap;
 }
@@ -55,9 +109,10 @@
     --chart-5: 27 87% 67%;
 
     /* Typography */
-    --font-sans: Outfit, sans-serif;
+    --font-sans: Ronzino, ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-    --font-mono: 'Departure Mono', ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    --font-title: Aujournuit, ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
     --letter-spacing: 0.025em;
     --tracking-normal: 0.025em;
 
@@ -143,9 +198,10 @@
 
   /* Custom Typography defaults */
   .theme {
-    --font-sans: Outfit, sans-serif;
-    --font-mono: 'Departure Mono', ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    --font-sans: Ronzino, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
     --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-title: Aujournuit, ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
     --radius: 0.5rem;
     --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
     --tracking-tight: calc(var(--tracking-normal) - 0.025em);
@@ -163,8 +219,18 @@
   * {
     @apply border-border;
   }
+  html, body {
+    font-family: var(--font-sans) !important;
+  }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans) !important;
+  }
+  *:not([class*="font-title"]) {
+    font-family: var(--font-sans) !important;
+  }
+  [class*="font-title"] {
+    font-family: var(--font-title) !important;
   }
 }
 

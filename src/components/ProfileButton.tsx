@@ -30,7 +30,7 @@ export function ProfileButton({ onClick }: ProfileButtonProps) {
       <button
         onClick={onClick}
         onKeyDown={handleKeyDown}
-        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-neutral-400 hover:bg-neutral-700 hover:text-neutral-200 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-800"
+        className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors text-neutral-400 hover:bg-neutral-700 hover:text-purple-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-800"
         aria-label="Open profile menu"
         data-testid="profile-button"
       >

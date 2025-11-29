@@ -1,18 +1,32 @@
-import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
-import { ArrowLeft, Star, Trash2, Copy, Download, RotateCcw, Clock, Cpu, TrendingUp, Calendar, Tag, User, Bot } from 'lucide-react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
-import rehypeHighlight from 'rehype-highlight';
-import { Conversation, ConversationMessage } from '../types/Conversation';
-import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
-import { ConversationMessageService } from '../services/conversationMessageService';
-import { ConfirmationModal } from './ConfirmationModal';
-import { useToast } from '../contexts/ToastContext';
-import { formatDistanceToNow } from 'date-fns';
-import { ChatMessage } from './ChatMessage';
-import { AIPromptInput } from './AIPromptInput';
-import 'highlight.js/styles/github-dark.css';
+import React, { useState, useEffect } from "react";
+import { useParams, useNavigate, Link } from "react-router-dom";
+import {
+  ArrowLeft,
+  Star,
+  Trash2,
+  Copy,
+  Download,
+  Clock,
+  Cpu,
+  TrendingUp,
+  Calendar,
+  Tag,
+  User,
+  Bot,
+  Info,
+} from "lucide-react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import rehypeHighlight from "rehype-highlight";
+import { Conversation, ConversationMessage } from "../types/Conversation";
+import { useLibraryState, useLibraryActions } from "../contexts/LibraryContext";
+import { ConversationMessageService } from "../services/conversationMessageService";
+import { ConfirmationModal } from "./ConfirmationModal";
+import { useToast } from "../contexts/ToastContext";
+import { formatDistanceToNow } from "date-fns";
+import { ChatMessage } from "./ChatMessage";
+import { AIPromptInput } from "./AIPromptInput";
+import "highlight.js/styles/github-dark.css";
 
 export function ConversationDetail() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -20,21 +34,21 @@ export function ConversationDetail() {
   const { showToast } = useToast();
 
   const { conversations, loading } = useLibraryState();
-  const {
-    deleteConversation,
-    updateConversation
-  } = useLibraryActions();
+  const { deleteConversation, updateConversation } = useLibraryActions();
 
   // Find the current conversation from the conversations array
-  const conversation = conversationId ? conversations.find(c => c.id === conversationId) : null;
+  const conversation = conversationId
+    ? conversations.find((c) => c.id === conversationId)
+    : null;
   const [messages, setMessages] = useState<ConversationMessage[]>([]);
   const [messagesLoading, setMessagesLoading] = useState(false);
   const [messagesError, setMessagesError] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isContinuing, setIsContinuing] = useState(false);
-  const [continuationInput, setContinuationInput] = useState('');
+  const [continuationInput, setContinuationInput] = useState("");
   const [isCopied, setIsCopied] = useState(false);
+  const [infoModalOpen, setInfoModalOpen] = useState(false);
 
   // Load conversation messages when conversationId changes
   useEffect(() => {
@@ -45,18 +59,22 @@ export function ConversationDetail() {
       setMessagesError(null);
 
       try {
-        const result = await ConversationMessageService.getMessagesByConversationId(conversationId);
+        const result =
+          await ConversationMessageService.getMessagesByConversationId(
+            conversationId
+          );
 
         if (result.error) {
           setMessagesError(result.error);
-          console.error('Failed to load messages:', result.error);
+          console.error("Failed to load messages:", result.error);
         } else if (result.data) {
           setMessages(result.data);
         }
       } catch (error) {
-        const errorMessage = error instanceof Error ? error.message : 'Failed to load messages';
+        const errorMessage =
+          error instanceof Error ? error.message : "Failed to load messages";
         setMessagesError(errorMessage);
-        console.error('Error loading messages:', error);
+        console.error("Error loading messages:", error);
       } finally {
         setMessagesLoading(false);
       }
@@ -67,9 +85,9 @@ export function ConversationDetail() {
 
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center bg-neutral-900">
-        <div className="flex items-center gap-3 text-neutral-400">
-          <div className="animate-spin rounded-full h-6 w-6 border-2 border-neutral-600 border-t-blue-500"></div>
+      <div className="flex h-full items-center justify-center bg-background">
+        <div className="flex items-center gap-3 text-muted-foreground">
+          <div className="h-6 w-6 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary"></div>
           Loading conversation...
         </div>
       </div>
@@ -78,13 +96,18 @@ export function ConversationDetail() {
 
   if (!conversation) {
     return (
-      <div className="h-full flex items-center justify-center bg-neutral-900">
+      <div className="flex h-full items-center justify-center bg-background">
         <div className="text-center">
-          <h2 className="text-xl font-semibold text-white mb-2">Conversation not found</h2>
-          <p className="text-neutral-400 mb-4">The conversation you're looking for doesn't exist or you don't have access to it.</p>
+          <h2 className="mb-2 text-xl font-semibold text-foreground">
+            Conversation not found
+          </h2>
+          <p className="mb-4 text-muted-foreground">
+            The conversation you're looking for doesn't exist or you don't have
+            access to it.
+          </p>
           <button
-            onClick={() => navigate('/prompt')}
-            className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+            onClick={() => navigate("/prompt")}
+            className="rounded-lg bg-primary px-4 py-2 text-primary-foreground transition-colors hover:bg-primary/90"
           >
             Back
           </button>
@@ -95,10 +118,17 @@ export function ConversationDetail() {
 
   const handleToggleFavorite = async () => {
     try {
-      await updateConversation(conversation.id, { is_favorite: !conversation.is_favorite });
-      showToast(conversation.is_favorite ? 'Removed from favorites' : 'Added to favorites', 'success');
+      await updateConversation(conversation.id, {
+        is_favorite: !conversation.is_favorite,
+      });
+      showToast(
+        conversation.is_favorite
+          ? "Removed from favorites"
+          : "Added to favorites",
+        "success"
+      );
     } catch (error) {
-      showToast('Failed to update favorite status', 'error');
+      showToast("Failed to update favorite status", "error");
     }
   };
 
@@ -110,10 +140,10 @@ export function ConversationDetail() {
     setIsDeleting(true);
     try {
       await deleteConversation(conversation.id);
-      showToast('Conversation deleted', 'success');
-      navigate('/history');
+      showToast("Conversation deleted", "success");
+      navigate("/history");
     } catch (error) {
-      showToast('Failed to delete conversation', 'error');
+      showToast("Failed to delete conversation", "error");
     } finally {
       setIsDeleting(false);
       setDeleteConfirmOpen(false);
@@ -123,16 +153,19 @@ export function ConversationDetail() {
   const handleCopyConversation = async () => {
     try {
       const conversationText = messages
-        .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}:\n${msg.content}`)
-        .join('\n\n');
+        .map(
+          (msg) =>
+            `${msg.role === "user" ? "User" : "Assistant"}:\n${msg.content}`
+        )
+        .join("\n\n");
 
       await navigator.clipboard.writeText(conversationText);
       setIsCopied(true);
-      showToast('Conversation copied to clipboard', 'success');
+      showToast("Conversation copied to clipboard", "success");
 
       setTimeout(() => setIsCopied(false), 2000);
     } catch (error) {
-      showToast('Failed to copy conversation', 'error');
+      showToast("Failed to copy conversation", "error");
     }
   };
 
@@ -146,19 +179,21 @@ export function ConversationDetail() {
         model_provider: conversation.model_provider,
         created_at: conversation.created_at,
         updated_at: conversation.updated_at,
-        metadata: conversation.metadata
+        metadata: conversation.metadata,
       },
-      messages: messages.map(msg => ({
+      messages: messages.map((msg) => ({
         role: msg.role,
         content: msg.content,
         created_at: msg.created_at,
-        metadata: msg.metadata
-      }))
+        metadata: msg.metadata,
+      })),
     };
 
-    const blob = new Blob([JSON.stringify(conversationData, null, 2)], { type: 'application/json' });
+    const blob = new Blob([JSON.stringify(conversationData, null, 2)], {
+      type: "application/json",
+    });
     const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
+    const a = document.createElement("a");
     a.href = url;
     a.download = `conversation-${conversation.id}.json`;
     document.body.appendChild(a);
@@ -166,7 +201,7 @@ export function ConversationDetail() {
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
 
-    showToast('Conversation exported', 'success');
+    showToast("Conversation exported", "success");
   };
 
   const handleContinueConversation = async () => {
@@ -176,174 +211,172 @@ export function ConversationDetail() {
     try {
       // This would integrate with the ChatInterface for continuation
       // For now, we'll just show a message
-      showToast('Conversation continuation feature coming soon', 'info');
-      setContinuationInput('');
+      showToast("Conversation continuation feature coming soon", "info");
+      setContinuationInput("");
     } catch (error) {
-      showToast('Failed to continue conversation', 'error');
+      showToast("Failed to continue conversation", "error");
     } finally {
       setIsContinuing(false);
     }
   };
 
   return (
-    <div className="h-full flex flex-col bg-neutral-900">
+    <div className="flex h-full flex-col bg-background">
       {/* Header */}
-      <div className="border-b border-neutral-800 bg-neutral-900/95 backdrop-blur-sm">
-        <div className="p-6">
+      <div className="border-b border-border bg-background/95 backdrop-blur-sm">
+        <div className="px-6 py-6">
           {/* Back Navigation */}
           <Link
             to="/prompt"
-            className="inline-flex items-center gap-2 text-neutral-400 hover:text-white transition-colors mb-4"
+            className="mb-4 inline-flex items-center gap-2 text-neutral-400 transition-colors hover:text-white"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="h-4 w-4" />
             Back
           </Link>
 
           {/* Title and Actions */}
-          <div className="flex items-start justify-between mb-4">
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-3 mb-2">
-                <h1 className="text-2xl font-bold text-white truncate">{conversation.title}</h1>
+          <div className="flex items-start justify-between">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-3">
+                <h1 className="truncate text-2xl font-bold text-white">
+                  {conversation.title}
+                </h1>
                 {conversation.is_favorite && (
-                  <Star className="w-5 h-5 text-yellow-400 fill-yellow-400 flex-shrink-0" />
+                  <Star className="h-5 w-5 flex-shrink-0 fill-yellow-400 text-yellow-400" />
                 )}
-                <span className={`px-2 py-1 text-xs font-medium rounded-md ${
-                  conversation.status === 'active'
-                    ? 'bg-green-500/10 text-green-400'
-                    : 'bg-neutral-700/50 text-neutral-400'
-                }`}>
-                  {conversation.status}
-                </span>
               </div>
 
               {conversation.description && (
-                <p className="text-neutral-300">{conversation.description}</p>
+                <p className="text-muted-foreground">
+                  {conversation.description}
+                </p>
               )}
             </div>
 
             {/* Action Buttons */}
-            <div className="flex items-center gap-2 ml-4">
+            <div className="ml-4 flex items-center gap-2">
               <button
                 onClick={handleToggleFavorite}
-                className="p-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-yellow-400 transition-colors"
-                title={conversation.is_favorite ? 'Remove from favorites' : 'Add to favorites'}
+                className="rounded-lg bg-card p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-yellow-400"
+                title={
+                  conversation.is_favorite
+                    ? "Remove from favorites"
+                    : "Add to favorites"
+                }
               >
-                <Star className={`w-4 h-4 ${conversation.is_favorite ? 'fill-yellow-400 text-yellow-400' : ''}`} />
+                <Star
+                  className={`h-4 w-4 ${
+                    conversation.is_favorite
+                      ? "fill-yellow-400 text-yellow-400"
+                      : ""
+                  }`}
+                />
               </button>
 
               <button
                 onClick={handleCopyConversation}
-                className="p-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors"
+                className="rounded-lg bg-card p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 title="Copy conversation"
               >
-                <Copy className="w-4 h-4" />
+                <Copy className="h-4 w-4" />
               </button>
 
               <button
                 onClick={handleExportConversation}
-                className="p-2 rounded-lg bg-neutral-800 hover:bg-neutral-700 text-neutral-400 hover:text-white transition-colors"
+                className="rounded-lg bg-card p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
                 title="Export conversation"
               >
-                <Download className="w-4 h-4" />
+                <Download className="h-4 w-4" />
+              </button>
+
+              <button
+                onClick={() => setInfoModalOpen(true)}
+                className="rounded-lg bg-card p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                title="Conversation info"
+              >
+                <Info className="h-4 w-4" />
               </button>
 
               <button
                 onClick={handleDeleteClick}
-                className="p-2 rounded-lg bg-neutral-800 hover:bg-red-600/20 text-neutral-400 hover:text-red-400 transition-colors"
+                className="rounded-lg bg-card p-2 text-muted-foreground transition-colors hover:bg-destructive/20 hover:text-destructive"
                 title="Delete conversation"
               >
-                <Trash2 className="w-4 h-4" />
+                <Trash2 className="h-4 w-4" />
               </button>
             </div>
           </div>
-
-          {/* Metadata */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 text-sm">
-            <div className="flex items-center gap-2 text-neutral-400">
-              <Cpu className="w-4 h-4" />
-              <span>{conversation.model_name}</span>
-            </div>
-
-            <div className="flex items-center gap-2 text-neutral-400">
-              <TrendingUp className="w-4 h-4" />
-              <span>{conversation.token_usage.toLocaleString()} tokens</span>
-            </div>
-
-            <div className="flex items-center gap-2 text-neutral-400">
-              <Clock className="w-4 h-4" />
-              <span>{Math.round(conversation.execution_duration_ms / 1000)}s</span>
-            </div>
-
-            <div className="flex items-center gap-2 text-neutral-400">
-              <Calendar className="w-4 h-4" />
-              <span>{formatDistanceToNow(new Date(conversation.updated_at), { addSuffix: true })}</span>
-            </div>
-          </div>
-
-          {conversation.estimated_cost > 0.001 && (
-            <div className="mt-2 text-sm text-neutral-400">
-              Estimated cost: <span className="text-white">${conversation.estimated_cost.toFixed(4)}</span>
-            </div>
-          )}
         </div>
       </div>
 
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-6">
-        <div className="max-w-4xl mx-auto">
+        <div className="mx-auto max-w-4xl">
           {messagesLoading ? (
-            <div className="flex items-center justify-center h-32">
-              <div className="flex items-center gap-3 text-neutral-400">
-                <div className="animate-spin rounded-full h-5 w-5 border-2 border-neutral-600 border-t-blue-500"></div>
+            <div className="flex h-32 items-center justify-center">
+              <div className="flex items-center gap-3 text-muted-foreground">
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-muted-foreground/30 border-t-primary"></div>
                 Loading messages...
               </div>
             </div>
           ) : messagesError ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Tag className="w-8 h-8 text-red-400" />
+            <div className="py-12 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-destructive/10">
+                <Tag className="h-8 w-8 text-destructive" />
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">Error loading messages</h3>
-              <p className="text-neutral-400">{messagesError}</p>
+              <h3 className="mb-2 text-lg font-medium text-foreground">
+                Error loading messages
+              </h3>
+              <p className="text-muted-foreground">{messagesError}</p>
             </div>
           ) : messages.length === 0 ? (
-            <div className="text-center py-12">
-              <div className="w-16 h-16 bg-neutral-800 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Tag className="w-8 h-8 text-neutral-600" />
+            <div className="py-12 text-center">
+              <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-muted">
+                <Tag className="h-8 w-8 text-muted-foreground" />
               </div>
-              <h3 className="text-lg font-medium text-white mb-2">No messages yet</h3>
-              <p className="text-neutral-400">This conversation doesn't have any messages.</p>
+              <h3 className="mb-2 text-lg font-medium text-foreground">
+                No messages yet
+              </h3>
+              <p className="text-muted-foreground">
+                This conversation doesn't have any messages.
+              </p>
             </div>
           ) : (
             <div className="space-y-6">
               {messages.map((message, index) => (
                 <div key={message.id} className="flex gap-4">
                   {/* Avatar */}
-                  <div className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
-                    message.role === 'user'
-                      ? 'bg-blue-500/10 text-blue-400'
-                      : 'bg-green-500/10 text-green-400'
-                  }`}>
-                    {message.role === 'user' ? (
-                      <User className="w-4 h-4" />
+                  <div
+                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
+                      message.role === "user"
+                        ? "bg-blue-500/10 text-blue-400"
+                        : "bg-green-500/10 text-green-400"
+                    }`}
+                  >
+                    {message.role === "user" ? (
+                      <User className="h-4 w-4" />
                     ) : (
-                      <Bot className="w-4 h-4" />
+                      <Bot className="h-4 w-4" />
                     )}
                   </div>
 
                   {/* Message Content */}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
+                  <div className="min-w-0 flex-1">
+                    <div className="mb-1 flex items-center gap-2">
                       <span className="text-sm font-medium text-white">
-                        {message.role === 'user' ? 'You' : 'Assistant'}
+                        {message.role === "user" ? "You" : "Assistant"}
                       </span>
                       <span className="text-xs text-neutral-500">
-                        {formatDistanceToNow(new Date(message.created_at), { addSuffix: true })}
+                        {formatDistanceToNow(new Date(message.created_at), {
+                          addSuffix: true,
+                        })}
                       </span>
                     </div>
-                    <div className="prose prose-invert prose-neutral max-w-none leading-relaxed">
-                      {message.role === 'user' ? (
-                        <div className="whitespace-pre-wrap">{message.content}</div>
+                    <div className="prose prose-neutral prose-invert max-w-none leading-relaxed">
+                      {message.role === "user" ? (
+                        <div className="whitespace-pre-wrap">
+                          {message.content}
+                        </div>
                       ) : (
                         <ReactMarkdown
                           remarkPlugins={[remarkGfm]}
@@ -351,16 +384,21 @@ export function ConversationDetail() {
                           components={{
                             // Custom styling for code blocks
                             code({ node, className, children, ...props }: any) {
-                              const match = /language-(\w+)/.exec(className || '');
+                              const match = /language-(\w+)/.exec(
+                                className || ""
+                              );
                               const isInline = !className || !match;
                               return !isInline ? (
-                                <pre className="bg-neutral-900 rounded-lg p-4 overflow-x-auto">
+                                <pre className="overflow-x-auto rounded-lg border bg-card p-4">
                                   <code className={className} {...props}>
                                     {children}
                                   </code>
                                 </pre>
                               ) : (
-                                <code className="bg-neutral-800 px-1.5 py-0.5 rounded text-xs font-mono" {...props}>
+                                <code
+                                  className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs"
+                                  {...props}
+                                >
                                   {children}
                                 </code>
                               );
@@ -368,7 +406,7 @@ export function ConversationDetail() {
                             // Custom styling for blockquotes
                             blockquote({ children }) {
                               return (
-                                <blockquote className="border-l-4 border-neutral-600 pl-4 italic my-4">
+                                <blockquote className="my-4 border-l-4 border-border pl-4 italic">
                                   {children}
                                 </blockquote>
                               );
@@ -376,8 +414,8 @@ export function ConversationDetail() {
                             // Custom styling for tables
                             table({ children }) {
                               return (
-                                <div className="overflow-x-auto my-4">
-                                  <table className="min-w-full border-collapse border border-neutral-700">
+                                <div className="my-4 overflow-x-auto">
+                                  <table className="min-w-full border-collapse border border-border">
                                     {children}
                                   </table>
                                 </div>
@@ -386,7 +424,7 @@ export function ConversationDetail() {
                             // Custom styling for table headers
                             th({ children }) {
                               return (
-                                <th className="border border-neutral-700 bg-neutral-800 px-4 py-2 text-left font-semibold">
+                                <th className="border border-border bg-muted px-4 py-2 text-left font-semibold">
                                   {children}
                                 </th>
                               );
@@ -394,17 +432,25 @@ export function ConversationDetail() {
                             // Custom styling for table cells
                             td({ children }) {
                               return (
-                                <td className="border border-neutral-700 px-4 py-2">
+                                <td className="border border-border px-4 py-2">
                                   {children}
                                 </td>
                               );
                             },
                             // Custom styling for lists
                             ul({ children }) {
-                              return <ul className="list-disc list-inside my-2">{children}</ul>;
+                              return (
+                                <ul className="my-2 list-inside list-disc">
+                                  {children}
+                                </ul>
+                              );
                             },
                             ol({ children }) {
-                              return <ol className="list-decimal list-inside my-2">{children}</ol>;
+                              return (
+                                <ol className="my-2 list-inside list-decimal">
+                                  {children}
+                                </ol>
+                              );
                             },
                             // Custom styling for list items
                             li({ children }) {
@@ -430,17 +476,9 @@ export function ConversationDetail() {
         </div>
       </div>
 
-      {/* Continuation Input */}
-      <div className="border-t border-neutral-800 p-6 bg-neutral-900/95 backdrop-blur-sm">
-        <div className="max-w-4xl mx-auto">
-          <div className="mb-2">
-            <h3 className="text-sm font-medium text-white flex items-center gap-2">
-              <RotateCcw className="w-4 h-4" />
-              Continue Conversation
-            </h3>
-            <p className="text-xs text-neutral-500">Send a message to continue this conversation</p>
-          </div>
-
+      {/* Input */}
+      <div className="border-t border-border bg-background/95 p-6 backdrop-blur-sm">
+        <div className="mx-auto max-w-4xl">
           <AIPromptInput
             value={continuationInput}
             onChange={setContinuationInput}
@@ -466,6 +504,105 @@ export function ConversationDetail() {
         type="delete"
         isLoading={isDeleting}
       />
+
+      {/* Info Modal */}
+      {infoModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
+          <div className="max-h-[80vh] w-full max-w-md overflow-auto rounded-lg border border-border bg-background">
+            <div className="p-6">
+              <div className="mb-4 flex items-center justify-between">
+                <h2 className="text-lg font-semibold text-foreground">
+                  Conversation Details
+                </h2>
+                <button
+                  onClick={() => setInfoModalOpen(false)}
+                  className="rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                >
+                  <svg
+                    className="h-4 w-4"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M6 18L18 6M6 6l12 12"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              <div className="space-y-4">
+                <div className="rounded-lg border bg-card p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Cpu className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">
+                      Model
+                    </span>
+                  </div>
+                  <p className="text-base text-foreground">
+                    {conversation.model_name}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border bg-card p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">
+                      Tokens
+                    </span>
+                  </div>
+                  <p className="text-base text-foreground">
+                    {conversation.token_usage.toLocaleString()}
+                  </p>
+                </div>
+
+                <div className="rounded-lg border bg-card p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Clock className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">
+                      Duration
+                    </span>
+                  </div>
+                  <p className="text-base text-foreground">
+                    {Math.round(conversation.execution_duration_ms / 1000)}s
+                  </p>
+                </div>
+
+                <div className="rounded-lg border bg-card p-4">
+                  <div className="mb-3 flex items-center gap-2">
+                    <Calendar className="h-4 w-4 text-muted-foreground" />
+                    <span className="text-sm font-medium text-foreground">
+                      Created
+                    </span>
+                  </div>
+                  <p className="text-base text-foreground">
+                    {formatDistanceToNow(new Date(conversation.updated_at), {
+                      addSuffix: true,
+                    })}
+                  </p>
+                </div>
+
+                {conversation.estimated_cost > 0.001 && (
+                  <div className="rounded-lg border bg-card p-4">
+                    <div className="mb-3 flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
+                      <span className="text-sm font-medium text-foreground">
+                        Estimated Cost
+                      </span>
+                    </div>
+                    <p className="text-base text-foreground">
+                      ${conversation.estimated_cost.toFixed(4)}
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
