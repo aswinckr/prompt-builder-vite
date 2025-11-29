@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { Library, Sparkles, History } from 'lucide-react';
+import { Library, Sparkles } from 'lucide-react';
 import { ROUTES } from '../routes/AppRoutes';
 import { useLibraryState } from '../contexts/LibraryContext';
 import { MotionHighlight } from './ui/shadcn-io/motion-highlight';
@@ -10,44 +10,17 @@ export function BottomTabNavigation() {
   const navigate = useNavigate();
   const { contextSelection } = useLibraryState();
 
-  // Add custom CSS to remove all outlines
-  React.useEffect(() => {
-    const style = document.createElement('style');
-    style.textContent = `
-      .nav-tab-no-outline {
-        outline: none !important;
-        box-shadow: none !important;
-      }
-      .nav-tab-no-outline:focus {
-        outline: none !important;
-        box-shadow: none !important;
-      }
-      .nav-tab-no-outline:focus-visible {
-        outline: none !important;
-        box-shadow: none !important;
-      }
-      .nav-tab-no-outline::-moz-focus-inner {
-        border: 0 !important;
-      }
-    `;
-    document.head.appendChild(style);
-    return () => {
-      document.head.removeChild(style);
-    };
-  }, []);
-
   // Hide tabs when multiple blocks are selected
   if (contextSelection.selectedBlockIds.length > 0) {
     return null;
   }
 
-  // Determine active tab based on current route
+  // Determine active tab based on current route (only Prompt and Knowledge tabs)
   const isKnowledgeActive = location.pathname === ROUTES.KNOWLEDGE;
   const isBuilderActive = location.pathname === ROUTES.PROMPT;
-  const isHistoryActive = location.pathname === ROUTES.HISTORY;
 
-  const defaultValue = isBuilderActive ? ROUTES.PROMPT : isHistoryActive ? ROUTES.HISTORY : ROUTES.KNOWLEDGE;
-
+  // Default value for MotionHighlight - only considers Prompt and Knowledge
+  const defaultValue = isBuilderActive ? ROUTES.PROMPT : ROUTES.KNOWLEDGE;
 
   return (
     <div className="fixed bottom-4 md:bottom-6 left-1/2 transform -translate-x-1/2 z-40">
@@ -84,19 +57,6 @@ export function BottomTabNavigation() {
           >
             <Library className="w-4 h-4" />
             <span>Knowledge</span>
-          </NavLink>
-
-          <NavLink
-            to={ROUTES.HISTORY}
-            data-value={ROUTES.HISTORY}
-            role="tab"
-            aria-selected={isHistoryActive}
-            aria-controls="history-panel"
-            className="nav-tab-no-outline flex items-center gap-2 px-3 md:px-4 h-8 rounded-full text-sm font-medium transition-colors duration-200 ease-out no-underline data-[active=true]:text-white data-[active=true]:font-medium text-neutral-900 cursor-pointer justify-center"
-            style={{ willChange: 'color', backfaceVisibility: 'hidden' }}
-          >
-            <History className="w-4 h-4" />
-            <span>History</span>
           </NavLink>
         </MotionHighlight>
       </div>

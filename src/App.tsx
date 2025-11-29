@@ -13,12 +13,14 @@ import { ToastProvider } from './contexts/ToastContext';
 
 function AppContent() {
   const location = useLocation();
-  const isMainRoute = location.pathname === '/prompt' || location.pathname === '/knowledge' || location.pathname === '/history';
+  // Update isMainRoute to exclude /history from showing Header and BottomTabNavigation
+  // Only show navigation on /prompt and /knowledge routes
+  const isMainRoute = location.pathname === '/prompt' || location.pathname === '/knowledge';
   const isHistoryDetailRoute = location.pathname.startsWith('/history/');
 
   return (
     <div className="h-screen bg-neutral-900 overflow-hidden relative flex flex-col">
-      {/* Header - Only show on main routes */}
+      {/* Header - Only show on main routes (prompt and knowledge) */}
       {isMainRoute && <Header />}
 
       {/* Main Content */}
@@ -48,8 +50,8 @@ function AppContent() {
         </Routes>
       </div>
 
-      {/* Bottom Navigation - Only show on main routes, not detail views */}
-      {!isHistoryDetailRoute && <BottomTabNavigation />}
+      {/* Bottom Navigation - Only show on main routes (prompt and knowledge), not on history or detail views */}
+      {!isHistoryDetailRoute && isMainRoute && <BottomTabNavigation />}
     </div>
   );
 }
