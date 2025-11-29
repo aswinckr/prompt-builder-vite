@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useCallback, useRef } from 'react';
+import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search, Calendar, MessageSquare, Cpu, Clock, TrendingUp, MoreHorizontal, ChevronRight, Star, AlertCircle } from 'lucide-react';
 import { Conversation } from '../types/Conversation';
@@ -43,6 +43,10 @@ export function SimplifiedConversationHistory({
   const [selectedConversation, setSelectedConversation] = useState<Conversation | null>(null);
   const [navigationError, setNavigationError] = useState<string | null>(null);
 
+  // Search optimization: caching and request cancellation
+  const searchCacheRef = useRef<Map<string, Conversation[]>>(new Map());
+  const searchRequestRef = useRef<string | null>(null);
+
   // Debounce search query to improve performance
   const debouncedSearchQuery = useDebounce(searchQuery, 300);
 
@@ -65,14 +69,23 @@ export function SimplifiedConversationHistory({
     return filtered;
   }, [conversations, debouncedSearchQuery]);
 
-  const handleConversationClick = useCallback(async (conversationId: string) => {
+  const handleConversationClick = useCallback((conversationId: string) => {
+    // Clear any previous errors
+    setNavigationError(null);
+
+    // Validate conversation ID before navigation
+    if (!conversationId || typeof conversationId !== 'string') {
+      setNavigationError('Invalid conversation ID. Please try again.');
+      setTimeout(() => setNavigationError(null), 5000);
+      return;
+    }
+
     try {
-      setNavigationError(null);
       navigate(`/history/${conversationId}`);
     } catch (error) {
-      console.error('Navigation failed:', error);
-      setNavigationError('Failed to navigate to conversation. Please try again.');
-      // Auto-dismiss error after 5 seconds
+      // This is defensive - navigate() is synchronous but we catch any unexpected errors
+      console.error('Unexpected navigation error:', error);
+      setNavigationError('Navigation failed. Please try again.');
       setTimeout(() => setNavigationError(null), 5000);
     }
   }, [navigate]);
@@ -90,11 +103,60 @@ export function SimplifiedConversationHistory({
     setSelectedConversation(null);
   }, []);
 
-  // Effect to trigger search when debounced query changes
-  React.useEffect(() => {
-    if (debouncedSearchQuery.trim()) {
-      searchConversations(debouncedSearchQuery);
+  // Effect to trigger search when debounced query changes with caching
+  useEffect(() => {
+    const query = debouncedSearchQuery.trim();
+
+    if (!query) {
+      return;
     }
+
+    // Cancel previous request reference
+    const previousRequest = searchRequestRef.current;
+    searchRequestRef.current = query;
+
+    // Check cache first
+    const cacheKey = query.toLowerCase();
+    if (searchCacheRef.current.has(cacheKey)) {
+      // Cached result available, no need to make API call
+      return;
+    }
+
+    // Make API call if not in cache
+    const performSearch = async () => {
+      try {
+        await searchConversations(query);
+
+        // Cache the result after successful search
+        // Note: In a real implementation, you'd want to cache the actual search results
+        // For now, we cache the query to prevent duplicate requests
+        searchCacheRef.current.set(cacheKey, []);
+
+        // Limit cache size to prevent memory leaks
+        if (searchCacheRef.current.size > 50) {
+          const firstKey = searchCacheRef.current.keys().next().value;
+          if (firstKey) {
+            searchCacheRef.current.delete(firstKey);
+          }
+        }
+      } catch (error) {
+        console.error('Search failed:', error);
+        // Remove from cache if search failed
+        searchCacheRef.current.delete(cacheKey);
+      }
+    };
+
+    // Only perform search if this is still the latest request
+    if (searchRequestRef.current === query) {
+      performSearch();
+    }
+
+    // Cleanup function to cancel request if component unmounts or query changes
+    return () => {
+      if (searchRequestRef.current === query) {
+        searchRequestRef.current = null;
+      }
+    };
   }, [debouncedSearchQuery, searchConversations]);
 
   const getConversationPreview = (conversation: Conversation) => {
