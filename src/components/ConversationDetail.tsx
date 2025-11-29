@@ -11,13 +11,8 @@ import {
   TrendingUp,
   Calendar,
   Tag,
-  User,
-  Bot,
   Info,
 } from "lucide-react";
-import ReactMarkdown from "react-markdown";
-import remarkGfm from "remark-gfm";
-import rehypeHighlight from "rehype-highlight";
 import { Conversation, ConversationMessage } from "../types/Conversation";
 import { useLibraryState, useLibraryActions } from "../contexts/LibraryContext";
 import { ConversationMessageService } from "../services/conversationMessageService";
@@ -26,7 +21,6 @@ import { useToast } from "../contexts/ToastContext";
 import { formatDistanceToNow } from "date-fns";
 import { ChatMessage } from "./ChatMessage";
 import { AIPromptInput } from "./AIPromptInput";
-import "highlight.js/styles/github-dark.css";
 
 export function ConversationDetail() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -221,14 +215,14 @@ export function ConversationDetail() {
   };
 
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="flex h-full flex-col bg-neutral-900">
       {/* Header */}
-      <div className="border-b border-border bg-background/95 backdrop-blur-sm">
+      <div className="border-b border-purple-800/30 bg-neutral-900">
         <div className="px-6 py-6">
           {/* Back Navigation */}
           <Link
             to="/prompt"
-            className="mb-4 inline-flex items-center gap-2 text-neutral-400 transition-colors hover:text-white"
+            className="mb-4 inline-flex items-center gap-2 text-purple-400 transition-colors hover:text-purple-300"
           >
             <ArrowLeft className="h-4 w-4" />
             Back
@@ -257,7 +251,7 @@ export function ConversationDetail() {
             <div className="ml-4 flex items-center gap-2">
               <button
                 onClick={handleToggleFavorite}
-                className="rounded-lg bg-card p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-yellow-400"
+                className="rounded-lg bg-purple-500/10 p-2 text-purple-400 transition-colors hover:bg-purple-500/20 hover:text-yellow-400"
                 title={
                   conversation.is_favorite
                     ? "Remove from favorites"
@@ -275,7 +269,7 @@ export function ConversationDetail() {
 
               <button
                 onClick={handleCopyConversation}
-                className="rounded-lg bg-card p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                className="rounded-lg bg-purple-500/10 p-2 text-purple-400 transition-colors hover:bg-purple-500/20 hover:text-purple-300"
                 title="Copy conversation"
               >
                 <Copy className="h-4 w-4" />
@@ -283,7 +277,7 @@ export function ConversationDetail() {
 
               <button
                 onClick={handleExportConversation}
-                className="rounded-lg bg-card p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                className="rounded-lg bg-purple-500/10 p-2 text-purple-400 transition-colors hover:bg-purple-500/20 hover:text-purple-300"
                 title="Export conversation"
               >
                 <Download className="h-4 w-4" />
@@ -291,7 +285,7 @@ export function ConversationDetail() {
 
               <button
                 onClick={() => setInfoModalOpen(true)}
-                className="rounded-lg bg-card p-2 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                className="rounded-lg bg-purple-500/10 p-2 text-purple-400 transition-colors hover:bg-purple-500/20 hover:text-purple-300"
                 title="Conversation info"
               >
                 <Info className="h-4 w-4" />
@@ -299,7 +293,7 @@ export function ConversationDetail() {
 
               <button
                 onClick={handleDeleteClick}
-                className="rounded-lg bg-card p-2 text-muted-foreground transition-colors hover:bg-destructive/20 hover:text-destructive"
+                className="rounded-lg bg-purple-500/10 p-2 text-purple-400 transition-colors hover:bg-red-500/20 hover:text-red-400"
                 title="Delete conversation"
               >
                 <Trash2 className="h-4 w-4" />
@@ -344,132 +338,15 @@ export function ConversationDetail() {
           ) : (
             <div className="space-y-6">
               {messages.map((message, index) => (
-                <div key={message.id} className="flex gap-4">
-                  {/* Avatar */}
-                  <div
-                    className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full ${
-                      message.role === "user"
-                        ? "bg-blue-500/10 text-blue-400"
-                        : "bg-green-500/10 text-green-400"
-                    }`}
-                  >
-                    {message.role === "user" ? (
-                      <User className="h-4 w-4" />
-                    ) : (
-                      <Bot className="h-4 w-4" />
-                    )}
-                  </div>
-
-                  {/* Message Content */}
-                  <div className="min-w-0 flex-1">
-                    <div className="mb-1 flex items-center gap-2">
-                      <span className="text-sm font-medium text-white">
-                        {message.role === "user" ? "You" : "Assistant"}
-                      </span>
-                      <span className="text-xs text-neutral-500">
-                        {formatDistanceToNow(new Date(message.created_at), {
-                          addSuffix: true,
-                        })}
-                      </span>
-                    </div>
-                    <div className="prose prose-neutral prose-invert max-w-none leading-relaxed">
-                      {message.role === "user" ? (
-                        <div className="whitespace-pre-wrap">
-                          {message.content}
-                        </div>
-                      ) : (
-                        <ReactMarkdown
-                          remarkPlugins={[remarkGfm]}
-                          rehypePlugins={[rehypeHighlight]}
-                          components={{
-                            // Custom styling for code blocks
-                            code({ node, className, children, ...props }: any) {
-                              const match = /language-(\w+)/.exec(
-                                className || ""
-                              );
-                              const isInline = !className || !match;
-                              return !isInline ? (
-                                <pre className="overflow-x-auto rounded-lg border bg-card p-4">
-                                  <code className={className} {...props}>
-                                    {children}
-                                  </code>
-                                </pre>
-                              ) : (
-                                <code
-                                  className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs"
-                                  {...props}
-                                >
-                                  {children}
-                                </code>
-                              );
-                            },
-                            // Custom styling for blockquotes
-                            blockquote({ children }) {
-                              return (
-                                <blockquote className="my-4 border-l-4 border-border pl-4 italic">
-                                  {children}
-                                </blockquote>
-                              );
-                            },
-                            // Custom styling for tables
-                            table({ children }) {
-                              return (
-                                <div className="my-4 overflow-x-auto">
-                                  <table className="min-w-full border-collapse border border-border">
-                                    {children}
-                                  </table>
-                                </div>
-                              );
-                            },
-                            // Custom styling for table headers
-                            th({ children }) {
-                              return (
-                                <th className="border border-border bg-muted px-4 py-2 text-left font-semibold">
-                                  {children}
-                                </th>
-                              );
-                            },
-                            // Custom styling for table cells
-                            td({ children }) {
-                              return (
-                                <td className="border border-border px-4 py-2">
-                                  {children}
-                                </td>
-                              );
-                            },
-                            // Custom styling for lists
-                            ul({ children }) {
-                              return (
-                                <ul className="my-2 list-inside list-disc">
-                                  {children}
-                                </ul>
-                              );
-                            },
-                            ol({ children }) {
-                              return (
-                                <ol className="my-2 list-inside list-decimal">
-                                  {children}
-                                </ol>
-                              );
-                            },
-                            // Custom styling for list items
-                            li({ children }) {
-                              return <li className="my-1">{children}</li>;
-                            },
-                          }}
-                        >
-                          {message.content}
-                        </ReactMarkdown>
-                      )}
-                    </div>
-
-                    {message.token_count > 0 && (
-                      <div className="mt-2 text-xs text-neutral-500">
-                        Tokens: {message.token_count}
-                      </div>
-                    )}
-                  </div>
-                </div>
+                <ChatMessage
+                  key={message.id}
+                  message={{
+                    id: message.id,
+                    role: message.role as "user" | "assistant",
+                    content: message.content,
+                    createdAt: new Date(message.created_at),
+                  }}
+                />
               ))}
             </div>
           )}
@@ -477,7 +354,7 @@ export function ConversationDetail() {
       </div>
 
       {/* Input */}
-      <div className="border-t border-border bg-background/95 p-6 backdrop-blur-sm">
+      <div className="border-t border-purple-800/30 bg-neutral-900 p-6">
         <div className="mx-auto max-w-4xl">
           <AIPromptInput
             value={continuationInput}
@@ -508,15 +385,15 @@ export function ConversationDetail() {
       {/* Info Modal */}
       {infoModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-          <div className="max-h-[80vh] w-full max-w-md overflow-auto rounded-lg border border-border bg-background">
+          <div className="max-h-[80vh] w-full max-w-md overflow-auto rounded-lg border border-purple-700/30 bg-neutral-900">
             <div className="p-6">
               <div className="mb-4 flex items-center justify-between">
-                <h2 className="text-lg font-semibold text-foreground">
+                <h2 className="text-lg font-semibold text-purple-100">
                   Conversation Details
                 </h2>
                 <button
                   onClick={() => setInfoModalOpen(false)}
-                  className="rounded-lg p-1 text-muted-foreground hover:bg-accent hover:text-foreground"
+                  className="rounded-lg p-1 text-purple-400 hover:bg-purple-700/30 hover:text-purple-300"
                 >
                   <svg
                     className="h-4 w-4"
@@ -535,50 +412,50 @@ export function ConversationDetail() {
               </div>
 
               <div className="space-y-4">
-                <div className="rounded-lg border bg-card p-4">
+                <div className="rounded-lg border border-purple-700/30 bg-purple-900/10 p-4">
                   <div className="mb-3 flex items-center gap-2">
-                    <Cpu className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-foreground">
+                    <Cpu className="h-4 w-4 text-purple-400" />
+                    <span className="text-sm font-medium text-purple-100">
                       Model
                     </span>
                   </div>
-                  <p className="text-base text-foreground">
+                  <p className="text-base text-purple-200">
                     {conversation.model_name}
                   </p>
                 </div>
 
-                <div className="rounded-lg border bg-card p-4">
+                <div className="rounded-lg border border-purple-700/30 bg-purple-900/10 p-4">
                   <div className="mb-3 flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-foreground">
+                    <TrendingUp className="h-4 w-4 text-purple-400" />
+                    <span className="text-sm font-medium text-purple-100">
                       Tokens
                     </span>
                   </div>
-                  <p className="text-base text-foreground">
+                  <p className="text-base text-purple-200">
                     {conversation.token_usage.toLocaleString()}
                   </p>
                 </div>
 
-                <div className="rounded-lg border bg-card p-4">
+                <div className="rounded-lg border border-purple-700/30 bg-purple-900/10 p-4">
                   <div className="mb-3 flex items-center gap-2">
-                    <Clock className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-foreground">
+                    <Clock className="h-4 w-4 text-purple-400" />
+                    <span className="text-sm font-medium text-purple-100">
                       Duration
                     </span>
                   </div>
-                  <p className="text-base text-foreground">
+                  <p className="text-base text-purple-200">
                     {Math.round(conversation.execution_duration_ms / 1000)}s
                   </p>
                 </div>
 
-                <div className="rounded-lg border bg-card p-4">
+                <div className="rounded-lg border border-purple-700/30 bg-purple-900/10 p-4">
                   <div className="mb-3 flex items-center gap-2">
-                    <Calendar className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-foreground">
+                    <Calendar className="h-4 w-4 text-purple-400" />
+                    <span className="text-sm font-medium text-purple-100">
                       Created
                     </span>
                   </div>
-                  <p className="text-base text-foreground">
+                  <p className="text-base text-purple-200">
                     {formatDistanceToNow(new Date(conversation.updated_at), {
                       addSuffix: true,
                     })}
@@ -586,14 +463,14 @@ export function ConversationDetail() {
                 </div>
 
                 {conversation.estimated_cost > 0.001 && (
-                  <div className="rounded-lg border bg-card p-4">
+                  <div className="rounded-lg border border-purple-700/30 bg-purple-900/10 p-4">
                     <div className="mb-3 flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-muted-foreground" />
-                      <span className="text-sm font-medium text-foreground">
+                      <TrendingUp className="h-4 w-4 text-purple-400" />
+                      <span className="text-sm font-medium text-purple-100">
                         Estimated Cost
                       </span>
                     </div>
-                    <p className="text-base text-foreground">
+                    <p className="text-base text-purple-200">
                       ${conversation.estimated_cost.toFixed(4)}
                     </p>
                   </div>

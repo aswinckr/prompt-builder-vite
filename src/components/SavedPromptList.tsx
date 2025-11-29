@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { Calendar, Hash, Play, Edit, Trash2, FileText } from 'lucide-react';
+import { Play, Edit, Trash2 } from 'lucide-react';
 import { SavedPrompt } from '../types/SavedPrompt';
 import { EditPromptModal } from './EditPromptModal';
 import { ConfirmationModal } from './ConfirmationModal';
@@ -7,6 +7,9 @@ import { useToast } from '../contexts/ToastContext';
 import { useLibraryActions } from '../contexts/LibraryContext';
 import { handleCrudResult, logError } from '../utils/errorHandling';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
+import { Card, CardContent, CardHeader } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 
 interface SavedPromptListProps {
   selectedProject: string;
@@ -221,74 +224,71 @@ export function SavedPromptList({
               <div className="text-sm">Try adjusting your search or filters</div>
             </div>
           ) : (
-            <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredPrompts.map((prompt) => (
-                <div
+                <Card
                   key={prompt.id}
-                  className="bg-neutral-800 border border-neutral-700 rounded-lg p-4 hover:bg-neutral-750 transition-colors"
+                  className="h-full transition-all hover:border-purple-500/30 hover:bg-purple-500/5 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
                 >
-                  {/* Prompt Header */}
-                  <div className="flex items-start justify-between mb-3">
-                    <div className="flex items-start gap-3 flex-1">
-                      <FileText size={18} className="text-neutral-400 mt-1 flex-shrink-0" />
-                      <div className="flex-1">
-                        <h3 className="font-medium text-white mb-1">{prompt.title}</h3>
-                        {prompt.description && (
-                          <p className="text-sm text-neutral-300 mb-2">{prompt.description}</p>
-                        )}
-                      </div>
+                  <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
+                    <h3 className="font-medium line-clamp-2 leading-tight text-white flex-1">
+                      {prompt.title}
+                    </h3>
+                    <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleLoadPrompt(prompt.id);
+                        }}
+                        className="h-6 w-6 p-0 text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10"
+                        aria-label={`Load ${prompt.title}`}
+                      >
+                        <Play size={12} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleEditPrompt(prompt);
+                        }}
+                        className="h-6 w-6 p-0 text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10"
+                        aria-label={`Edit ${prompt.title}`}
+                      >
+                        <Edit size={12} />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteClick(prompt);
+                        }}
+                        className="h-6 w-6 p-0 text-neutral-400 hover:text-red-400 hover:bg-red-500/10"
+                        aria-label={`Delete ${prompt.title}`}
+                      >
+                        <Trash2 size={12} />
+                      </Button>
                     </div>
+                  </CardHeader>
 
-                    {/* Action Buttons */}
-                    <div className="flex items-center gap-1 ml-2">
-                      <button
-                        onClick={() => handleLoadPrompt(prompt.id)}
-                        className="p-2 rounded hover:bg-neutral-600 text-neutral-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        aria-label="Load prompt"
-                      >
-                        <Play size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleEditPrompt(prompt)}
-                        className="p-2 rounded hover:bg-neutral-600 text-neutral-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
-                        aria-label="Edit prompt"
-                      >
-                        <Edit size={16} />
-                      </button>
-                      <button
-                        onClick={() => handleDeleteClick(prompt)}
-                        className="p-2 rounded hover:bg-red-600/20 text-neutral-400 hover:text-red-400 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
-                        aria-label="Delete prompt"
-                      >
-                        <Trash2 size={16} />
-                      </button>
+                  <CardContent className="flex flex-col flex-1">
+                    {/* Description - takes up remaining space */}
+                    <div className="flex-1">
+                      {prompt.description ? (
+                        <p className="text-sm text-neutral-300 line-clamp-3 leading-relaxed">
+                          {prompt.description}
+                        </p>
+                      ) : (
+                        <p className="text-sm text-neutral-400 line-clamp-3 leading-relaxed italic">
+                          No description available
+                        </p>
+                      )}
                     </div>
-                  </div>
-
-                  {/* Tags */}
-                  <div className="flex flex-wrap gap-1 mb-3">
-                    {prompt.tags && prompt.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-neutral-700 text-neutral-300"
-                      >
-                        <Hash size={10} className="text-neutral-400" />
-                        {tag}
-                      </span>
-                    ))}
-                  </div>
-
-                  {/* Footer */}
-                  <div className="flex items-center justify-between text-xs text-neutral-500">
-                    <div className="flex items-center gap-1">
-                      <Calendar size={12} />
-                      Updated {prompt.updated_at.toLocaleDateString()}
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <span>Created {prompt.created_at.toLocaleDateString()}</span>
-                    </div>
-                  </div>
-                </div>
+                  </CardContent>
+                </Card>
               ))}
             </div>
           )}
