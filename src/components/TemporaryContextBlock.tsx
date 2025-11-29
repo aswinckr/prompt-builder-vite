@@ -180,14 +180,14 @@ export function TemporaryContextBlock({
         <div className="pointer-events-none absolute inset-0 rounded-2xl bg-gradient-to-br from-neutral-500/3 via-transparent to-neutral-400/3" />
 
         {/* Drag Handle */}
-        <div className="absolute left-4 top-4 cursor-grab rounded-lg p-1.5 text-neutral-500 transition-colors duration-200 hover:bg-neutral-700/50 hover:text-neutral-400 active:cursor-grabbing">
+        <div className="absolute left-4 top-4 cursor-grab rounded-lg p-1.5 text-muted-foreground transition-colors duration-200 hover:bg-neutral-700/50 hover:text-neutral-400 active:cursor-grabbing">
           <GripVertical className="h-4 w-4" />
         </div>
 
         {/* Remove Button */}
         <button
           onClick={handleRemove}
-          className="absolute right-3 top-3 rounded-xl p-2 text-neutral-500 transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/50"
+          className="absolute right-3 top-3 rounded-xl p-2 text-muted-foreground transition-all duration-200 hover:bg-red-500/10 hover:text-red-400 focus:outline-none focus:ring-2 focus:ring-red-500/50"
           aria-label={`Remove ${block.title} from prompt`}
         >
           <X className="h-4 w-4" />
@@ -197,7 +197,7 @@ export function TemporaryContextBlock({
         <button
           onClick={handleToggleExpand}
           onKeyDown={handleKeyDown}
-          className="absolute bottom-4 left-4 rounded-xl p-2 text-neutral-500 transition-all duration-200 hover:bg-neutral-600/20 hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-neutral-500/50"
+          className="absolute bottom-4 left-4 rounded-xl p-2 text-muted-foreground transition-all duration-200 hover:bg-neutral-600/20 hover:text-neutral-300 focus:outline-none focus:ring-2 focus:ring-neutral-500/50"
           aria-label={`${isExpanded ? "Collapse" : "Expand"} ${block.title}`}
           aria-expanded={isExpanded}
         >
@@ -209,26 +209,15 @@ export function TemporaryContextBlock({
         </button>
 
         {/* Context Block Content */}
-        <div className="flex items-start gap-4 pl-14 pr-12 pt-6">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-neutral-500/30 bg-gradient-to-br from-neutral-500/20 to-neutral-400/20">
-            <Type className="h-4 w-4 text-neutral-400" />
-          </div>
+        <div className="pl-14 pr-12 pt-6">
+          {block.title && (
+            <h3 className="truncate text-sm font-semibold text-neutral-100 mb-3">
+              {block.title}
+            </h3>
+          )}
 
-          <div className="min-w-0 flex-1">
-            {/* Title and Badge */}
-            <div className="mb-3 flex items-center gap-3">
-              <div className="rounded-lg border border-neutral-500/30 bg-gradient-to-r from-neutral-500/20 to-neutral-400/20 px-3 py-1">
-                <span className="text-xs font-medium text-neutral-300">
-                  Text Block
-                </span>
-              </div>
-              <h3 className="truncate text-sm font-semibold text-neutral-100">
-                {block.title}
-              </h3>
-            </div>
-
-            {/* Content Editor */}
-            <div className="mb-4">
+          {/* Content Editor */}
+          <div className="mb-4">
               {isExpanded ? (
                 <TipTapEditor
                   ref={editorRef}
@@ -243,7 +232,6 @@ export function TemporaryContextBlock({
                 </div>
               )}
             </div>
-          </div>
         </div>
       </div>
     </div>

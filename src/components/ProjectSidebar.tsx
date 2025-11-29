@@ -135,11 +135,7 @@ export function ProjectSidebar({
                 onClick={() => setSelectedProject(project.id)}
                 className={`group flex w-full items-center justify-between rounded-lg px-3 py-2 transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
                   selectedProject === project.id
-                    ? project.is_system
-                      ? "border border-primary/30 bg-primary/20 text-primary shadow-glow-sm"
-                      : "border border-primary/20 bg-primary/10 text-primary shadow-glow-sm"
-                    : project.is_system
-                    ? "border border-primary/20 text-primary/70 hover:bg-primary/10 hover:text-primary"
+                    ? "border border-primary/20 bg-primary/10 text-primary shadow-glow-sm"
                     : "border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
                 }`}
                 role="listitem"

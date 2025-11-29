@@ -59,7 +59,7 @@ export function AIPromptInput({
   return (
     <form
       onSubmit={onSubmit}
-      className={`relative border border-neutral-700/30 bg-neutral-800/50 rounded-xl overflow-hidden transition-all duration-200 focus-within:border-blue-500/50 hover:border-neutral-700/50 ${className}`}
+      className={`relative border border-purple-700/30 bg-neutral-800 rounded-xl overflow-hidden transition-all duration-200 focus-within:border-purple-500/50 hover:border-purple-700/50 ${className}`}
     >
       <div className="flex items-end">
         <textarea
@@ -79,7 +79,7 @@ export function AIPromptInput({
         <button
           type="submit"
           disabled={disabled || isLoading || !value.trim()}
-          className="p-3 text-neutral-400 hover:text-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 m-1 rounded-lg hover:bg-neutral-700/30"
+          className="p-3 text-purple-400 hover:text-purple-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 m-1 rounded-lg hover:bg-purple-700/30"
         >
           {isLoading ? (
             <Loader2 className="h-4 w-4 animate-spin" />

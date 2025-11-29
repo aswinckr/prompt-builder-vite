@@ -7,8 +7,6 @@ import { SavedPrompt } from '../types/SavedPrompt';
 import { convertToHtml, detectContentFormat, validateContentCompatibility } from '../utils/contentFormatUtils';
 import { debounce } from '../utils/performanceUtils';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import {
   Dialog,
@@ -229,43 +227,45 @@ export function EditPromptModal({
         <div className="p-6 space-y-6">
           {/* Title Field */}
           <div className="space-y-2">
-            <Label htmlFor="prompt-title">
+            <Label htmlFor="prompt-title" className="text-sm font-medium text-neutral-300">
               Title
             </Label>
-            <Input
+            <input
               id="prompt-title"
               type="text"
               value={title}
               onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
               placeholder="Enter prompt title..."
               disabled={isSubmitting || isLoading}
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-neutral-600 focus:ring-2 focus:ring-purple-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             />
             {!title.trim() && (
-              <p className="text-sm text-destructive">Title is required</p>
+              <p className="text-sm text-red-400">Title is required</p>
             )}
           </div>
 
           {/* Description Field */}
           <div className="space-y-2">
-            <Label htmlFor="prompt-description">
+            <Label htmlFor="prompt-description" className="text-sm font-medium text-neutral-300">
               Description
             </Label>
-            <Textarea
+            <textarea
               id="prompt-description"
               value={description}
               onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
               placeholder="Optional description about how to use this prompt..."
               rows={3}
               disabled={isSubmitting || isLoading}
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-neutral-600 focus:ring-2 focus:ring-purple-500/20 transition-all resize-none disabled:opacity-50 disabled:cursor-not-allowed"
             />
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-neutral-500">
               Additional context about when and how to use this prompt
             </p>
           </div>
 
           {/* Content Editor */}
           <div className="space-y-2">
-            <Label>
+            <Label className="text-sm font-medium text-neutral-300">
               Content
             </Label>
             <TipTapEditor

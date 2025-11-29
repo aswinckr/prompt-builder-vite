@@ -96,9 +96,9 @@ export function PromptBuilder() {
     <DndProvider backend={HTML5Backend}>
       <ErrorBoundary>
         <SynchronizedLoading isLoading={isLoading}>
-        <div className="flex h-full flex-col bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 text-neutral-100">
+        <div className="flex h-full flex-col bg-background text-foreground">
         {/* Header with Model Selector and Actions */}
-        <div className="flex items-center justify-between border-b border-neutral-800/50 p-4 backdrop-blur-sm">
+        <div className="flex items-center justify-between border-b border-border p-4 backdrop-blur-sm">
           {/* Left side - Hamburger History Menu and Model Selector */}
           <div className="flex items-center gap-3">
             <HamburgerHistoryMenu />

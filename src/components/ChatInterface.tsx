@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { ChatMessage } from "./ChatMessage";
 import { TypingIndicator } from "./TypingIndicator";
 import { AIPromptInput } from "./AIPromptInput";
+import { Modal } from "./Modal";
+import { Button } from "./ui/button";
 import { ConversationMessageService } from '../services/conversationMessageService';
 import {
   X,
@@ -45,6 +46,7 @@ export function ChatInterface({
   onClose,
 }: ChatInterfaceProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
   const [input, setInput] = useState("");
@@ -53,6 +55,7 @@ export function ChatInterface({
   const [abortController, setAbortController] =
     useState<AbortController | null>(null);
   const [conversationId, setConversationId] = useState<string | null>(null);
+  const [conversationTitle, setConversationTitle] = useState<string | null>(null);
   const [executionStartTime, setExecutionStartTime] = useState<number>(Date.now());
 
   const { createConversation, createConversationMessage, updateConversation } = useLibraryActions();
@@ -61,6 +64,14 @@ export function ChatInterface({
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Focus management for dialog
+  useEffect(() => {
+    if (isOpen && dialogRef.current) {
+      // Focus the dialog when it opens
+      dialogRef.current.focus();
+    }
+  }, [isOpen]);
 
   // Initialize OpenRouter client
   const openrouter = createOpenRouter({
@@ -99,6 +110,7 @@ export function ChatInterface({
 
       if (result.data) {
         setConversationId(result.data.id);
+        setConversationTitle(title);
         return result.data.id;
       }
     } catch (error) {
@@ -559,7 +571,9 @@ export function ChatInterface({
 
       {/* Side panel */}
       <div
-        className={`fixed right-0 top-0 z-50 flex h-full w-full transform flex-col bg-gradient-to-br from-neutral-900 via-neutral-900 to-neutral-950 text-neutral-100 shadow-2xl transition-transform duration-300 ease-in-out ${
+        ref={dialogRef}
+        tabIndex={-1}
+        className={`fixed right-0 top-0 z-50 flex h-full w-full transform flex-col bg-neutral-900 text-neutral-100 shadow-2xl transition-transform duration-300 ease-in-out outline-none ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         role="dialog"
@@ -568,19 +582,29 @@ export function ChatInterface({
         onKeyDown={handleKeyDown}
       >
         {/* Header */}
-        <div className="flex items-center justify-between border-b border-neutral-800/50 p-4">
+        <div className="flex items-center justify-between border-b border-purple-800/30 p-4">
           <div className="flex items-center gap-3">
-            <h2 id="chat-panel-title" className="text-lg font-medium">
-              AI Chat
+            <h2 id="chat-panel-title" className="text-lg font-medium truncate">
+              {conversationTitle || 'AI Chat'}
             </h2>
-            {conversationId && (
-              <button
-                onClick={() => window.open(`/history/${conversationId}`, '_blank')}
-                className="p-1.5 hover:bg-neutral-700 rounded-lg text-neutral-400 hover:text-white transition-colors"
-                title="View in history"
-              >
-                <MessageSquare className="h-4 w-4" />
-              </button>
+            {/* Status indicator */}
+            {isLoading && (
+              <div className="flex items-center gap-2 text-sm text-purple-400">
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                <span className="hidden sm:inline">Generating...</span>
+              </div>
+            )}
+            {error && (
+              <div className="flex items-center gap-2 text-sm text-red-400">
+                <AlertCircle className="w-4 h-4" />
+                <span className="hidden sm:inline">Error</span>
+              </div>
+            )}
+            {!isLoading && !error && conversationId && (
+              <div className="flex items-center gap-2 text-sm text-green-400">
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span className="hidden sm:inline">Ready</span>
+              </div>
             )}
           </div>
           <div className="flex items-center gap-2">
@@ -597,7 +621,7 @@ export function ChatInterface({
               messages.length > 0 && (
                 <button
                   onClick={handleRetry}
-                  className="rounded-lg bg-blue-500/10 p-2 text-blue-400 transition-colors hover:bg-blue-500/20"
+                  className="rounded-lg bg-purple-500/10 p-2 text-purple-400 transition-colors hover:bg-purple-500/20"
                   aria-label="Regenerate last response"
                 >
                   <RotateCcw className="h-4 w-4" />
@@ -607,55 +631,35 @@ export function ChatInterface({
 
             {messages.length > 0 && (
               <>
-                <button
+                <Button
+                  variant="purple-ghost"
+                  size="icon-sm"
                   onClick={handleCopy}
-                  className="rounded-lg bg-neutral-800/50 p-2 text-neutral-400 transition-colors hover:bg-neutral-800/70"
                   aria-label="Copy conversation"
                 >
                   <Copy className="h-4 w-4" />
-                </button>
+                </Button>
                 {conversationId && (
-                  <button
+                  <Button
+                    variant="purple-ghost"
+                    size="icon-sm"
                     onClick={handleToggleFavorite}
-                    className="rounded-lg bg-neutral-800/50 p-2 text-neutral-400 transition-colors hover:bg-neutral-800/70"
                     aria-label="Toggle favorite"
                   >
                     <Star className="h-4 w-4" />
-                  </button>
+                  </Button>
                 )}
               </>
             )}
 
             <button
               onClick={handleClose}
-              className="rounded-lg bg-neutral-800/50 p-2 text-neutral-400 transition-colors hover:bg-neutral-800/70"
+              className="rounded-lg bg-purple-500/10 p-2 text-purple-400 transition-colors hover:bg-purple-500/20"
               aria-label="Close panel"
             >
               <X className="h-5 w-5" />
             </button>
           </div>
-        </div>
-
-        {/* Status indicator */}
-        <div className="border-b border-neutral-800/30 px-4 py-2">
-          {error && (
-            <div className="flex items-center gap-2 text-red-400">
-              <AlertCircle className="h-4 w-4" />
-              <span className="text-sm">{error}</span>
-            </div>
-          )}
-          {isLoading && !error && (
-            <div className="flex items-center gap-2 text-green-400">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              <span className="text-sm">AI is thinking...</span>
-            </div>
-          )}
-          {conversationId && (
-            <div className="flex items-center gap-2 text-neutral-500 text-xs">
-              <Loader2 className="h-3 w-3" />
-              <span>Auto-saving conversation</span>
-            </div>
-          )}
         </div>
 
         {/* Messages area */}
@@ -684,7 +688,7 @@ export function ChatInterface({
         </div>
 
         {/* Input form */}
-        <div className="border-t border-neutral-800/50 p-4">
+        <div className="border-t border-purple-800/30 p-4">
           <div className="mx-auto max-w-3xl">
             <AIPromptInput
               value={input}
@@ -707,5 +711,5 @@ export function ChatInterface({
     </>
   );
 
-  return createPortal(content, document.body);
+  return content;
 }

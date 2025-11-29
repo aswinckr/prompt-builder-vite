@@ -13,7 +13,7 @@ interface ModalProps {
   onClose: () => void;
   title: string;
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | 'full';
+  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl' | 'full';
   mobileBehavior?: 'modal' | 'fullscreen';
   showCloseButton?: boolean;
   closeOnOverlayClick?: boolean;
@@ -48,6 +48,10 @@ export function Modal({
         return 'max-w-lg';
       case 'xl':
         return 'max-w-xl';
+      case '2xl':
+        return 'max-w-2xl';
+      case '3xl':
+        return 'max-w-3xl';
       case 'full':
         return 'max-w-full mx-4';
       default:
@@ -58,7 +62,8 @@ export function Modal({
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
-        className={`${getSizeClass()} ${mobileBehavior === 'fullscreen' ? 'h-full md:h-auto md:max-h-[90vh]' : 'max-h-[90vh]'}`}
+        className={`${getSizeClass()} ${mobileBehavior === 'fullscreen' ? 'h-full md:h-auto' : ''} max-h-[90vh] flex flex-col [[data-radix-dialog-close]]:hidden [data-state=open]:hidden [&_.absolute.right-4.top-4]:hidden [&_.rounded-sm.opacity-70]:hidden`}
+        hideCloseButton={true}
         onPointerDownOutside={(e) => {
           if (!closeOnOverlayClick) {
             e.preventDefault();
@@ -71,7 +76,7 @@ export function Modal({
         }}
         aria-labelledby={ariaLabelledby}
       >
-        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 flex-shrink-0">
           <DialogTitle
             id={ariaLabelledby || `modal-title-${title.replace(/\s+/g, '-').toLowerCase()}`}
             className="text-lg font-semibold truncate"
@@ -90,7 +95,7 @@ export function Modal({
             </Button>
           )}
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto min-h-0">
           {children}
         </div>
       </DialogContent>

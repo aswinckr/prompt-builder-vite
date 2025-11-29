@@ -18,8 +18,8 @@ export function PromptBuilderContent({ onRunPrompt }: PromptBuilderContentProps)
         {/* Title - Like Claude/ChatGPT branding */}
         <div className="text-center">
           <h1
-            className="mb-4 text-4xl font-medium text-neutral-100 lg:text-5xl"
-            style={{ fontFamily: '"Libra Baskerville", Georgia, serif' }}
+            className="mb-4 text-4xl font-medium text-neutral-100 font-title lg:text-5xl"
+            style={{ fontFamily: 'Aujournuit, ui-serif, Georgia, Cambria, "Times New Roman", Times, serif' }}
           >
             What can I help with?
           </h1>

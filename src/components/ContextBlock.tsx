@@ -5,6 +5,17 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
+// Utility function to strip HTML tags and get plain text
+const stripHtml = (html: string): string => {
+  if (!html) return '';
+  // Create a temporary div element to parse HTML and extract text
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  const text = tempDiv.textContent || tempDiv.innerText || '';
+  // Normalize whitespace: replace multiple newlines with single newline, trim
+  return text.replace(/\n\s*\n/g, '\n\n').trim();
+};
+
 interface ContextBlockProps {
   block: ContextBlockType;
   isSelected: boolean;
@@ -49,10 +60,10 @@ export const ContextBlock = React.memo(function ContextBlock({ block, isSelected
   return (
     <Card
       data-block-id={block.id}
-      className={`h-full cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-primary/50 ${
+      className={`h-full cursor-pointer transition-all focus:outline-none focus:ring-2 focus:ring-purple-500/50 ${
         isSelected
-          ? 'border-primary/30 bg-primary/5 shadow-lg'
-          : 'hover:border-primary/30 hover:bg-muted/50'
+          ? 'border-purple-500/30 bg-purple-500/10 shadow-lg shadow-purple-500/20'
+          : 'hover:border-purple-500/30 hover:bg-purple-500/5'
       }`}
       role="gridcell"
       aria-selected={isSelected}
@@ -71,7 +82,7 @@ export const ContextBlock = React.memo(function ContextBlock({ block, isSelected
               variant="ghost"
               size="sm"
               onClick={handleDeleteClick}
-              className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="h-6 w-6 p-0 text-neutral-400 hover:text-red-400 hover:bg-red-500/10"
               aria-label={`Delete ${block.title}`}
             >
               <Trash2 size={12} />
@@ -82,15 +93,15 @@ export const ContextBlock = React.memo(function ContextBlock({ block, isSelected
               variant="ghost"
               size="sm"
               onClick={handleEditClick}
-              className="h-6 w-6 p-0 text-primary hover:text-primary hover:bg-primary/10"
+              className="h-6 w-6 p-0 text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10"
               aria-label={`Edit ${block.title}`}
             >
               <Edit size={12} />
             </Button>
           )}
           {isSelected && (
-            <div className="w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-              <span className="text-primary-foreground text-xs">✓</span>
+            <div className="w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+              <span className="text-white text-xs">✓</span>
             </div>
           )}
         </div>
@@ -100,20 +111,26 @@ export const ContextBlock = React.memo(function ContextBlock({ block, isSelected
         {/* Content Preview - takes up remaining space */}
         <div className="flex-1 mb-4">
           <p className="text-sm line-clamp-3 leading-relaxed">
-            {block.content}
+            {stripHtml(block.content)}
           </p>
         </div>
 
         {/* Tags - at bottom */}
         <div className="flex flex-wrap gap-1 flex-shrink-0 mb-2">
           {block.tags.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-xs">
-              <Hash size={8} className="mr-1" />
+            <Badge
+              key={tag}
+              variant="secondary"
+              className="text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30"
+            >
               {tag}
             </Badge>
           ))}
           {block.tags.length > 3 && (
-            <Badge variant="outline" className="text-xs">
+            <Badge
+              variant="outline"
+              className="text-xs border-purple-500/30 text-purple-300"
+            >
               +{block.tags.length - 3}
             </Badge>
           )}

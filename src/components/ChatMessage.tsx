@@ -23,11 +23,11 @@ export function ChatMessage({ message }: ChatMessageProps) {
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'} mb-4`}>
       <div className={`max-w-full rounded-lg p-4 ${
         isUser
-          ? 'bg-blue-500/10 border border-blue-500/20 text-blue-100'
-          : 'bg-neutral-800/30 border border-neutral-700/30 text-neutral-100'
+          ? 'bg-purple-900/30 border border-purple-500/30 text-purple-100'
+          : 'bg-neutral-800 border border-purple-700/30 text-neutral-100'
       }`}>
         <div className={`text-xs font-medium mb-2 ${
-          isUser ? 'text-blue-400' : 'text-green-400'
+          isUser ? 'text-purple-400' : 'text-purple-300'
         }`}>
           {isUser ? 'You' : 'AI Assistant'}
           <span className="ml-2 text-neutral-500">
@@ -47,13 +47,13 @@ export function ChatMessage({ message }: ChatMessageProps) {
                   const match = /language-(\w+)/.exec(className || '');
                   const isInline = !className || !match;
                   return !isInline ? (
-                    <pre className="bg-neutral-900 rounded-lg p-4 overflow-x-auto">
+                    <pre className="bg-neutral-900 border border-purple-700/30 rounded-lg p-4 overflow-x-auto">
                       <code className={className} {...props}>
                         {children}
                       </code>
                     </pre>
                   ) : (
-                    <code className="bg-neutral-800 px-1.5 py-0.5 rounded text-xs font-mono" {...props}>
+                    <code className="bg-purple-900/30 border border-purple-700/20 px-1.5 py-0.5 rounded text-xs font-mono text-purple-300" {...props}>
                       {children}
                     </code>
                   );
@@ -61,7 +61,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 // Custom styling for blockquotes
                 blockquote({ children }) {
                   return (
-                    <blockquote className="border-l-4 border-neutral-600 pl-4 italic my-4">
+                    <blockquote className="border-l-4 border-purple-500/50 pl-4 italic my-4 text-purple-200">
                       {children}
                     </blockquote>
                   );
@@ -70,7 +70,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 table({ children }) {
                   return (
                     <div className="overflow-x-auto my-4">
-                      <table className="min-w-full border-collapse border border-neutral-700">
+                      <table className="min-w-full border-collapse border border-purple-700/30">
                         {children}
                       </table>
                     </div>
@@ -79,7 +79,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 // Custom styling for table headers
                 th({ children }) {
                   return (
-                    <th className="border border-neutral-700 bg-neutral-800 px-4 py-2 text-left font-semibold">
+                    <th className="border border-purple-700/30 bg-purple-900/20 px-4 py-2 text-left font-semibold text-purple-100">
                       {children}
                     </th>
                   );
@@ -87,7 +87,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
                 // Custom styling for table cells
                 td({ children }) {
                   return (
-                    <td className="border border-neutral-700 px-4 py-2">
+                    <td className="border border-purple-700/30 px-4 py-2">
                       {children}
                     </td>
                   );

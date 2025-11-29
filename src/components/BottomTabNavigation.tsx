@@ -24,7 +24,7 @@ export function BottomTabNavigation() {
 
   return (
     <div className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 transform md:bottom-6">
-      <div className="flex max-w-[90vw] items-center rounded-full border border-primary/20 bg-muted/80 p-1 shadow-glow-sm backdrop-blur-md md:max-w-none">
+      <div className="flex max-w-[90vw] items-center rounded-full border border-primary/20 bg-muted/30 p-1 shadow-glow-sm backdrop-blur-xl md:max-w-none">
         <MotionHighlight
           defaultValue={defaultValue}
           className="flex items-center gap-1"

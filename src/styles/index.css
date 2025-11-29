@@ -2,6 +2,71 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Font declarations */
+@font-face {
+  font-family: 'Ronzino';
+  src: url('/fonts/Ronzino-Regular.woff2') format('woff2'),
+       url('/fonts/Ronzino-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ronzino';
+  src: url('/fonts/Ronzino-Medium.woff2') format('woff2'),
+       url('/fonts/Ronzino-Medium.otf') format('opentype');
+  font-weight: 500;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ronzino';
+  src: url('/fonts/Ronzino-Bold.woff2') format('woff2'),
+       url('/fonts/Ronzino-Bold.otf') format('opentype');
+  font-weight: bold;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Ronzino';
+  src: url('/fonts/Ronzino-Oblique.woff2') format('woff2'),
+       url('/fonts/Ronzino-Oblique.otf') format('opentype');
+  font-weight: normal;
+  font-style: italic;
+  font-display: swap;
+}
+
+/* Aujournuit font for title */
+@font-face {
+  font-family: 'Aujournuit';
+  src: url('/fonts/Aujournuit-Regular.woff2') format('woff2'),
+       url('/fonts/Aujournuit-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aujournuit';
+  src: url('/fonts/Aujournuit-Airy.woff2') format('woff2'),
+       url('/fonts/Aujournuit-Airy.otf') format('opentype');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Aujournuit';
+  src: url('/fonts/Aujournuit-Densed.woff2') format('woff2'),
+       url('/fonts/Aujournuit-Densed.otf') format('opentype');
+  font-weight: 600;
+  font-style: normal;
+  font-display: swap;
+}
+
 @layer base {
   :root {
     /* Light Mode */
@@ -11,7 +76,7 @@
     --card-foreground: 240 10% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 262 83% 58%;
+    --primary: 270 95% 60%; /* Enhanced purple - more vibrant */
     --primary-foreground: 0 0% 98%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
@@ -23,13 +88,13 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 262 83% 58%;
+    --ring: 270 95% 60%; /* Enhanced purple ring to match primary */
     --radius: 0.5rem;
 
     /* Sidebar Light */
     --sidebar: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 262 83% 58%;
+    --sidebar-primary: 270 95% 60%; /* Enhanced purple for sidebar primary */
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 240 4.8% 95.9%;
     --sidebar-accent-foreground: 240 5.9% 10%;
@@ -44,9 +109,10 @@
     --chart-5: 27 87% 67%;
 
     /* Typography */
-    --font-sans: Outfit, sans-serif;
+    --font-sans: Ronzino, ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-    --font-mono: monospace;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
+    --font-title: Aujournuit, ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
     --letter-spacing: 0.025em;
     --tracking-normal: 0.025em;
 
@@ -75,7 +141,7 @@
     --popover: 260 14% 6%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 263 70% 60%; /* Vibrant Purple Glow */
+    --primary: 270 85% 65%; /* Enhanced vibrant purple with stronger glow */
     --primary-foreground: 0 0% 98%;
 
     --secondary: 260 10% 12%; /* Dark subtle grey-purple */
@@ -92,17 +158,17 @@
 
     --border: 260 10% 12%;
     --input: 260 10% 12%;
-    --ring: 263 70% 60%;
+    --ring: 270 85% 65%; /* Enhanced purple ring to match primary in dark mode */
 
-    /* Sidebar Dark - blend with background but distinguish slightly */
-    --sidebar: 260 14% 4%;
+    /* Sidebar Dark - lighter shade of background blue */
+    --sidebar: 260 14% 8%; /* Lighter shade of background blue (260 14% 4% -> 260 14% 8%) */
     --sidebar-foreground: 260 5% 70%;
-    --sidebar-primary: 263 70% 60%;
+    --sidebar-primary: 270 85% 65%; /* Enhanced purple for sidebar primary in dark mode */
     --sidebar-primary-foreground: 0 0% 98%;
     --sidebar-accent: 260 10% 12%;
     --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 260 10% 12%;
-    --sidebar-ring: 263 70% 60%;
+    --sidebar-border: 260 10% 15%; /* Slightly lighter border to match new sidebar background */
+    --sidebar-ring: 270 85% 65%; /* Enhanced purple for sidebar ring in dark mode */
 
     /* Charts */
     --chart-1: 263 70% 60%;
@@ -132,9 +198,10 @@
 
   /* Custom Typography defaults */
   .theme {
-    --font-sans: Outfit, sans-serif;
-    --font-mono: monospace;
+    --font-sans: Ronzino, ui-sans-serif, system-ui, -apple-system, sans-serif;
+    --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Consolas, "Liberation Mono", Menlo, monospace;
     --font-serif: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+    --font-title: Aujournuit, ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
     --radius: 0.5rem;
     --tracking-tighter: calc(var(--tracking-normal) - 0.05em);
     --tracking-tight: calc(var(--tracking-normal) - 0.025em);
@@ -152,8 +219,18 @@
   * {
     @apply border-border;
   }
+  html, body {
+    font-family: var(--font-sans) !important;
+  }
   body {
     @apply bg-background text-foreground;
+    font-family: var(--font-sans) !important;
+  }
+  *:not([class*="font-title"]) {
+    font-family: var(--font-sans) !important;
+  }
+  [class*="font-title"] {
+    font-family: var(--font-title) !important;
   }
 }
 

@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useCallback, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Search, Calendar, MessageSquare, Cpu, Clock, TrendingUp, MoreHorizontal, ChevronRight, Star, AlertCircle } from 'lucide-react';
+import { Search, Calendar, MessageSquare, MoreHorizontal, ChevronRight, Star, AlertCircle } from 'lucide-react';
 import { Conversation } from '../types/Conversation';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 import { ConversationSearch } from './ConversationSearch';
@@ -33,7 +33,7 @@ interface SimplifiedConversationHistoryProps {
 
 export function SimplifiedConversationHistory({
   title,
-  className = "h-full flex flex-col bg-neutral-900"
+  className = "h-full flex flex-col bg-sidebar"
 }: SimplifiedConversationHistoryProps) {
   const navigate = useNavigate();
   const { conversations, loading, syncLoading } = useLibraryState();
@@ -159,66 +159,39 @@ export function SimplifiedConversationHistory({
     };
   }, [debouncedSearchQuery, searchConversations]);
 
-  const getConversationPreview = (conversation: Conversation) => {
-    // Show first 100 characters of description or original prompt
-    const content = conversation.description || conversation.original_prompt_content || '';
-    return content.length > 100 ? `${content.substring(0, 100)}...` : content;
-  };
-
-  const getTokenUsageColor = (tokens: number) => {
-    if (tokens > 10000) return 'text-red-400';
-    if (tokens > 5000) return 'text-yellow-400';
-    return 'text-green-400';
-  };
-
+  
+  
   return (
     <div className={className}>
-      {/* Simplified Header with Search Only */}
-      <div className="border-b border-neutral-800 bg-neutral-900/95 backdrop-blur-sm">
-        <div className="p-6 space-y-4">
-          {/* Title and Conversation Count - only show title if provided */}
-          {title && (
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                  <MessageSquare className="w-6 h-6 text-blue-400" />
-                  {title}
-                </h1>
-                <p className="text-neutral-400 mt-1">
-                  {filteredConversations.length} {filteredConversations.length === 1 ? 'conversation' : 'conversations'}
-                </p>
-              </div>
-            </div>
-          )}
-
-          {/* Navigation Error Alert */}
-          {navigationError && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg flex items-center gap-2 max-w-xl">
-              <AlertCircle className="w-4 h-4 flex-shrink-0" />
-              <span className="text-sm">{navigationError}</span>
-            </div>
-          )}
-
-          {/* Search Bar */}
-          <div className="relative max-w-xl">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-500" />
-            <input
-              type="text"
-              placeholder="Search conversations..."
-              value={searchQuery}
-              onChange={(e) => handleSearch(e.target.value)}
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
-            />
+      {/* Search and Error Section - no border to align with drawer title */}
+      <div className="p-6 pb-3 space-y-3">
+        {/* Navigation Error Alert */}
+        {navigationError && (
+          <div className="bg-red-500/10 border border-red-500/20 text-red-400 p-3 rounded-lg flex items-center gap-2 max-w-xl">
+            <AlertCircle className="w-4 h-4 flex-shrink-0" />
+            <span className="text-sm">{navigationError}</span>
           </div>
+        )}
+
+        {/* Search Bar */}
+        <div className="relative max-w-xl">
+          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-sidebar-foreground" />
+          <input
+            type="text"
+            placeholder="Search conversations..."
+            value={searchQuery}
+            onChange={(e) => handleSearch(e.target.value)}
+            className="w-full bg-sidebar-accent border border-sidebar-border rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-sidebar-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
+          />
         </div>
       </div>
 
-      {/* Conversation List */}
-      <div className="flex-1 overflow-y-auto p-6">
+      {/* Conversation List - reduced top padding */}
+      <div className="flex-1 overflow-y-auto px-6 pb-6">
         {loading || syncLoading ? (
           <div className="flex items-center justify-center h-64">
             <div className="flex items-center gap-3 text-neutral-400">
-              <div className="animate-spin rounded-full h-6 w-6 border-2 border-neutral-600 border-t-blue-500"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-neutral-600 border-t-primary"></div>
               Loading conversations...
             </div>
           </div>
@@ -235,81 +208,39 @@ export function SimplifiedConversationHistory({
             {filteredConversations.map((conversation) => (
               <div
                 key={conversation.id}
-                className="group bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 hover:border-neutral-600 rounded-lg transition-all cursor-pointer"
+                className="group bg-card hover:bg-accent border border-border hover:border-primary/50 rounded-lg transition-all cursor-pointer"
                 onClick={() => handleConversationClick(conversation.id)}
               >
                 <div className="p-5">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-white truncate group-hover:text-blue-400 transition-colors">
+                      <div className="flex items-center gap-3">
+                        <h3 className="text-lg font-semibold text-white truncate group-hover:text-primary transition-colors">
                           {conversation.title}
                         </h3>
                         {conversation.is_favorite && (
                           <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 flex-shrink-0" />
                         )}
-                        <span className={`px-2 py-1 text-xs font-medium rounded-md ${
-                          conversation.status === 'active'
-                            ? 'bg-green-500/10 text-green-400'
-                            : 'bg-neutral-700/50 text-neutral-400'
-                        }`}>
-                          {conversation.status}
-                        </span>
                       </div>
-
-                      {/* Description/Preview */}
-                      <p className="text-sm text-neutral-300 line-clamp-2">
-                        {getConversationPreview(conversation)}
-                      </p>
                     </div>
 
                     <div className="flex items-center gap-2 ml-4">
                       <button
                         onClick={(e) => handleMoreButtonClick(e, conversation)}
-                        className="p-1.5 hover:bg-neutral-600 rounded-md text-neutral-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                        className="p-1.5 hover:bg-accent rounded-md text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
-                      <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-white transition-colors" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                     </div>
                   </div>
 
-                  {/* Metadata Row */}
-                  <div className="flex items-center justify-between text-xs text-neutral-500">
-                    <div className="flex items-center gap-4">
-                      {/* Model Info */}
-                      <div className="flex items-center gap-1">
-                        <Cpu className="w-3 h-3" />
-                        <span>{conversation.model_name}</span>
-                      </div>
-
-                      {/* Token Usage */}
-                      <div className={`flex items-center gap-1 ${getTokenUsageColor(conversation.token_usage)}`}>
-                        <TrendingUp className="w-3 h-3" />
-                        <span>{conversation.token_usage.toLocaleString()} tokens</span>
-                      </div>
-
-                      {/* Duration */}
-                      <div className="flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
-                        <span>{Math.round(conversation.execution_duration_ms / 1000)}s</span>
-                      </div>
-                    </div>
-
-                    {/* Timestamp */}
-                    <div className="flex items-center gap-1">
-                      <Calendar className="w-3 h-3" />
-                      <span>{formatDistanceToNow(new Date(conversation.updated_at), { addSuffix: true })}</span>
-                    </div>
+                  {/* Timestamp */}
+                  <div className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <Calendar className="w-3 h-3" />
+                    <span>{formatDistanceToNow(new Date(conversation.updated_at), { addSuffix: true })}</span>
                   </div>
-
-                  {/* Cost Indicator (if significant) */}
-                  {conversation.estimated_cost > 0.001 && (
-                    <div className="mt-2 text-xs text-neutral-500">
-                      Estimated cost: ${(conversation.estimated_cost).toFixed(4)}
-                    </div>
-                  )}
                 </div>
               </div>
             ))}

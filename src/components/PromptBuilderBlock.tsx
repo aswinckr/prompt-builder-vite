@@ -7,6 +7,17 @@ import { X, GripVertical, Hash, ChevronDown, ChevronRight } from "lucide-react";
 import { ContextBlock as ContextBlockType } from "../types/ContextBlock";
 import { useLibraryActions } from "../contexts/LibraryContext";
 
+// Utility function to strip HTML tags and get plain text
+const stripHtml = (html: string): string => {
+  if (!html) return '';
+  // Create a temporary div element to parse HTML and extract text
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+  const text = tempDiv.textContent || tempDiv.innerText || '';
+  // Normalize whitespace: replace multiple newlines with single newline, trim
+  return text.replace(/\n\s*\n/g, '\n\n').trim();
+};
+
 interface PromptBuilderBlockProps {
   block: ContextBlockType;
   index: number;
@@ -176,19 +187,10 @@ export function PromptBuilderBlock({
         </button>
 
         {/* Context Block Content */}
-        <div className="flex items-start gap-4 pl-14 pr-12 pt-6">
-          <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-xl border border-blue-500/30 bg-gradient-to-br from-blue-500/20 to-purple-500/20">
-            <Hash className="h-4 w-4 text-blue-400" />
-          </div>
-
+        <div className="pl-14 pr-12 pt-6">
           <div className="min-w-0 flex-1">
-            {/* Title and Badge */}
-            <div className="mb-3 flex items-center gap-3">
-              <div className="rounded-lg border border-blue-500/30 bg-gradient-to-r from-blue-500/20 to-purple-500/20 px-3 py-1">
-                <span className="text-xs font-medium text-blue-300">
-                  Context Block
-                </span>
-              </div>
+            {/* Title */}
+            <div className="mb-3">
               <h3 className="truncate text-sm font-semibold text-neutral-100">
                 {block.title}
               </h3>
@@ -198,10 +200,10 @@ export function PromptBuilderBlock({
             <div className="mb-4 text-sm leading-relaxed text-neutral-300">
               {isExpanded ? (
                 <div className="scrollbar-thin scrollbar-thumb-neutral-600 scrollbar-track-neutral-800/50 max-h-96 overflow-y-auto pr-2">
-                  <div className="whitespace-pre-wrap">{block.content}</div>
+                  <div className="whitespace-pre-wrap">{stripHtml(block.content)}</div>
                 </div>
               ) : (
-                <div className="line-clamp-2">{block.content}</div>
+                <div className="line-clamp-2">{stripHtml(block.content)}</div>
               )}
             </div>
 

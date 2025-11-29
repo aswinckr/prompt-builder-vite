@@ -71,9 +71,10 @@ export function Drawer({
     <Sheet open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <SheetContent
         side={side}
-        className={cn(getSizeClass(), className, 'bg-neutral-900', {
+        className={cn(getSizeClass(), className, 'bg-sidebar', {
           'w-full sm:!w-[40vw] sm:!max-w-none': size === 'wide' && (side === 'left' || side === 'right')
         })}
+        hideCloseButton={true}
       >
         <div className="flex items-center justify-between">
           {(title || description) && (
@@ -84,7 +85,7 @@ export function Drawer({
           )}
           <button
             onClick={onClose}
-            className="p-2 rounded-md text-neutral-400 hover:text-white hover:bg-neutral-800 transition-colors"
+            className="p-2 rounded-md text-sidebar-foreground hover:text-white hover:bg-sidebar-accent transition-colors"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
