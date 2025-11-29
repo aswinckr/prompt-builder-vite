@@ -84,7 +84,7 @@ export function ConversationDetail() {
           >
             Back
           </button>
-          </div>
+        </div>
       </div>
     );
   }

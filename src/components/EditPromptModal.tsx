@@ -6,6 +6,18 @@ import { useToast } from '../contexts/ToastContext';
 import { SavedPrompt } from '../types/SavedPrompt';
 import { convertToHtml, detectContentFormat, validateContentCompatibility } from '../utils/contentFormatUtils';
 import { debounce } from '../utils/performanceUtils';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Label } from '@/components/ui/label';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 
 interface EditPromptModalProps {
   isOpen: boolean;
@@ -182,27 +194,25 @@ export function EditPromptModal({
     debouncedValidation(newContent.html);
   };
 
-  const confirmDialog = showConfirmDialog && (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60]">
-      <div className="bg-neutral-800 rounded-lg shadow-xl max-w-md mx-4 border border-neutral-700 p-6">
-        <h3 className="text-lg font-semibold text-white mb-2">Discard changes?</h3>
-        <p className="text-neutral-300 mb-6">You have unsaved changes. Are you sure you want to close without saving?</p>
-        <div className="flex gap-3 justify-end">
-          <button
-            onClick={handleCancel}
-            className="px-4 py-2 text-neutral-300 hover:bg-neutral-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
+  const confirmDialog = (
+    <Dialog open={showConfirmDialog} onOpenChange={(open) => !open && setShowConfirmDialog(false)}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>Discard changes?</DialogTitle>
+          <DialogDescription>
+            You have unsaved changes. Are you sure you want to close without saving?
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button variant="outline" onClick={handleCancel}>
             Cancel
-          </button>
-          <button
-            onClick={handleDiscardChanges}
-            className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors focus:outline-none focus:ring-2 focus:ring-red-500"
-          >
+          </Button>
+          <Button variant="destructive" onClick={handleDiscardChanges}>
             Discard Changes
-          </button>
-        </div>
-      </div>
-    </div>
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 
   return (
@@ -218,48 +228,46 @@ export function EditPromptModal({
       >
         <div className="p-6 space-y-6">
           {/* Title Field */}
-          <div>
-            <label htmlFor="prompt-title" className="block text-sm font-medium text-neutral-300 mb-2">
+          <div className="space-y-2">
+            <Label htmlFor="prompt-title">
               Title
-            </label>
-            <input
+            </Label>
+            <Input
               id="prompt-title"
               type="text"
               value={title}
-              onChange={(e) => setTitle(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLInputElement>) => setTitle(e.target.value)}
               placeholder="Enter prompt title..."
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all"
               disabled={isSubmitting || isLoading}
             />
             {!title.trim() && (
-              <p className="mt-1 text-sm text-red-400">Title is required</p>
+              <p className="text-sm text-destructive">Title is required</p>
             )}
           </div>
 
           {/* Description Field */}
-          <div>
-            <label htmlFor="prompt-description" className="block text-sm font-medium text-neutral-300 mb-2">
+          <div className="space-y-2">
+            <Label htmlFor="prompt-description">
               Description
-            </label>
-            <textarea
+            </Label>
+            <Textarea
               id="prompt-description"
               value={description}
-              onChange={(e) => setDescription(e.target.value)}
+              onChange={(e: React.ChangeEvent<HTMLTextAreaElement>) => setDescription(e.target.value)}
               placeholder="Optional description about how to use this prompt..."
               rows={3}
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
               disabled={isSubmitting || isLoading}
             />
-            <p className="mt-1 text-xs text-neutral-500">
+            <p className="text-xs text-muted-foreground">
               Additional context about when and how to use this prompt
             </p>
           </div>
 
           {/* Content Editor */}
-          <div>
-            <label className="block text-sm font-medium text-neutral-300 mb-2">
+          <div className="space-y-2">
+            <Label>
               Content
-            </label>
+            </Label>
             <TipTapEditor
               content={content}
               onUpdate={handleContentUpdate}
@@ -278,28 +286,27 @@ export function EditPromptModal({
           </div>
 
           {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t border-neutral-700">
-            <button
+          <div className="flex items-center justify-end gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
               onClick={handleClose}
               disabled={isSubmitting || isLoading}
-              className="px-4 py-2 text-neutral-300 hover:bg-neutral-700 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Cancel
-            </button>
-            <button
+            </Button>
+            <Button
               onClick={handleSave}
               disabled={isSubmitting || isLoading || !title.trim()}
-              className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                  <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
                   Saving...
                 </>
               ) : (
                 'Save'
               )}
-            </button>
+            </Button>
           </div>
         </div>
       </Modal>

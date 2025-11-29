@@ -3,16 +3,16 @@ import { Menu } from 'lucide-react';
 import { HistoryMenuButton } from './HistoryMenuButton';
 
 interface HamburgerHistoryMenuProps {
-  // Optional prop to customize positioning
+  // Optional prop to customize styling
   className?: string;
 }
 
 export function HamburgerHistoryMenu({ className = '' }: HamburgerHistoryMenuProps) {
   return (
     <HistoryMenuButton
-      icon={<Menu className="w-5 h-5" />}
+      icon={<Menu className="w-4 h-4" />}
       defaultValue="menu"
-      containerClassName={`absolute top-4 left-4 z-30 ${className}`}
+      containerClassName={className}
     />
   );
 }

@@ -1,5 +1,13 @@
 import React, { useMemo } from 'react';
-import { ChevronDown } from 'lucide-react';
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectLabel,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 
 interface Model {
@@ -47,23 +55,22 @@ export function ModelSelector({ selectedModel, onModelChange }: ModelSelectorPro
   }, [availableModels]);
 
   return (
-    <div className="relative">
-      <select
-        className="min-w-[160px] appearance-none rounded-xl border border-neutral-700/50 bg-neutral-800/50 px-4 py-2 pr-8 text-sm backdrop-blur-sm transition-all duration-200 hover:bg-neutral-800/70 focus:border-blue-500/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-        value={selectedModel}
-        onChange={(e) => onModelChange(e.target.value)}
-      >
+    <Select value={selectedModel} onValueChange={onModelChange}>
+      <SelectTrigger className="min-w-[160px]">
+        <SelectValue placeholder="Select a model" />
+      </SelectTrigger>
+      <SelectContent>
         {Object.entries(groupedModels).map(([group, models]) => (
-          <optgroup key={group} label={group}>
+          <SelectGroup key={group}>
+            <SelectLabel>{group}</SelectLabel>
             {models.map((model) => (
-              <option key={model.value} value={model.value}>
+              <SelectItem key={model.value} value={model.value}>
                 {model.label}
-              </option>
+              </SelectItem>
             ))}
-          </optgroup>
+          </SelectGroup>
         ))}
-      </select>
-      <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 transform text-neutral-400" />
-    </div>
+      </SelectContent>
+    </Select>
   );
 }

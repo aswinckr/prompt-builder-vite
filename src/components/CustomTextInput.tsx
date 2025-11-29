@@ -1,6 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
 import { useLibraryState, useLibraryActions } from "../contexts/LibraryContext";
 import { Send } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
 
 interface PromptInputProps {
   value: string;
@@ -65,16 +67,16 @@ function PromptInput({
   return (
     <form onSubmit={handleSubmit}>
       <div
-        className={`relative bg-neutral-800/50 backdrop-blur-sm border border-neutral-700/50 rounded-xl overflow-hidden transition-all duration-200 focus-within:ring-2 focus-within:ring-blue-500/50 focus-within:border-blue-500/50 hover:border-neutral-600/50 hover:bg-neutral-800/70 ${className}`}
+        className={`relative border border-neutral-700/60 rounded-xl overflow-hidden transition-all duration-200 focus-within:ring-2 focus-within:ring-primary/50 focus-within:border-primary/50 hover:border-neutral-600 ${className}`}
       >
         <div className="flex items-end">
-          <textarea
+          <Textarea
             ref={textareaRef}
             value={value}
             onChange={handleChange}
             onKeyDown={handleKeyDown}
             placeholder={placeholder}
-            className="flex-1 bg-transparent p-4 text-neutral-100 placeholder-neutral-500 resize-none outline-none overflow-hidden"
+            className="flex-1 border-0 resize-none focus-visible:ring-0 shadow-none bg-transparent"
             style={{
               minHeight: `${minHeight}px`,
               maxHeight: `${maxHeight}px`,
@@ -85,14 +87,15 @@ function PromptInput({
             aria-label="Add custom text to your prompt"
           />
           {onSubmit && (
-            <button
+            <Button
               type="submit"
+              size="icon"
               disabled={!value.trim()}
-              className="p-3 m-2 text-neutral-400 hover:text-neutral-100 disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-200 rounded-lg hover:bg-neutral-700/30"
+              className="m-2 hover:bg-muted/50"
               title="Run prompt (Enter or Cmd+Enter)"
             >
               <Send className="h-4 w-4" />
-            </button>
+            </Button>
           )}
         </div>
       </div>

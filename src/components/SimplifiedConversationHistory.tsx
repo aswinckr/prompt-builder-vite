@@ -32,7 +32,7 @@ interface SimplifiedConversationHistoryProps {
 }
 
 export function SimplifiedConversationHistory({
-  title = "Conversation History",
+  title,
   className = "h-full flex flex-col bg-neutral-900"
 }: SimplifiedConversationHistoryProps) {
   const navigate = useNavigate();
@@ -176,18 +176,20 @@ export function SimplifiedConversationHistory({
       {/* Simplified Header with Search Only */}
       <div className="border-b border-neutral-800 bg-neutral-900/95 backdrop-blur-sm">
         <div className="p-6 space-y-4">
-          {/* Title and Conversation Count */}
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                <MessageSquare className="w-6 h-6 text-blue-400" />
-                {title}
-              </h1>
-              <p className="text-neutral-400 mt-1">
-                {filteredConversations.length} {filteredConversations.length === 1 ? 'conversation' : 'conversations'}
-              </p>
+          {/* Title and Conversation Count - only show title if provided */}
+          {title && (
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-white flex items-center gap-3">
+                  <MessageSquare className="w-6 h-6 text-blue-400" />
+                  {title}
+                </h1>
+                <p className="text-neutral-400 mt-1">
+                  {filteredConversations.length} {filteredConversations.length === 1 ? 'conversation' : 'conversations'}
+                </p>
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Navigation Error Alert */}
           {navigationError && (
