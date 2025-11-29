@@ -188,7 +188,7 @@ export function ProfileModal({
                   <h4 className="font-medium text-white">Account Type</h4>
                   <p className="text-sm text-neutral-400">Personal Account</p>
                 </div>
-                <button className="rounded bg-blue-500 px-3 py-1 text-sm text-white transition-colors hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <button className="rounded bg-purple-600 px-3 py-1 text-sm text-white transition-colors hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
                   Upgrade to Pro
                 </button>
               </div>
@@ -196,7 +196,7 @@ export function ProfileModal({
 
             {/* Settings Options */}
             <div className="space-y-2">
-              <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-neutral-300 transition-colors hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
+              <button className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-neutral-300 transition-colors hover:bg-neutral-700 focus:outline-none focus:ring-2 focus:ring-purple-500">
                 <Settings size={18} />
                 <span>Settings</span>
               </button>
@@ -286,7 +286,7 @@ export function ProfileModal({
                         value={email}
                         onChange={(e) => setEmail(e.target.value)}
                         required
-                        className="w-full pl-10 pr-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full pl-10 pr-3 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="you@example.com"
                       />
                     </div>
@@ -305,7 +305,7 @@ export function ProfileModal({
                         onChange={(e) => setPassword(e.target.value)}
                         required
                         minLength={6}
-                        className="w-full pl-10 pr-10 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full pl-10 pr-10 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                         placeholder="••••••••"
                       />
                       <button
@@ -332,7 +332,7 @@ export function ProfileModal({
                           onChange={(e) => setConfirmPassword(e.target.value)}
                           required
                           minLength={6}
-                          className="w-full pl-10 pr-10 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                          className="w-full pl-10 pr-10 py-2 bg-neutral-800 border border-neutral-700 rounded-lg text-white placeholder-neutral-500 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
                           placeholder="••••••••"
                         />
                         <button
@@ -349,7 +349,7 @@ export function ProfileModal({
                   <button
                     type="submit"
                     disabled={isLoading}
-                    className="w-full bg-blue-500 hover:bg-blue-600 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-neutral-900"
+                    className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-neutral-700 disabled:cursor-not-allowed text-white font-medium py-2 px-4 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-neutral-900"
                   >
                     {isLoading ? (
                       <div className="flex items-center justify-center gap-2">
@@ -367,7 +367,7 @@ export function ProfileModal({
                   <div className="mt-4 text-center">
                     <button
                       onClick={handlePasswordReset}
-                      className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
+                      className="text-sm text-purple-400 hover:text-purple-300 transition-colors"
                     >
                       Forgot your password?
                     </button>

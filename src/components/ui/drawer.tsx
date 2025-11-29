@@ -74,6 +74,7 @@ export function Drawer({
         className={cn(getSizeClass(), className, 'bg-neutral-900', {
           'w-full sm:!w-[40vw] sm:!max-w-none': size === 'wide' && (side === 'left' || side === 'right')
         })}
+        hideCloseButton={true}
       >
         <div className="flex items-center justify-between">
           {(title || description) && (

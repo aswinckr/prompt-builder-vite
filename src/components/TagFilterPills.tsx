@@ -81,9 +81,9 @@ export function TagFilterPills() {
               key={tag}
               onClick={() => handleTagClick(tag)}
               onKeyDown={(e) => handleTagKeyDown(e, tag)}
-              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-blue-500/50 ${
+              className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium transition-all focus:outline-none focus:ring-2 focus:ring-purple-500/50 ${
                 isActive
-                  ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30 hover:bg-blue-500/30'
+                  ? 'bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30'
                   : 'bg-neutral-700 text-neutral-300 border border-transparent hover:bg-neutral-600 hover:text-neutral-200'
               }`}
               role="button"
@@ -102,7 +102,7 @@ export function TagFilterPills() {
           <button
             onClick={clearAllTagFilters}
             onKeyDown={handleClearKeyDown}
-            className="inline-flex items-center gap-1 px-2 py-0.5 ml-2 text-xs bg-neutral-600 text-neutral-300 rounded-full hover:bg-neutral-500 hover:text-neutral-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500/50"
+            className="inline-flex items-center gap-1 px-2 py-0.5 ml-2 text-xs bg-neutral-600 text-neutral-300 rounded-full hover:bg-neutral-500 hover:text-neutral-200 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500/50"
             role="button"
             tabIndex={0}
             aria-label={`Clear all ${activeFilterCount} active tag filters`}

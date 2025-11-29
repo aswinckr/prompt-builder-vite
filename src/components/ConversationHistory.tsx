@@ -62,18 +62,18 @@ export function ConversationHistory() {
   };
 
   return (
-    <div className="h-full flex flex-col bg-neutral-900">
+    <div className="h-full flex flex-col bg-card text-foreground">
       {/* Header with Search and Controls */}
-      <div className="border-b border-neutral-800 bg-neutral-900/95 backdrop-blur-sm">
+      <div className="border-b border-border bg-card/95 backdrop-blur-sm">
         <div className="p-6 space-y-4">
           {/* Title and Stats */}
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-white flex items-center gap-3">
-                <MessageSquare className="w-6 h-6 text-blue-400" />
+              <h1 className="text-2xl font-bold text-foreground flex items-center gap-3">
+                <MessageSquare className="w-6 h-6 text-primary" />
                 Conversation History
               </h1>
-              <p className="text-neutral-400 mt-1">
+              <p className="text-muted-foreground mt-1">
                 {filteredConversations.length} {filteredConversations.length === 1 ? 'conversation' : 'conversations'}
               </p>
             </div>
@@ -81,7 +81,7 @@ export function ConversationHistory() {
             <div className="flex items-center gap-2">
               <button
                 onClick={() => setShowStats(!showStats)}
-                className="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg transition-colors flex items-center gap-2"
+                className="px-3 py-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-lg transition-colors flex items-center gap-2"
               >
                 <TrendingUp className="w-4 h-4" />
                 Stats
@@ -89,7 +89,7 @@ export function ConversationHistory() {
 
               <button
                 onClick={() => setShowFilters(!showFilters)}
-                className="px-3 py-2 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 rounded-lg transition-colors flex items-center gap-2"
+                className="px-3 py-2 bg-secondary hover:bg-secondary/80 text-secondary-foreground rounded-lg transition-colors flex items-center gap-2"
               >
                 <Filter className="w-4 h-4" />
                 Filters
@@ -99,27 +99,27 @@ export function ConversationHistory() {
 
           {/* Search Bar */}
           <div className="relative max-w-xl">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-neutral-500" />
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
               type="text"
               placeholder="Search conversations..."
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg pl-10 pr-4 py-2.5 text-white placeholder-neutral-500 focus:outline-none focus:border-blue-500 focus:ring-1 focus:ring-blue-500/20 transition-all"
+              className="w-full bg-muted border border-input rounded-lg pl-10 pr-4 py-2.5 text-foreground placeholder-muted-foreground focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all"
             />
           </div>
         </div>
 
         {/* Filters Panel */}
         {showFilters && (
-          <div className="border-t border-neutral-800 p-6">
+          <div className="border-t border-border p-6">
             <ConversationFilters />
           </div>
         )}
 
         {/* Stats Panel */}
         {showStats && (
-          <div className="border-t border-neutral-800 p-6">
+          <div className="border-t border-border p-6">
             <ConversationStats />
           </div>
         )}
@@ -129,16 +129,16 @@ export function ConversationHistory() {
       <div className="flex-1 overflow-y-auto p-6">
         {loading || syncLoading ? (
           <div className="flex items-center justify-center h-64">
-            <div className="flex items-center gap-3 text-neutral-400">
-              <div className="animate-spin rounded-full h-6 w-6 border-2 border-neutral-600 border-t-blue-500"></div>
+            <div className="flex items-center gap-3 text-muted-foreground">
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-muted border-t-primary"></div>
               Loading conversations...
             </div>
           </div>
         ) : filteredConversations.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-64 text-center">
-            <MessageSquare className="w-12 h-12 text-neutral-600 mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">No conversations found</h3>
-            <p className="text-neutral-400 max-w-md">
+            <MessageSquare className="w-12 h-12 text-muted mb-4" />
+            <h3 className="text-lg font-medium text-foreground mb-2">No conversations found</h3>
+            <p className="text-muted-foreground max-w-md">
               {searchQuery ? 'Try adjusting your search terms' : 'Your conversation history will appear here once you start chatting with AI models.'}
             </p>
           </div>
@@ -147,7 +147,7 @@ export function ConversationHistory() {
             {filteredConversations.map((conversation) => (
               <div
                 key={conversation.id}
-                className="group bg-neutral-800 hover:bg-neutral-750 border border-neutral-700 hover:border-neutral-600 rounded-lg transition-all cursor-pointer"
+                className="group bg-card hover:bg-card/80 border border-border hover:border-border/80 rounded-lg transition-all cursor-pointer"
                 onClick={() => handleConversationClick(conversation.id)}
               >
                 <div className="p-5">
@@ -155,7 +155,7 @@ export function ConversationHistory() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-white truncate group-hover:text-blue-400 transition-colors">
+                        <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors">
                           {conversation.title}
                         </h3>
                         {conversation.is_favorite && (
@@ -164,14 +164,14 @@ export function ConversationHistory() {
                         <span className={`px-2 py-1 text-xs font-medium rounded-md ${
                           conversation.status === 'active'
                             ? 'bg-green-500/10 text-green-400'
-                            : 'bg-neutral-700/50 text-neutral-400'
+                            : 'bg-muted/50 text-muted-foreground'
                         }`}>
                           {conversation.status}
                         </span>
                       </div>
 
                       {/* Description/Preview */}
-                      <p className="text-sm text-neutral-300 line-clamp-2">
+                      <p className="text-sm text-card-foreground line-clamp-2">
                         {getConversationPreview(conversation)}
                       </p>
                     </div>
@@ -182,16 +182,16 @@ export function ConversationHistory() {
                           e.stopPropagation();
                           setSelectedConversation(conversation);
                         }}
-                        className="p-1.5 hover:bg-neutral-600 rounded-md text-neutral-400 hover:text-white transition-colors opacity-0 group-hover:opacity-100"
+                        className="p-1.5 hover:bg-muted rounded-md text-muted-foreground hover:text-foreground transition-colors opacity-0 group-hover:opacity-100"
                       >
                         <MoreHorizontal className="w-4 h-4" />
                       </button>
-                      <ChevronRight className="w-4 h-4 text-neutral-400 group-hover:text-white transition-colors" />
+                      <ChevronRight className="w-4 h-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                     </div>
                   </div>
 
                   {/* Metadata Row */}
-                  <div className="flex items-center justify-between text-xs text-neutral-500">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <div className="flex items-center gap-4">
                       {/* Model Info */}
                       <div className="flex items-center gap-1">
@@ -221,7 +221,7 @@ export function ConversationHistory() {
 
                   {/* Cost Indicator (if significant) */}
                   {conversation.estimated_cost > 0.001 && (
-                    <div className="mt-2 text-xs text-neutral-500">
+                    <div className="mt-2 text-xs text-muted-foreground">
                       Estimated cost: ${(conversation.estimated_cost).toFixed(4)}
                     </div>
                   )}

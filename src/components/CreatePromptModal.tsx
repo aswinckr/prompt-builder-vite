@@ -152,7 +152,7 @@ export function CreatePromptModal({
       isOpen={isOpen}
       onClose={handleCloseAttempt}
       title={modalTitle}
-      size="lg"
+      size="2xl"
       mobileBehavior="fullscreen"
       aria-labelledby="create-prompt-modal-title"
     >
@@ -177,7 +177,7 @@ export function CreatePromptModal({
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Enter a descriptive title for this prompt template"
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-neutral-600 focus:ring-2 focus:ring-blue-500/20 transition-all"
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-neutral-600 focus:ring-2 focus:ring-purple-500/20 transition-all"
               aria-required="true"
               aria-describedby="title-description"
             />
@@ -197,7 +197,7 @@ export function CreatePromptModal({
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Optional description about how to use this prompt (optional)"
               rows={3}
-              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-neutral-600 focus:ring-2 focus:ring-blue-500/20 transition-all resize-none"
+              className="w-full bg-neutral-800 border border-neutral-700 rounded-lg px-4 py-2.5 text-sm text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-neutral-600 focus:ring-2 focus:ring-purple-500/20 transition-all resize-none"
               aria-describedby="description-description"
             />
             <p id="description-description" className="mt-1 text-xs text-neutral-500">
@@ -238,7 +238,7 @@ export function CreatePromptModal({
             <button
               onClick={handleSave}
               disabled={isSubmitting || !title.trim() || !content.text.trim()}
-              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-neutral-600 disabled:to-neutral-700 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-neutral-600 disabled:to-neutral-700 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSubmitting ? (
                 <>

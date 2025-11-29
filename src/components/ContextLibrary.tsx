@@ -226,7 +226,7 @@ export function ContextLibrary() {
       <div
         className={`${
           contextLibrarySidebarExpanded ? 'w-64 md:w-64' : 'w-16'
-        } bg-neutral-800 border-r border-neutral-700 flex-col transition-all duration-300 ease-out h-full z-50 fixed md:relative h-full ${
+        } bg-sidebar border-r border-sidebar-border flex-col transition-all duration-300 ease-out h-full z-50 fixed md:relative h-full ${
           contextLibrarySidebarExpanded ? 'flex' : 'hidden md:flex'
         }`}
       >
@@ -237,7 +237,7 @@ export function ContextLibrary() {
           {/* Toggle Button - Always visible */}
           <button
             onClick={toggleContextLibrarySidebar}
-            className={`p-2 rounded-md hover:bg-neutral-700 text-neutral-400 hover:text-neutral-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 ${
+            className={`p-2 rounded-md hover:bg-neutral-700 text-neutral-400 hover:text-neutral-200 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 ${
               !contextLibrarySidebarExpanded ? 'mx-auto' : ''
             }`}
             aria-label={contextLibrarySidebarExpanded ? 'Collapse sidebar' : 'Expand sidebar'}
@@ -264,12 +264,9 @@ export function ContextLibrary() {
           </div>
         )}
 
-        {/* Bottom Section - History Button and Profile Button */}
+        {/* Bottom Section - Profile Button */}
         {contextLibrarySidebarExpanded && (
-          <div className="border-t border-neutral-700 p-4 space-y-3">
-            {/* History Button */}
-            <KnowledgeHistoryButton />
-
+          <div className="border-t border-sidebar-border p-4">
             {/* Profile Button */}
             <ProfileButton onClick={handleProfileClick} />
           </div>
@@ -281,12 +278,12 @@ export function ContextLibrary() {
         {/* Fixed Header Section */}
         <div className="flex-shrink-0">
           {/* Unified Search Bar with Mobile Sidebar Toggle */}
-          <div className="border-b border-neutral-700">
+          <div className="border-b border-sidebar-border">
             <div className="flex items-center gap-3 p-4 md:p-6">
                 {/* Mobile Sidebar Toggle - Only visible on mobile when sidebar is collapsed */}
                 <button
                   onClick={toggleContextLibrarySidebar}
-                  className="md:hidden p-2 rounded-md hover:bg-neutral-700 text-neutral-400 hover:text-neutral-200 transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500 flex-shrink-0"
+                  className="md:hidden p-2 rounded-md hover:bg-neutral-700 text-neutral-400 hover:text-neutral-200 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 flex-shrink-0"
                   aria-label="Expand sidebar"
                   data-testid="mobile-sidebar-toggle"
                 >
@@ -304,7 +301,7 @@ export function ContextLibrary() {
                     {getCurrentProjectType() === 'datasets' && (
                       <button
                         onClick={handleAddKnowledge}
-                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 whitespace-nowrap"
+                        className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 whitespace-nowrap"
                         aria-label="Add new knowledge context block"
                       >
                         <Plus size={16} />
@@ -315,7 +312,7 @@ export function ContextLibrary() {
                     {getCurrentProjectType() === 'prompts' && (
                       <button
                         onClick={handleAddPrompt}
-                        className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 whitespace-nowrap"
+                        className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 whitespace-nowrap"
                         aria-label="Add new prompt template"
                       >
                         <Plus size={16} />

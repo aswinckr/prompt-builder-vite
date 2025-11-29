@@ -173,6 +173,9 @@ module.exports = {
           },
         },
       },
+      fontFamily: {
+        mono: "var(--font-mono)",
+      },
       keyframes: {
         "accordion-down": {
           from: { height: "0" },

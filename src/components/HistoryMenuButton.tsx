@@ -34,7 +34,7 @@ export function HistoryMenuButton({
             size="icon"
             data-value={defaultValue}
             onClick={openDrawer}
-            className={`h-9 w-9 ${className}`}
+            className={`h-9 w-9 hover:bg-neutral-700 hover:text-white dark:hover:bg-neutral-600 dark:hover:text-white ${className}`}
             aria-label="Open conversation history"
             title="Conversation History"
             data-testid={dataTestId}

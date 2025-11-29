@@ -71,7 +71,7 @@ export const ContextBlock = React.memo(function ContextBlock({ block, isSelected
               variant="ghost"
               size="sm"
               onClick={handleDeleteClick}
-              className="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/10"
+              className="h-6 w-6 p-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
               aria-label={`Delete ${block.title}`}
             >
               <Trash2 size={12} />
@@ -82,7 +82,7 @@ export const ContextBlock = React.memo(function ContextBlock({ block, isSelected
               variant="ghost"
               size="sm"
               onClick={handleEditClick}
-              className="h-6 w-6 p-0 text-primary hover:text-primary hover:bg-primary/10"
+              className="h-6 w-6 p-0 text-muted-foreground hover:text-primary hover:bg-primary/10"
               aria-label={`Edit ${block.title}`}
             >
               <Edit size={12} />
@@ -107,8 +107,8 @@ export const ContextBlock = React.memo(function ContextBlock({ block, isSelected
         {/* Tags - at bottom */}
         <div className="flex flex-wrap gap-1 flex-shrink-0 mb-2">
           {block.tags.slice(0, 3).map((tag) => (
-            <Badge key={tag} variant="secondary" className="text-xs">
-              <Hash size={8} className="mr-1" />
+            <Badge key={tag} variant="secondary" className="text-xs group/badge">
+              <Hash size={8} className="mr-1 text-muted-foreground group-hover/badge:text-foreground" />
               {tag}
             </Badge>
           ))}

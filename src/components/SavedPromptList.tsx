@@ -6,6 +6,7 @@ import { ConfirmationModal } from './ConfirmationModal';
 import { useToast } from '../contexts/ToastContext';
 import { useLibraryActions } from '../contexts/LibraryContext';
 import { handleCrudResult, logError } from '../utils/errorHandling';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 
 interface SavedPromptListProps {
   selectedProject: string;
@@ -175,17 +176,17 @@ export function SavedPromptList({
               <label htmlFor="date-filter" className="text-sm text-neutral-400">
                 Date:
               </label>
-              <select
-                id="date-filter"
-                value={selectedDate}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="bg-neutral-800 border border-neutral-700 rounded px-3 py-1.5 text-sm text-neutral-100 focus:outline-none focus:border-neutral-600 focus:ring-2 focus:ring-blue-500/20"
-              >
-                <option value="all">All time</option>
-                <option value="today">Today</option>
-                <option value="week">This week</option>
-                <option value="month">This month</option>
-              </select>
+              <Select value={selectedDate} onValueChange={setSelectedDate}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Select date" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All time</SelectItem>
+                  <SelectItem value="today">Today</SelectItem>
+                  <SelectItem value="week">This week</SelectItem>
+                  <SelectItem value="month">This month</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Sort Options */}
@@ -193,16 +194,16 @@ export function SavedPromptList({
               <label htmlFor="sort-by" className="text-sm text-neutral-400">
                 Sort by:
               </label>
-              <select
-                id="sort-by"
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as 'updated' | 'created' | 'title')}
-                className="bg-neutral-800 border border-neutral-700 rounded px-3 py-1.5 text-sm text-neutral-100 focus:outline-none focus:border-neutral-600 focus:ring-2 focus:ring-blue-500/20"
-              >
-                <option value="updated">Last updated</option>
-                <option value="created">Created</option>
-                <option value="title">Title</option>
-              </select>
+              <Select value={sortBy} onValueChange={(value) => setSortBy(value as 'updated' | 'created' | 'title')}>
+                <SelectTrigger className="w-[140px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="updated">Last updated</SelectItem>
+                  <SelectItem value="created">Created</SelectItem>
+                  <SelectItem value="title">Title</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             {/* Results count */}
@@ -242,14 +243,14 @@ export function SavedPromptList({
                     <div className="flex items-center gap-1 ml-2">
                       <button
                         onClick={() => handleLoadPrompt(prompt.id)}
-                        className="p-2 rounded hover:bg-neutral-600 text-neutral-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="p-2 rounded hover:bg-neutral-600 text-neutral-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
                         aria-label="Load prompt"
                       >
                         <Play size={16} />
                       </button>
                       <button
                         onClick={() => handleEditPrompt(prompt)}
-                        className="p-2 rounded hover:bg-neutral-600 text-neutral-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="p-2 rounded hover:bg-neutral-600 text-neutral-400 hover:text-white transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500"
                         aria-label="Edit prompt"
                       >
                         <Edit size={16} />
