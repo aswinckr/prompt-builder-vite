@@ -1,8 +1,9 @@
 import React, { useRef, useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { ChatMessage } from "./ChatMessage";
 import { TypingIndicator } from "./TypingIndicator";
 import { AIPromptInput } from "./AIPromptInput";
+import { Modal } from "./Modal";
+import { Button } from "./ui/button";
 import { ConversationMessageService } from '../services/conversationMessageService';
 import {
   X,
@@ -45,6 +46,7 @@ export function ChatInterface({
   onClose,
 }: ChatInterfaceProps) {
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const dialogRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessageData[]>([]);
   const [input, setInput] = useState("");
@@ -62,6 +64,14 @@ export function ChatInterface({
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
+
+  // Focus management for dialog
+  useEffect(() => {
+    if (isOpen && dialogRef.current) {
+      // Focus the dialog when it opens
+      dialogRef.current.focus();
+    }
+  }, [isOpen]);
 
   // Initialize OpenRouter client
   const openrouter = createOpenRouter({
@@ -561,7 +571,9 @@ export function ChatInterface({
 
       {/* Side panel */}
       <div
-        className={`fixed right-0 top-0 z-50 flex h-full w-full transform flex-col bg-neutral-900 text-neutral-100 shadow-2xl transition-transform duration-300 ease-in-out ${
+        ref={dialogRef}
+        tabIndex={-1}
+        className={`fixed right-0 top-0 z-50 flex h-full w-full transform flex-col bg-neutral-900 text-neutral-100 shadow-2xl transition-transform duration-300 ease-in-out outline-none ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         role="dialog"
@@ -575,6 +587,25 @@ export function ChatInterface({
             <h2 id="chat-panel-title" className="text-lg font-medium truncate">
               {conversationTitle || 'AI Chat'}
             </h2>
+            {/* Status indicator */}
+            {isLoading && (
+              <div className="flex items-center gap-2 text-sm text-purple-400">
+                <div className="w-2 h-2 bg-purple-400 rounded-full animate-pulse"></div>
+                <span className="hidden sm:inline">Generating...</span>
+              </div>
+            )}
+            {error && (
+              <div className="flex items-center gap-2 text-sm text-red-400">
+                <AlertCircle className="w-4 h-4" />
+                <span className="hidden sm:inline">Error</span>
+              </div>
+            )}
+            {!isLoading && !error && conversationId && (
+              <div className="flex items-center gap-2 text-sm text-green-400">
+                <div className="w-2 h-2 bg-green-400 rounded-full"></div>
+                <span className="hidden sm:inline">Ready</span>
+              </div>
+            )}
           </div>
           <div className="flex items-center gap-2">
             {/* Control buttons */}
@@ -600,21 +631,23 @@ export function ChatInterface({
 
             {messages.length > 0 && (
               <>
-                <button
+                <Button
+                  variant="purple-ghost"
+                  size="icon-sm"
                   onClick={handleCopy}
-                  className="rounded-lg bg-purple-500/10 p-2 text-purple-400 transition-colors hover:bg-purple-500/20"
                   aria-label="Copy conversation"
                 >
                   <Copy className="h-4 w-4" />
-                </button>
+                </Button>
                 {conversationId && (
-                  <button
+                  <Button
+                    variant="purple-ghost"
+                    size="icon-sm"
                     onClick={handleToggleFavorite}
-                    className="rounded-lg bg-purple-500/10 p-2 text-purple-400 transition-colors hover:bg-purple-500/20"
                     aria-label="Toggle favorite"
                   >
                     <Star className="h-4 w-4" />
-                  </button>
+                  </Button>
                 )}
               </>
             )}
@@ -678,5 +711,5 @@ export function ChatInterface({
     </>
   );
 
-  return createPortal(content, document.body);
+  return content;
 }

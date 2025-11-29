@@ -5,6 +5,7 @@ import { useLibraryActions } from '../contexts/LibraryContext';
 import { useToast } from '../contexts/ToastContext';
 import { formatDistanceToNow } from 'date-fns';
 import { Modal } from './Modal';
+import { ConfirmationModal } from './ConfirmationModal';
 
 interface ConversationActionsProps {
   conversation: Conversation;
@@ -16,6 +17,7 @@ export function ConversationActions({ conversation, isOpen, onClose }: Conversat
   const { toggleConversationFavorite, deleteConversation } = useLibraryActions();
   const { showToast } = useToast();
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showDeleteConfirmation, setShowDeleteConfirmation] = useState(false);
 
   const handleToggleFavorite = async () => {
     try {
@@ -31,14 +33,15 @@ export function ConversationActions({ conversation, isOpen, onClose }: Conversat
   };
 
   const handleDelete = async () => {
-    if (!confirm(`Are you sure you want to delete "${conversation.title}"? This action cannot be undone.`)) {
-      return;
-    }
+    setShowDeleteConfirmation(true);
+  };
 
+  const confirmDelete = async () => {
     setIsDeleting(true);
     try {
       await deleteConversation(conversation.id);
       showToast('Conversation deleted successfully', 'success');
+      setShowDeleteConfirmation(false);
       onClose();
     } catch (error) {
       showToast('Failed to delete conversation', 'error');
@@ -57,25 +60,8 @@ export function ConversationActions({ conversation, isOpen, onClose }: Conversat
     }
   };
 
-  const handleDuplicateConversation = async () => {
-    try {
-      // This would require implementing a duplicate conversation service
-      showToast('Duplicate feature coming soon', 'info');
-    } catch (error) {
-      showToast('Failed to duplicate conversation', 'error');
-    }
-  };
-
-  const handleArchiveConversation = async () => {
-    try {
-      // This would use the archiveConversation service
-      showToast(conversation.status === 'archived' ? 'Conversation restored' : 'Conversation archived', 'success');
-      onClose();
-    } catch (error) {
-      showToast('Failed to update conversation status', 'error');
-    }
-  };
-
+  
+  
   return (
     <Modal
       isOpen={isOpen}
@@ -116,7 +102,7 @@ export function ConversationActions({ conversation, isOpen, onClose }: Conversat
       {/* Actions */}
       <div className="space-y-2">
         {/* Primary Actions */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-1 gap-2">
           <button
             onClick={handleToggleFavorite}
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
@@ -135,30 +121,11 @@ export function ConversationActions({ conversation, isOpen, onClose }: Conversat
           </button>
 
           <button
-            onClick={handleDuplicateConversation}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
-          >
-            <Copy className="w-4 h-4" />
-            Duplicate
-          </button>
-        </div>
-
-        {/* Secondary Actions */}
-        <div className="grid grid-cols-2 gap-2">
-          <button
             onClick={handleCopyConversationLink}
             className="flex items-center justify-center gap-2 px-4 py-2.5 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
           >
             <ExternalLink className="w-4 h-4" />
             Copy Link
-          </button>
-
-          <button
-            onClick={handleArchiveConversation}
-            className="flex items-center justify-center gap-2 px-4 py-2.5 bg-neutral-700 hover:bg-neutral-600 text-white rounded-lg transition-colors"
-          >
-            <RotateCcw className="w-4 h-4" />
-            {conversation.status === 'archived' ? 'Restore' : 'Archive'}
           </button>
         </div>
 
@@ -177,6 +144,19 @@ export function ConversationActions({ conversation, isOpen, onClose }: Conversat
           </p>
         </div>
       </div>
+
+      {/* Delete Confirmation Modal */}
+      <ConfirmationModal
+        isOpen={showDeleteConfirmation}
+        onClose={() => setShowDeleteConfirmation(false)}
+        onConfirm={confirmDelete}
+        title="Delete Conversation"
+        message={`Are you sure you want to delete "${conversation.title}"? This action cannot be undone and will permanently remove all messages.`}
+        confirmText="Delete Conversation"
+        cancelText="Cancel"
+        type="delete"
+        isLoading={isDeleting}
+      />
     </Modal>
   );
 }

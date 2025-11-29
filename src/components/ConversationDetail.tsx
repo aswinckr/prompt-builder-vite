@@ -20,7 +20,6 @@ import { ConfirmationModal } from "./ConfirmationModal";
 import { useToast } from "../contexts/ToastContext";
 import { formatDistanceToNow } from "date-fns";
 import { ChatMessage } from "./ChatMessage";
-import { AIPromptInput } from "./AIPromptInput";
 
 export function ConversationDetail() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -39,8 +38,6 @@ export function ConversationDetail() {
   const [messagesError, setMessagesError] = useState<string | null>(null);
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
-  const [isContinuing, setIsContinuing] = useState(false);
-  const [continuationInput, setContinuationInput] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [infoModalOpen, setInfoModalOpen] = useState(false);
 
@@ -198,22 +195,7 @@ export function ConversationDetail() {
     showToast("Conversation exported", "success");
   };
 
-  const handleContinueConversation = async () => {
-    if (!continuationInput.trim()) return;
-
-    setIsContinuing(true);
-    try {
-      // This would integrate with the ChatInterface for continuation
-      // For now, we'll just show a message
-      showToast("Conversation continuation feature coming soon", "info");
-      setContinuationInput("");
-    } catch (error) {
-      showToast("Failed to continue conversation", "error");
-    } finally {
-      setIsContinuing(false);
-    }
-  };
-
+  
   return (
     <div className="flex h-full flex-col bg-neutral-900">
       {/* Header */}
@@ -353,22 +335,7 @@ export function ConversationDetail() {
         </div>
       </div>
 
-      {/* Input */}
-      <div className="border-t border-purple-800/30 bg-neutral-900 p-6">
-        <div className="mx-auto max-w-4xl">
-          <AIPromptInput
-            value={continuationInput}
-            onChange={setContinuationInput}
-            onSubmit={handleContinueConversation}
-            disabled={isContinuing}
-            isLoading={isContinuing}
-            placeholder="Type your message to continue..."
-            minHeight={60}
-            maxHeight={120}
-          />
-        </div>
-      </div>
-
+      
       {/* Delete Confirmation Modal */}
       <ConfirmationModal
         isOpen={deleteConfirmOpen}
