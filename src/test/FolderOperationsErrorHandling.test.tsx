@@ -61,7 +61,7 @@ describe('Folder Operations Error Handling', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -94,7 +94,7 @@ describe('Folder Operations Error Handling', () => {
           onClose={mockOnClose}
           onConfirm={mockDeleteConfirm}
           folder={mockUserProject}
-          type="prompts"
+          type="prompt"
           isLoading={false}
         />
       );
@@ -120,7 +120,7 @@ describe('Folder Operations Error Handling', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -160,7 +160,7 @@ describe('Folder Operations Error Handling', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -191,7 +191,7 @@ describe('Folder Operations Error Handling', () => {
           onClose={mockOnClose}
           onConfirm={mockDeleteConfirm}
           folder={mockUserProject}
-          type="prompts"
+          type="prompt"
           isLoading={false}
         />
       );
@@ -216,7 +216,7 @@ describe('Folder Operations Error Handling', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -244,7 +244,7 @@ describe('Folder Operations Error Handling', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -270,7 +270,7 @@ describe('Folder Operations Error Handling', () => {
       render(
         <FolderActionMenu
           folder={mockUserProject}
-          type="prompts"
+          type="prompt"
           onRename={mockOnRename}
           onDelete={mockOnDelete}
         />
@@ -306,7 +306,7 @@ describe('Folder Operations Error Handling', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -337,7 +337,7 @@ describe('Folder Operations Error Handling', () => {
           onClose={mockOnClose}
           onConfirm={mockDeleteConfirm}
           folder={mockUserProject}
-          type="prompts"
+          type="prompt"
           isLoading={false}
         />
       );
@@ -361,7 +361,7 @@ describe('Folder Operations Error Handling', () => {
           onClose={mockOnClose}
           onRename={jest.fn()}
           folder={mockUserProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -386,7 +386,7 @@ describe('Folder Operations Error Handling', () => {
           onClose={mockOnClose}
           onRename={jest.fn()}
           folder={mockUserProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -415,7 +415,7 @@ describe('Folder Operations Error Handling', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );

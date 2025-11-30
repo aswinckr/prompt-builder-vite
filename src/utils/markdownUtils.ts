@@ -408,3 +408,63 @@ export function markdownToHtml(markdown: string): string {
     return `<p>${String(markdown).replace(/</g, '&lt;').replace(/>/g, '&gt;')}</p>`;
   }
 }
+
+/**
+ * Converts Markdown content to plain text with proper spacing
+ *
+ * @description Transforms Markdown elements into their plain text equivalents
+ * Strips all markdown formatting and returns clean text content
+ * Preserves single spaces between words across line breaks
+ *
+ * @param markdown - Markdown string to convert to plain text
+ * @returns Plain text string with all markdown formatting removed
+ *
+ * @example
+ * ```typescript
+ * const markdown = '## Heading\n\nThis is **bold** text with *italic* and `code`';
+ * const text = markdownToText(markdown);
+ * // Returns: 'Heading This is bold text with italic and code'
+ * ```
+ */
+export function markdownToText(markdown: string): string {
+  try {
+    if (!markdown || typeof markdown !== 'string') {
+      return '';
+    }
+
+    // First, strip markdown syntax directly with better spacing handling
+    let text = markdown
+      // Remove headers (# ## ### etc.) and replace with space
+      .replace(/^#{1,6}\s+/gm, '')
+      // Remove bold formatting
+      .replace(/\*\*([^*]+)\*\*/g, '$1')
+      // Remove italic formatting
+      .replace(/\*([^*]+)\*/g, '$1')
+      .replace(/_([^_]+)_/g, '$1')
+      // Remove underline formatting
+      .replace(/__([^_]+)__/g, '$1')
+      // Remove inline code
+      .replace(/`([^`]+)`/g, '$1')
+      // Remove code blocks
+      .replace(/```[\s\S]*?```/g, '')
+      // Remove links but keep text
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      // Remove list markers
+      .replace(/^[-*+]\s+/gm, '')
+      .replace(/^\d+\.\s+/gm, '')
+      // Remove blockquote markers
+      .replace(/^>\s+/gm, '')
+      // Convert multiple newlines to single spaces
+      .replace(/\n+/g, ' ')
+      // Convert multiple spaces to single spaces
+      .replace(/\s+/g, ' ')
+      // Trim whitespace
+      .trim();
+
+    return text;
+  } catch (error) {
+    console.error('Error converting Markdown to text:', error);
+    // Return original content as fallback
+    return markdown;
+  }
+}

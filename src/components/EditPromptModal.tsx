@@ -192,11 +192,50 @@ export function EditPromptModal({
     debouncedValidation(newContent.html);
   };
 
+  // Handle keyboard shortcuts
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
+      event.preventDefault();
+      handleSave();
+    }
+  };
+
+  // Footer content for sticky CTA
+  const footerContent = (
+    <div className="flex items-center justify-between gap-3 p-6" onKeyDown={handleKeyDown}>
+      <p className="text-xs text-neutral-500">
+        Press ⌘+Enter to save
+      </p>
+      <div className="flex items-center gap-3">
+        <Button
+          variant="outline"
+          onClick={handleClose}
+          disabled={isSubmitting || isLoading}
+        >
+          Cancel
+        </Button>
+        <Button
+          onClick={handleSave}
+          disabled={isSubmitting || isLoading || !title.trim()}
+        >
+          {isSubmitting ? (
+            <>
+              <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
+              Saving...
+            </>
+          ) : (
+            'Save'
+          )}
+        </Button>
+      </div>
+    </div>
+  );
+
   const confirmDialog = (
     <Dialog open={showConfirmDialog} onOpenChange={(open) => !open && setShowConfirmDialog(false)}>
-      <DialogContent>
+      <DialogContent aria-labelledby="confirm-dialog-title">
         <DialogHeader>
-          <DialogTitle>Discard changes?</DialogTitle>
+          <DialogTitle id="confirm-dialog-title">Discard changes?</DialogTitle>
           <DialogDescription>
             You have unsaved changes. Are you sure you want to close without saving?
           </DialogDescription>
@@ -223,6 +262,9 @@ export function EditPromptModal({
         mobileBehavior="fullscreen"
         closeOnOverlayClick={!hasChanges}
         closeOnEscape={!hasChanges}
+        aria-labelledby="edit-prompt-modal-title"
+        stickyFooter={true}
+        footerContent={footerContent}
       >
         <div className="p-6 space-y-6">
           {/* Title Field */}
@@ -283,30 +325,6 @@ export function EditPromptModal({
                 </p>
               </div>
             )}
-          </div>
-
-          {/* Footer Actions */}
-          <div className="flex items-center justify-end gap-3 pt-4 border-t">
-            <Button
-              variant="outline"
-              onClick={handleClose}
-              disabled={isSubmitting || isLoading}
-            >
-              Cancel
-            </Button>
-            <Button
-              onClick={handleSave}
-              disabled={isSubmitting || isLoading || !title.trim()}
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 mr-2 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                  Saving...
-                </>
-              ) : (
-                'Save'
-              )}
-            </Button>
           </div>
         </div>
       </Modal>

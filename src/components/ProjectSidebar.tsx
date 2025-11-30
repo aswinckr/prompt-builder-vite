@@ -5,13 +5,13 @@ import { Project } from "../services/projectService";
 import { FolderActionMenu } from "./FolderActionMenu";
 
 interface ProjectSidebarProps {
-  projects: (Project & { type: "prompts" | "datasets" })[];
+  projects: (Project & { type: "prompt" | "dataset" })[];
   selectedProject: string;
   setSelectedProject: (id: string) => void;
   loading?: boolean;
-  onCreateFolder?: (type: "prompts" | "datasets") => void;
-  onRenameFolder?: (folder: Project, type: "prompts" | "datasets") => void;
-  onDeleteFolder?: (folder: Project, type: "prompts" | "datasets") => void;
+  onCreateFolder?: (type: "prompt" | "dataset") => void;
+  onRenameFolder?: (folder: Project, type: "prompt" | "dataset") => void;
+  onDeleteFolder?: (folder: Project, type: "prompt" | "dataset") => void;
 }
 
 export function ProjectSidebar({
@@ -26,12 +26,12 @@ export function ProjectSidebar({
   const { openFolderModal } = useLibraryActions();
 
   // Organize projects by type
-  const promptProjects = projects.filter((p) => p.type === "prompts");
-  const datasetProjects = projects.filter((p) => p.type === "datasets");
+  const promptProjects = projects.filter((p) => p.type === "prompt");
+  const datasetProjects = projects.filter((p) => p.type === "dataset");
 
   // Handle project creation - use authentication-aware handler if provided, otherwise fallback to direct modal
   const handleCreateProject = useCallback(
-    (type: "prompts" | "datasets") => {
+    (type: "prompt" | "dataset") => {
       if (onCreateFolder) {
         onCreateFolder(type);
       } else {
@@ -43,7 +43,7 @@ export function ProjectSidebar({
 
   // Handle folder rename - use provided handler or default behavior
   const handleRenameFolder = useCallback(
-    (folder: Project, type: "prompts" | "datasets") => {
+    (folder: Project, type: "prompt" | "dataset") => {
       if (onRenameFolder) {
         onRenameFolder(folder, type);
       }
@@ -53,7 +53,7 @@ export function ProjectSidebar({
 
   // Handle folder delete - use provided handler or default behavior
   const handleDeleteFolder = useCallback(
-    (folder: Project, type: "prompts" | "datasets") => {
+    (folder: Project, type: "prompt" | "dataset") => {
       if (onDeleteFolder) {
         onDeleteFolder(folder, type);
       }
@@ -96,8 +96,8 @@ export function ProjectSidebar({
           }
         } else if (activeElement.hasAttribute("data-add-button")) {
           const projectType = activeElement.getAttribute("data-add-button") as
-            | "prompts"
-            | "datasets";
+            | "prompt"
+            | "dataset";
           if (projectType) {
             handleCreateProject(projectType);
           }
@@ -114,7 +114,7 @@ export function ProjectSidebar({
   }: {
     title: string;
     projects: Project[];
-    type: "prompts" | "datasets";
+    type: "prompt" | "dataset";
   }) => {
     // Sort projects: system projects first, then alphabetically
     const sortedProjects = [...projects].sort((a, b) => {
@@ -183,7 +183,7 @@ export function ProjectSidebar({
                     </span>
                     <span className="text-sm font-medium">{project.name}</span>
                   </div>
-                  {type === "prompts" && project.promptCount !== undefined && (
+                  {type === "prompt" && project.promptCount !== undefined && (
                     <span
                       className={`text-xs ${
                         selectedProject === project.id
@@ -217,14 +217,14 @@ export function ProjectSidebar({
       <ProjectSection
         title="PROMPTS"
         projects={promptProjects}
-        type="prompts"
+        type="prompt"
       />
 
       {/* DATASETS Section */}
       <ProjectSection
         title="DATASETS"
         projects={datasetProjects}
-        type="datasets"
+        type="dataset"
       />
     </div>
   );

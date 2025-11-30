@@ -223,6 +223,7 @@ export function PromptBuilderActions() {
         onClose={handleCloseSaveModal}
         selectedProjectId={null}
         initialContent={saveModalContent}
+        aria-labelledby="save-prompt-modal-title"
       />
 
       <ProfileModal

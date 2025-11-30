@@ -24,12 +24,12 @@ import { htmlToText } from '../utils/markdownUtils';
 
 // Extended project interface with type information
 interface ProjectWithType extends Project {
-  type: 'prompts' | 'datasets';
+  type: 'prompt' | 'dataset';
 }
 
 // Action type for post-authentication trigger
 type PostAuthAction = 'add-knowledge' | 'add-prompt' | 'create-folder' | null;
-type FolderType = 'prompts' | 'datasets';
+type FolderType = 'prompt' | 'dataset';
 
 // Error types for better error handling
 interface OperationError {
@@ -49,7 +49,7 @@ export function ContextLibrary() {
   );
   const [selectedProject, setSelectedProject] = useState<string>('');
   const [postAuthAction, setPostAuthAction] = useState<PostAuthAction>(null);
-  const [pendingFolderType, setPendingFolderType] = useState<FolderType>('prompts');
+  const [pendingFolderType, setPendingFolderType] = useState<FolderType>('prompt');
 
   // Error handling state
   const [operationError, setOperationError] = useState<OperationError | null>(null);
@@ -182,10 +182,10 @@ export function ContextLibrary() {
 
   // Combine all projects for sidebar with type information (system projects first) - memoized for performance
   const allProjects: ProjectWithType[] = useMemo(() => [
-    ...((systemPromptProjects || []).map(p => ({ ...p, type: 'prompts' as const }))),
-    ...((systemDatasetProjects || []).map(p => ({ ...p, type: 'datasets' as const }))),
-    ...((promptProjects || []).map(p => ({ ...p, type: 'prompts' as const }))),
-    ...((datasetProjects || []).map(p => ({ ...p, type: 'datasets' as const })))
+    ...((systemPromptProjects || []).map(p => ({ ...p, type: 'prompt' as const }))),
+    ...((systemDatasetProjects || []).map(p => ({ ...p, type: 'dataset' as const }))),
+    ...((promptProjects || []).map(p => ({ ...p, type: 'prompt' as const }))),
+    ...((datasetProjects || []).map(p => ({ ...p, type: 'dataset' as const })))
   ], [systemPromptProjects, systemDatasetProjects, promptProjects, datasetProjects]);
 
   // Set default project if none selected
@@ -219,7 +219,7 @@ export function ContextLibrary() {
   const handleAuthFailure = () => {
     // Clear the stored action and folder type, return to clean state
     setPostAuthAction(null);
-    setPendingFolderType('prompts');
+    setPendingFolderType('prompt');
   };
 
   // Remove blocking empty state - let users access the interface even with no projects
@@ -285,13 +285,13 @@ export function ContextLibrary() {
   };
 
   // Handle folder rename with error handling
-  const handleRenameFolder = (folder: Project, type: 'prompts' | 'datasets') => {
+  const handleRenameFolder = (folder: Project, type: 'prompt' | 'dataset') => {
     clearOperationError();
     openRenameModal(folder, type);
   };
 
   // Handle folder rename submission with enhanced error handling
-  const handleRenameFolderSubmit = async (data: { name: string; folderId: string; type: 'prompts' | 'datasets' }) => {
+  const handleRenameFolderSubmit = async (data: { name: string; folderId: string; type: 'prompt' | 'dataset' }) => {
     const renameOperation = async () => {
       await renameProject(data.folderId, data.type, data.name);
     };
@@ -307,7 +307,7 @@ export function ContextLibrary() {
   };
 
   // Handle folder delete with error handling
-  const handleDeleteFolder = (folder: Project, type: 'prompts' | 'datasets') => {
+  const handleDeleteFolder = (folder: Project, type: 'prompt' | 'dataset') => {
     clearOperationError();
     openDeleteModal(folder, type);
   };
@@ -340,9 +340,9 @@ export function ContextLibrary() {
   };
 
   // Helper function to get the type of the current selected project
-  const getCurrentProjectType = (): 'prompts' | 'datasets' => {
+  const getCurrentProjectType = (): 'prompt' | 'dataset' => {
     const currentProject = allProjects.find(p => p.id === selectedProject);
-    return currentProject?.type || 'datasets'; // Default to datasets for backward compatibility
+    return currentProject?.type || 'dataset'; // Default to dataset for backward compatibility
   };
 
   // Handle prompt updates with database and error handling
@@ -400,7 +400,7 @@ export function ContextLibrary() {
   // Find the current project to determine its type
   const currentProject = allProjects.find(p => p.id === selectedProject);
   // Default to context blocks view if no project or if project is a dataset
-  const isPromptProject = currentProject?.type === 'prompts';
+  const isPromptProject = currentProject?.type === 'prompt';
 
   // Modify error handling - don't show error overlay for authentication-related issues
   const shouldShowErrorOverlay = error && !error.toLowerCase().includes('user not authenticated');
@@ -497,7 +497,7 @@ export function ContextLibrary() {
                 {/* Add Buttons */}
                 {isAuthenticated && (
                   <div className="flex gap-2">
-                    {getCurrentProjectType() === 'datasets' && (
+                    {getCurrentProjectType() === 'dataset' && (
                       <button
                         onClick={handleAddKnowledge}
                         className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 whitespace-nowrap"
@@ -508,7 +508,7 @@ export function ContextLibrary() {
                         <span className="sm:hidden">Add</span>
                       </button>
                     )}
-                    {getCurrentProjectType() === 'prompts' && (
+                    {getCurrentProjectType() === 'prompt' && (
                       <button
                         onClick={handleAddPrompt}
                         className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white px-4 py-2.5 rounded-lg text-sm font-medium flex items-center gap-2 transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 whitespace-nowrap"
@@ -600,6 +600,7 @@ export function ContextLibrary() {
         isOpen={isCreateContextModalOpen}
         onClose={handleCloseCreateContextModal}
         selectedProjectId={isPromptProject ? null : selectedProject}
+        aria-labelledby="create-context-modal-title"
       />
 
       {/* Create Prompt Modal */}
@@ -607,6 +608,7 @@ export function ContextLibrary() {
         isOpen={isCreatePromptModalOpen}
         onClose={handleCloseCreatePromptModal}
         selectedProjectId={isPromptProject ? selectedProject : null}
+        aria-labelledby="create-prompt-modal-title"
       />
 
       {/* Create Folder Modal */}

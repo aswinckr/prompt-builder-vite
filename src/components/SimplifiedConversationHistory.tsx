@@ -6,6 +6,7 @@ import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 import { ConversationSearch } from './ConversationSearch';
 import { ConversationActions } from './ConversationActions';
 import { formatDistanceToNow } from 'date-fns';
+import { markdownToText } from '../utils/markdownUtils';
 
 // Custom hook for debouncing
 function useDebounce<T>(value: T, delay: number): T {
@@ -217,7 +218,7 @@ export function SimplifiedConversationHistory({
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3">
                         <h3 className="text-lg font-semibold text-white truncate group-hover:text-primary transition-colors">
-                          {conversation.title}
+                          {markdownToText(conversation.title)}
                         </h3>
                         {conversation.is_favorite && (
                           <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 flex-shrink-0" />

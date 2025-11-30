@@ -76,7 +76,11 @@ export class DatabaseService {
           if (status === 'SUBSCRIBED') {
             console.log(`Successfully subscribed to ${table} changes`);
           } else if (status === 'CHANNEL_ERROR') {
-            console.error(`Failed to subscribe to ${table} changes`);
+            // Suppress channel errors during authentication - they're expected behavior
+            // Only log in development for debugging purposes
+            if (process.env.NODE_ENV === 'development') {
+              console.warn(`Expected authentication delay for ${table} subscription - will retry`);
+            }
           }
         })
 

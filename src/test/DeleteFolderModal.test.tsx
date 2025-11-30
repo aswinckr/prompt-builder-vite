@@ -29,7 +29,7 @@ describe('Delete Folder Modal Tests', () => {
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
           folder={mockProject}
-          type="prompts"
+          type="prompt"
           isLoading={false}
           contentCount={0}
         />
@@ -49,7 +49,7 @@ describe('Delete Folder Modal Tests', () => {
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
           folder={mockProject}
-          type="datasets"
+          type="dataset"
           isLoading={false}
           contentCount={0}
         />
@@ -68,7 +68,7 @@ describe('Delete Folder Modal Tests', () => {
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
           folder={mockProject}
-          type="prompts"
+          type="prompt"
           isLoading={true}
           contentCount={0}
         />
@@ -95,7 +95,7 @@ describe('Delete Folder Modal Tests', () => {
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
           folder={systemProject}
-          type="prompts"
+          type="prompt"
           isLoading={false}
           contentCount={0}
         />
@@ -114,7 +114,7 @@ describe('Delete Folder Modal Tests', () => {
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
           folder={systemProject}
-          type="datasets"
+          type="dataset"
           isLoading={false}
           contentCount={0}
         />
@@ -136,7 +136,7 @@ describe('Delete Folder Modal Tests', () => {
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
           folder={mockProject}
-          type="prompts"
+          type="prompt"
           isLoading={false}
           contentCount={0}
         />
@@ -156,7 +156,7 @@ describe('Delete Folder Modal Tests', () => {
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
           folder={mockProject}
-          type="datasets"
+          type="dataset"
           isLoading={false}
           contentCount={0}
         />
@@ -182,7 +182,7 @@ describe('Delete Folder Modal Tests', () => {
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
           folder={mockProject}
-          type="prompts"
+          type="prompt"
           isLoading={false}
           contentCount={5}
         />
@@ -199,7 +199,7 @@ describe('Delete Folder Modal Tests', () => {
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
           folder={mockProject}
-          type="datasets"
+          type="dataset"
           isLoading={false}
           contentCount={0}
         />

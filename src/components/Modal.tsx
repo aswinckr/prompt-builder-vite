@@ -18,6 +18,8 @@ interface ModalProps {
   showCloseButton?: boolean;
   closeOnOverlayClick?: boolean;
   closeOnEscape?: boolean;
+  stickyFooter?: boolean;
+  footerContent?: React.ReactNode;
   'aria-labelledby'?: string;
 }
 
@@ -35,6 +37,8 @@ export function Modal({
   showCloseButton = true,
   closeOnOverlayClick = true,
   closeOnEscape = true,
+  stickyFooter = false,
+  footerContent,
   'aria-labelledby': ariaLabelledby,
 }: ModalProps) {
   // Map size to Shadcn Dialog max-width classes
@@ -59,6 +63,9 @@ export function Modal({
     }
   };
 
+  // Generate a unique ID for the dialog title to ensure accessibility
+  const modalTitleId = ariaLabelledby || `modal-title-${title.replace(/\s+/g, '-').toLowerCase()}`;
+
   return (
     <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <DialogContent
@@ -74,11 +81,11 @@ export function Modal({
             e.preventDefault();
           }
         }}
-        aria-labelledby={ariaLabelledby}
+        aria-labelledby={modalTitleId}
       >
         <DialogHeader className="flex flex-row items-center justify-between space-y-0 pb-4 flex-shrink-0">
           <DialogTitle
-            id={ariaLabelledby || `modal-title-${title.replace(/\s+/g, '-').toLowerCase()}`}
+            id={modalTitleId}
             className="text-lg font-semibold truncate"
           >
             {title}
@@ -95,9 +102,22 @@ export function Modal({
             </Button>
           )}
         </DialogHeader>
-        <div className="flex-1 overflow-y-auto min-h-0">
-          {children}
-        </div>
+        {stickyFooter ? (
+          <>
+            <div className="flex-1 overflow-y-auto min-h-0">
+              {children}
+            </div>
+            {footerContent && (
+              <div className="flex-shrink-0 border-t border-neutral-800 bg-neutral-900/95 backdrop-blur-sm">
+                {footerContent}
+              </div>
+            )}
+          </>
+        ) : (
+          <div className="flex-1 overflow-y-auto min-h-0">
+            {children}
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );

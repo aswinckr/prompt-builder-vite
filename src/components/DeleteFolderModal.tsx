@@ -7,7 +7,7 @@ interface DeleteFolderModalProps {
   onClose: () => void;
   onConfirm: () => void;
   folder: Project | null;
-  type: 'prompts' | 'datasets';
+  type: 'prompt' | 'dataset';
   isLoading?: boolean;
   contentCount?: number;
 }
@@ -49,7 +49,7 @@ export function DeleteFolderModal({
 
   // For user folders, show delete confirmation
   const getDeleteMessage = () => {
-    const folderTypeText = type === 'prompts' ? 'prompt' : 'dataset';
+    const folderTypeText = type === 'prompt' ? 'prompt' : 'dataset';
 
     if (contentCount > 0) {
       return `Are you sure you want to delete "${folder.name}"? This folder contains ${contentCount} ${folderTypeText}${contentCount !== 1 ? 's' : ''} that will be permanently deleted. This action cannot be undone.`;
@@ -63,7 +63,7 @@ export function DeleteFolderModal({
   };
 
   const getTitle = () => {
-    const folderTypeText = type === 'prompts' ? 'Prompt' : 'Dataset';
+    const folderTypeText = type === 'prompt' ? 'Prompt' : 'Dataset';
     return `Delete ${folderTypeText} Folder`;
   };
 
