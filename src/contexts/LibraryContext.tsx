@@ -51,6 +51,20 @@ interface LibraryState {
     defaultType: 'prompts' | 'datasets';
     loading: boolean;
   };
+  // Rename modal state
+  renameModal: {
+    isOpen: boolean;
+    folder: Project | null;
+    type: 'prompts' | 'datasets';
+    loading: boolean;
+  };
+  // Delete confirmation state
+  deleteModal: {
+    isOpen: boolean;
+    folder: Project | null;
+    type: 'prompts' | 'datasets';
+    loading: boolean;
+  };
 }
 
 type LibraryAction =
@@ -95,6 +109,14 @@ type LibraryAction =
   | { type: 'OPEN_FOLDER_MODAL'; payload: 'prompts' | 'datasets' }
   | { type: 'CLOSE_FOLDER_MODAL' }
   | { type: 'SET_FOLDER_MODAL_LOADING'; payload: boolean }
+  // Rename modal actions
+  | { type: 'OPEN_RENAME_MODAL'; payload: { folder: Project; type: 'prompts' | 'datasets' } }
+  | { type: 'CLOSE_RENAME_MODAL' }
+  | { type: 'SET_RENAME_MODAL_LOADING'; payload: boolean }
+  // Delete modal actions
+  | { type: 'OPEN_DELETE_MODAL'; payload: { folder: Project; type: 'prompts' | 'datasets' } }
+  | { type: 'CLOSE_DELETE_MODAL' }
+  | { type: 'SET_DELETE_MODAL_LOADING'; payload: boolean }
   // Chat actions
   | { type: 'SET_CHAT_PANEL_OPEN'; payload: boolean }
   | { type: 'SET_SELECTED_MODEL'; payload: string }
@@ -136,6 +158,18 @@ const initialState: LibraryState = {
   folderModal: {
     isOpen: false,
     defaultType: 'prompts',
+    loading: false
+  },
+  renameModal: {
+    isOpen: false,
+    folder: null,
+    type: 'prompts',
+    loading: false
+  },
+  deleteModal: {
+    isOpen: false,
+    folder: null,
+    type: 'prompts',
     loading: false
   }
 };
@@ -354,6 +388,62 @@ function libraryReducer(state: LibraryState, action: LibraryAction): LibraryStat
           loading: action.payload
         }
       };
+    case 'OPEN_RENAME_MODAL':
+      return {
+        ...state,
+        renameModal: {
+          isOpen: true,
+          folder: action.payload.folder,
+          type: action.payload.type,
+          loading: false
+        }
+      };
+    case 'CLOSE_RENAME_MODAL':
+      return {
+        ...state,
+        renameModal: {
+          ...state.renameModal,
+          isOpen: false,
+          folder: null,
+          loading: false
+        }
+      };
+    case 'SET_RENAME_MODAL_LOADING':
+      return {
+        ...state,
+        renameModal: {
+          ...state.renameModal,
+          loading: action.payload
+        }
+      };
+    case 'OPEN_DELETE_MODAL':
+      return {
+        ...state,
+        deleteModal: {
+          isOpen: true,
+          folder: action.payload.folder,
+          type: action.payload.type,
+          loading: false
+        }
+      };
+    case 'CLOSE_DELETE_MODAL':
+      return {
+        ...state,
+        deleteModal: {
+          ...state.deleteModal,
+          isOpen: false,
+          folder: null,
+          loading: false
+        }
+      };
+    case 'SET_DELETE_MODAL_LOADING':
+      return {
+        ...state,
+        deleteModal: {
+          ...state.deleteModal,
+          loading: action.payload
+        }
+      };
     case 'SET_CHAT_PANEL_OPEN':
       return {
         ...state,
@@ -481,7 +571,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
               if (datasetProjectsResult.data) {
                 dispatch({ type: 'SET_DATASET_PROJECTS', payload: datasetProjectsResult.data });
               }
-  
+
               lastRefreshTimeRef.current = Date.now();
             } catch (error) {
               console.warn('Data refresh operation failed');
@@ -736,10 +826,59 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       return result;
     },
 
+    // Rename project action
+    renameProject: async (folderId: string, type: 'prompts' | 'datasets', newName: string) => {
+      try {
+        dispatch({ type: 'SET_RENAME_MODAL_LOADING', payload: true });
+
+        const result = await ProjectService.updateProject(folderId, type as 'prompt' | 'dataset', { name: newName });
+
+        if (result.data) {
+          // Refresh all data to ensure consistency after the operation
+          await refreshAllData();
+        } else {
+          throw new Error(result.error || 'Failed to rename folder');
+        }
+
+        dispatch({ type: 'SET_RENAME_MODAL_LOADING', payload: false });
+        dispatch({ type: 'CLOSE_RENAME_MODAL' });
+
+        return result;
+      } catch (error) {
+        console.warn('Folder rename operation failed');
+        dispatch({ type: 'SET_RENAME_MODAL_LOADING', payload: false });
+        throw error;
+      }
+    },
+
+    // Delete project action
+    deleteProject: async (id: string, type: 'prompt' | 'dataset') => {
+      const result = await ProjectService.deleteProject(id, type);
+      if (!result.error) {
+        dispatch({
+          type: type === 'prompt' ? 'DELETE_PROMPT_PROJECT' : 'DELETE_DATASET_PROJECT',
+          payload: id
+        });
+        // Wait for database confirmation, then refresh all data
+        await refreshAllData();
+      }
+      return result;
+    },
+
     // Folder modal actions
     openFolderModal: (type: 'prompts' | 'datasets') => dispatch({ type: 'OPEN_FOLDER_MODAL', payload: type }),
     closeFolderModal: () => dispatch({ type: 'CLOSE_FOLDER_MODAL' }),
     setFolderModalLoading: (loading: boolean) => dispatch({ type: 'SET_FOLDER_MODAL_LOADING', payload: loading }),
+
+    // Rename modal actions
+    openRenameModal: (folder: Project, type: 'prompts' | 'datasets') => dispatch({ type: 'OPEN_RENAME_MODAL', payload: { folder, type } }),
+    closeRenameModal: () => dispatch({ type: 'CLOSE_RENAME_MODAL' }),
+    setRenameModalLoading: (loading: boolean) => dispatch({ type: 'SET_RENAME_MODAL_LOADING', payload: loading }),
+
+    // Delete modal actions
+    openDeleteModal: (folder: Project, type: 'prompts' | 'datasets') => dispatch({ type: 'OPEN_DELETE_MODAL', payload: { folder, type } }),
+    closeDeleteModal: () => dispatch({ type: 'CLOSE_DELETE_MODAL' }),
+    setDeleteModalLoading: (loading: boolean) => dispatch({ type: 'SET_DELETE_MODAL_LOADING', payload: loading }),
 
     // Enhanced folder creation with auto-refresh
     createFolder: async (folderData: { name: string; icon: string }) => {
@@ -792,19 +931,6 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
       } catch (error) {
         console.error('Error refreshing system projects:', error);
       }
-    },
-
-    deleteProject: async (id: string, type: 'prompt' | 'dataset') => {
-      const result = await ProjectService.deleteProject(id, type);
-      if (!result.error) {
-        dispatch({
-          type: type === 'prompt' ? 'DELETE_PROMPT_PROJECT' : 'DELETE_DATASET_PROJECT',
-          payload: id
-        });
-        // Wait for database confirmation, then refresh all data
-        await refreshAllData();
-      }
-      return result;
     },
 
     // Chat actions
