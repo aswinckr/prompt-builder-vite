@@ -2,6 +2,7 @@ import React, { useState, useCallback } from "react";
 import { Plus } from "lucide-react";
 import { useLibraryActions } from "../contexts/LibraryContext";
 import { Project } from "../services/projectService";
+import { FolderActionMenu } from "./FolderActionMenu";
 
 interface ProjectSidebarProps {
   projects: (Project & { type: "prompts" | "datasets" })[];
@@ -9,6 +10,8 @@ interface ProjectSidebarProps {
   setSelectedProject: (id: string) => void;
   loading?: boolean;
   onCreateFolder?: (type: "prompts" | "datasets") => void;
+  onRenameFolder?: (folder: Project, type: "prompts" | "datasets") => void;
+  onDeleteFolder?: (folder: Project, type: "prompts" | "datasets") => void;
 }
 
 export function ProjectSidebar({
@@ -17,6 +20,8 @@ export function ProjectSidebar({
   setSelectedProject,
   loading = false,
   onCreateFolder,
+  onRenameFolder,
+  onDeleteFolder,
 }: ProjectSidebarProps) {
   const { openFolderModal } = useLibraryActions();
 
@@ -34,6 +39,26 @@ export function ProjectSidebar({
       }
     },
     [onCreateFolder, openFolderModal]
+  );
+
+  // Handle folder rename - use provided handler or default behavior
+  const handleRenameFolder = useCallback(
+    (folder: Project, type: "prompts" | "datasets") => {
+      if (onRenameFolder) {
+        onRenameFolder(folder, type);
+      }
+    },
+    [onRenameFolder]
+  );
+
+  // Handle folder delete - use provided handler or default behavior
+  const handleDeleteFolder = useCallback(
+    (folder: Project, type: "prompts" | "datasets") => {
+      if (onDeleteFolder) {
+        onDeleteFolder(folder, type);
+      }
+    },
+    [onDeleteFolder]
   );
 
   // Handle keyboard navigation
@@ -128,45 +153,57 @@ export function ProjectSidebar({
             </div>
           ) : (
             sortedProjects.map((project, index) => (
-              <button
+              <div
                 key={project.id}
-                data-project-button
-                data-project-name={project.id}
-                onClick={() => setSelectedProject(project.id)}
-                className={`group flex w-full items-center justify-between rounded-lg px-3 py-2 transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
-                  selectedProject === project.id
-                    ? "border border-primary/20 bg-primary/10 text-primary shadow-glow-sm"
-                    : "border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
-                }`}
+                className="group flex w-full items-center justify-between rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
                 role="listitem"
-                aria-label={`Select ${project.name} project`}
-                aria-pressed={selectedProject === project.id}
-                tabIndex={
-                  index === 0 && selectedProject !== project.id
-                    ? 0
-                    : selectedProject === project.id
-                    ? 0
-                    : -1
-                }
               >
-                <div className="flex items-center gap-3">
-                  <span className="text-lg" role="img" aria-hidden="true">
-                    {project.icon}
-                  </span>
-                  <span className="text-sm font-medium">{project.name}</span>
-                </div>
-                {type === "prompts" && project.promptCount !== undefined && (
-                  <span
-                    className={`text-xs ${
-                      selectedProject === project.id
-                        ? "text-primary/80"
-                        : "text-muted-foreground group-hover:text-foreground"
-                    }`}
-                  >
-                    ({project.promptCount})
-                  </span>
-                )}
-              </button>
+                <button
+                  data-project-button
+                  data-project-name={project.id}
+                  onClick={() => setSelectedProject(project.id)}
+                  className={`flex flex-1 items-center justify-between rounded-lg px-3 py-2 transition-all focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background ${
+                    selectedProject === project.id
+                      ? "border border-primary/20 bg-primary/10 text-primary shadow-glow-sm"
+                      : "border border-transparent text-muted-foreground hover:bg-muted hover:text-foreground"
+                  }`}
+                  aria-label={`Select ${project.name} project`}
+                  aria-pressed={selectedProject === project.id}
+                  tabIndex={
+                    index === 0 && selectedProject !== project.id
+                      ? 0
+                      : selectedProject === project.id
+                      ? 0
+                      : -1
+                  }
+                >
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg" role="img" aria-hidden="true">
+                      {project.icon}
+                    </span>
+                    <span className="text-sm font-medium">{project.name}</span>
+                  </div>
+                  {type === "prompts" && project.promptCount !== undefined && (
+                    <span
+                      className={`text-xs ${
+                        selectedProject === project.id
+                          ? "text-primary/80"
+                          : "text-muted-foreground group-hover:text-foreground"
+                      }`}
+                    >
+                      ({project.promptCount})
+                    </span>
+                  )}
+                </button>
+
+                {/* Folder Action Menu - Only for user-created folders */}
+                <FolderActionMenu
+                  folder={project}
+                  type={type}
+                  onRename={handleRenameFolder}
+                  onDelete={handleDeleteFolder}
+                />
+              </div>
             ))
           )}
         </div>

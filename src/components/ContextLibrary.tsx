@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, AlertCircle, Loader2, Plus } from 'lucide-react';
+import { ChevronLeft, ChevronRight, AlertCircle, Loader2, Plus, RefreshCw } from 'lucide-react';
 import { AppLogo } from './AppLogo';
 import { ProjectSidebar } from './ProjectSidebar';
 import { ProfileButton } from './ProfileButton';
@@ -13,6 +13,8 @@ import { SavedPromptList } from './SavedPromptList';
 import { CreateContextModal } from './CreateContextModal';
 import { CreatePromptModal } from './CreatePromptModal';
 import { CreateFolderModal } from './CreateFolderModal';
+import { RenameFolderModal } from './RenameFolderModal';
+import { DeleteFolderModal } from './DeleteFolderModal';
 import { SynchronizedLoading } from './ui/SynchronizedLoading';
 import { useLibraryState, useLibraryActions } from '../contexts/LibraryContext';
 import { useAuthState } from '../contexts/AuthContext';
@@ -29,6 +31,14 @@ interface ProjectWithType extends Project {
 type PostAuthAction = 'add-knowledge' | 'add-prompt' | 'create-folder' | null;
 type FolderType = 'prompts' | 'datasets';
 
+// Error types for better error handling
+interface OperationError {
+  message: string;
+  type: 'network' | 'permission' | 'concurrent' | 'validation' | 'unknown';
+  retryable?: boolean;
+  action?: string;
+}
+
 export function ContextLibrary() {
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
   const [isCreateContextModalOpen, setIsCreateContextModalOpen] = useState(false);
@@ -40,15 +50,128 @@ export function ContextLibrary() {
   const [postAuthAction, setPostAuthAction] = useState<PostAuthAction>(null);
   const [pendingFolderType, setPendingFolderType] = useState<FolderType>('prompts');
 
+  // Error handling state
+  const [operationError, setOperationError] = useState<OperationError | null>(null);
+  const [isRetrying, setIsRetrying] = useState(false);
+
   // Get authentication state
   const { isAuthenticated } = useAuthState();
 
   // Get data from LibraryContext
-  const { savedPrompts, promptProjects, datasetProjects, systemPromptProjects, systemDatasetProjects, loading, error, folderModal } = useLibraryState();
-  const { updateSavedPrompt, deleteSavedPrompt, createFolder, closeFolderModal, openFolderModal, setCustomText, clearPromptBuilder } = useLibraryActions();
+  const {
+    savedPrompts,
+    promptProjects,
+    datasetProjects,
+    systemPromptProjects,
+    systemDatasetProjects,
+    loading,
+    error,
+    folderModal,
+    renameModal,
+    deleteModal
+  } = useLibraryState();
+
+  const {
+    updateSavedPrompt,
+    deleteSavedPrompt,
+    createFolder,
+    closeFolderModal,
+    openFolderModal,
+    setCustomText,
+    clearPromptBuilder,
+    openRenameModal,
+    closeRenameModal,
+    renameProject,
+    openDeleteModal,
+    closeDeleteModal,
+    deleteProject,
+    setDeleteModalLoading
+  } = useLibraryActions();
 
   // Get navigation function
   const navigate = useNavigate();
+
+  // Error handling utility functions
+  const categorizeError = (error: unknown): OperationError => {
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+
+    if (errorMessage.toLowerCase().includes('network') ||
+        errorMessage.toLowerCase().includes('fetch') ||
+        errorMessage.toLowerCase().includes('timeout')) {
+      return {
+        message: errorMessage,
+        type: 'network',
+        retryable: true,
+        action: 'Please check your internet connection and try again.'
+      };
+    }
+
+    if (errorMessage.toLowerCase().includes('permission') ||
+        errorMessage.toLowerCase().includes('unauthorized') ||
+        errorMessage.toLowerCase().includes('forbidden')) {
+      return {
+        message: errorMessage,
+        type: 'permission',
+        retryable: false,
+        action: 'You may need to log in again or contact an administrator.'
+      };
+    }
+
+    if (errorMessage.toLowerCase().includes('concurrent') ||
+        errorMessage.toLowerCase().includes('modified by another') ||
+        errorMessage.toLowerCase().includes('already deleted')) {
+      return {
+        message: errorMessage,
+        type: 'concurrent',
+        retryable: true,
+        action: 'Please refresh the page and try again.'
+      };
+    }
+
+    if (errorMessage.toLowerCase().includes('validation') ||
+        errorMessage.toLowerCase().includes('required') ||
+        errorMessage.toLowerCase().includes('invalid')) {
+      return {
+        message: errorMessage,
+        type: 'validation',
+        retryable: false,
+        action: 'Please check your input and try again.'
+      };
+    }
+
+    return {
+      message: errorMessage,
+      type: 'unknown',
+      retryable: false,
+      action: 'Please try again or contact support if the problem persists.'
+    };
+  };
+
+  const handleOperationError = (error: unknown) => {
+    const categorizedError = categorizeError(error);
+    setOperationError(categorizedError);
+
+    // Log error for debugging
+    console.error('Folder operation error:', {
+      error: categorizedError,
+      timestamp: new Date().toISOString(),
+      context: 'folder-management'
+    });
+  };
+
+  const clearOperationError = () => {
+    setOperationError(null);
+    setIsRetrying(false);
+  };
+
+  const retryOperation = async () => {
+    if (!operationError?.retryable) return;
+
+    setIsRetrying(true);
+    clearOperationError();
+    // The retry logic would be implemented by the specific operation handlers
+    // This is a placeholder for the retry mechanism
+  };
 
   // Combine all projects for sidebar with type information (system projects first) - memoized for performance
   const allProjects: ProjectWithType[] = useMemo(() => [
@@ -154,29 +277,77 @@ export function ContextLibrary() {
     }
   };
 
+  // Handle folder rename with error handling
+  const handleRenameFolder = (folder: Project, type: 'prompts' | 'datasets') => {
+    clearOperationError();
+    openRenameModal(folder, type);
+  };
+
+  // Handle folder rename submission with enhanced error handling
+  const handleRenameFolderSubmit = async (data: { name: string; folderId: string; type: 'prompts' | 'datasets' }) => {
+    try {
+      clearOperationError();
+      await renameProject(data.folderId, data.type, data.name);
+    } catch (error) {
+      handleOperationError(error);
+      // Re-throw to let the modal handle the error display
+      throw error;
+    }
+  };
+
+  // Handle folder delete with error handling
+  const handleDeleteFolder = (folder: Project, type: 'prompts' | 'datasets') => {
+    clearOperationError();
+    openDeleteModal(folder, type);
+  };
+
+  // Handle folder delete confirmation with enhanced error handling
+  const handleDeleteFolderConfirm = async () => {
+    if (!deleteModal.folder) return;
+
+    try {
+      clearOperationError();
+      setDeleteModalLoading(true);
+
+      await deleteProject(deleteModal.folder.id, deleteModal.type);
+      closeDeleteModal();
+
+      // If the deleted folder was selected, clear the selection
+      if (selectedProject === deleteModal.folder.id) {
+        setSelectedProject('');
+      }
+    } catch (error) {
+      handleOperationError(error);
+      setDeleteModalLoading(false);
+      // Keep modal open for user to see error
+    }
+  };
+
   // Helper function to get the type of the current selected project
   const getCurrentProjectType = (): 'prompts' | 'datasets' => {
     const currentProject = allProjects.find(p => p.id === selectedProject);
     return currentProject?.type || 'datasets'; // Default to datasets for backward compatibility
   };
 
-  // Handle prompt updates with database
+  // Handle prompt updates with database and error handling
   const handlePromptUpdate = async (updatedPrompt: any) => {
     try {
+      clearOperationError();
       await updateSavedPrompt(updatedPrompt.id, updatedPrompt);
     } catch (error) {
-      console.error('Failed to update prompt:', error);
-      // Handle error - could show toast notification
+      handleOperationError(error);
+      // Error could be shown in a toast notification
     }
   };
 
-  // Handle prompt deletion with database
+  // Handle prompt deletion with database and error handling
   const handlePromptDelete = async (promptId: string) => {
     try {
+      clearOperationError();
       await deleteSavedPrompt(promptId);
     } catch (error) {
-      console.error('Failed to delete prompt:', error);
-      // Handle error - could show toast notification
+      handleOperationError(error);
+      // Error could be shown in a toast notification
     }
   };
 
@@ -210,10 +381,9 @@ export function ContextLibrary() {
   // Modify error handling - don't show error overlay for authentication-related issues
   const shouldShowErrorOverlay = error && !error.toLowerCase().includes('user not authenticated');
 
-
   return (
     <SynchronizedLoading
-      isLoading={loading && !shouldShowErrorOverlay && allProjects.length === 0}
+      isLoading={loading && !shouldShowErrorOverlay && !operationError && allProjects.length === 0}
       message="Loading your data..."
     >
       <div className="h-full flex overflow-hidden">
@@ -263,6 +433,8 @@ export function ContextLibrary() {
               setSelectedProject={setSelectedProject}
               loading={loading}
               onCreateFolder={handleCreateFolder}
+              onRenameFolder={handleRenameFolder}
+              onDeleteFolder={handleDeleteFolder}
             />
           </div>
         )}
@@ -332,6 +504,47 @@ export function ContextLibrary() {
           {!isPromptProject && <CollapsibleTagSection />}
         </div>
 
+        {/* Operation Error Banner */}
+        {operationError && (
+          <div className="flex-shrink-0 border-l-4 border-red-500 bg-red-900/20 p-4">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-red-400">
+                  {operationError.type === 'network' && 'Connection Error'}
+                  {operationError.type === 'permission' && 'Permission Error'}
+                  {operationError.type === 'concurrent' && 'Synchronization Error'}
+                  {operationError.type === 'validation' && 'Validation Error'}
+                  {operationError.type === 'unknown' && 'Error'}
+                </p>
+                <p className="text-sm text-red-300 mt-1">{operationError.message}</p>
+                {operationError.action && (
+                  <p className="text-xs text-red-200 mt-2">{operationError.action}</p>
+                )}
+              </div>
+              <div className="flex items-center gap-2">
+                {operationError.retryable && (
+                  <button
+                    onClick={retryOperation}
+                    disabled={isRetrying}
+                    className="flex items-center gap-1 px-2 py-1 text-xs bg-red-500/20 hover:bg-red-500/30 text-red-300 rounded transition-colors disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3 h-3 ${isRetrying ? 'animate-spin' : ''}`} />
+                    {isRetrying ? 'Retrying...' : 'Retry'}
+                  </button>
+                )}
+                <button
+                  onClick={clearOperationError}
+                  className="p-1 text-red-300 hover:text-red-200 transition-colors"
+                  aria-label="Dismiss error"
+                >
+                  ×
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Scrollable Content - Always show interface, default to context blocks */}
         <div className="flex-1 overflow-hidden">
           {/* Show prompts list only when we have a prompt project selected */}
@@ -380,6 +593,30 @@ export function ContextLibrary() {
         folderType={folderModal.defaultType}
         loading={folderModal.loading}
       />
+
+      {/* Rename Folder Modal */}
+      {renameModal.folder && (
+        <RenameFolderModal
+          isOpen={renameModal.isOpen}
+          onClose={closeRenameModal}
+          onRename={handleRenameFolderSubmit}
+          folder={renameModal.folder}
+          type={renameModal.type}
+          loading={renameModal.loading}
+        />
+      )}
+
+      {/* Delete Folder Modal */}
+      {deleteModal.folder && (
+        <DeleteFolderModal
+          isOpen={deleteModal.isOpen}
+          onClose={closeDeleteModal}
+          onConfirm={handleDeleteFolderConfirm}
+          folder={deleteModal.folder}
+          type={deleteModal.type}
+          isLoading={deleteModal.loading}
+        />
+      )}
 
       {/* Error State Overlay - Only show for non-authentication errors */}
       {shouldShowErrorOverlay && (
