@@ -1,15 +1,12 @@
 import React, { useState, useMemo } from 'react';
-import { Play, Edit, Trash2 } from 'lucide-react';
 import { SavedPrompt } from '../types/SavedPrompt';
 import { EditPromptModal } from './EditPromptModal';
 import { ConfirmationModal } from './ConfirmationModal';
+import { PromptBlock } from './PromptBlock';
 import { useToast } from '../contexts/ToastContext';
 import { useLibraryActions } from '../contexts/LibraryContext';
 import { handleCrudResult, logError } from '../utils/errorHandling';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 
 interface SavedPromptListProps {
   selectedProject: string;
@@ -226,69 +223,13 @@ export function SavedPromptList({
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {filteredPrompts.map((prompt) => (
-                <Card
+                <PromptBlock
                   key={prompt.id}
-                  className="h-full transition-all hover:border-purple-500/30 hover:bg-purple-500/5 focus:outline-none focus:ring-2 focus:ring-purple-500/50"
-                >
-                  <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
-                    <h3 className="font-medium line-clamp-2 leading-tight text-white flex-1">
-                      {prompt.title}
-                    </h3>
-                    <div className="flex items-center gap-1 flex-shrink-0 ml-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleLoadPrompt(prompt.id);
-                        }}
-                        className="h-6 w-6 p-0 text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10"
-                        aria-label={`Load ${prompt.title}`}
-                      >
-                        <Play size={12} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleEditPrompt(prompt);
-                        }}
-                        className="h-6 w-6 p-0 text-neutral-400 hover:text-purple-400 hover:bg-purple-500/10"
-                        aria-label={`Edit ${prompt.title}`}
-                      >
-                        <Edit size={12} />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleDeleteClick(prompt);
-                        }}
-                        className="h-6 w-6 p-0 text-neutral-400 hover:text-red-400 hover:bg-red-500/10"
-                        aria-label={`Delete ${prompt.title}`}
-                      >
-                        <Trash2 size={12} />
-                      </Button>
-                    </div>
-                  </CardHeader>
-
-                  <CardContent className="flex flex-col flex-1">
-                    {/* Description - takes up remaining space */}
-                    <div className="flex-1">
-                      {prompt.description ? (
-                        <p className="text-sm text-neutral-300 line-clamp-3 leading-relaxed">
-                          {prompt.description}
-                        </p>
-                      ) : (
-                        <p className="text-sm text-neutral-400 line-clamp-3 leading-relaxed italic">
-                          No description available
-                        </p>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
+                  prompt={prompt}
+                  onPlay={() => handleLoadPrompt(prompt.id)}
+                  onEdit={handleEditPrompt}
+                  onDelete={handleDeleteClick}
+                />
               ))}
             </div>
           )}
