@@ -80,16 +80,13 @@ export function PromptBuilderActions() {
 
       // Show success toast message
       showToast("Prompt copied to clipboard!", "success");
-
-      // Reset status after delay
-      setTimeout(() => setCopyStatus("idle"), TIMEOUTS.COPY_STATUS_RESET);
     } catch (error) {
       setCopyStatus("error");
 
       // Show error toast message
       showToast("Failed to copy prompt to clipboard", "error");
-
-      // Reset status after delay
+    } finally {
+      // Reset status after delay, regardless of success or error
       setTimeout(() => setCopyStatus("idle"), TIMEOUTS.COPY_STATUS_RESET);
     }
   };

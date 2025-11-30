@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Edit, Trash2, Play, Copy } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -110,6 +110,14 @@ export function ContentBlock<T extends BaseContentBlock>({
   const [isHovered, setIsHovered] = useState(false);
   const { showToast } = useToast();
 
+  // Memoize TurndownService instance to avoid recreating it on every render
+  const turndownService = useMemo(() => new TurndownService({
+    headingStyle: 'atx',
+    bulletListMarker: '-',
+    codeBlockStyle: 'fenced',
+    fence: '```'
+  }), []);
+
   const handleClick = () => {
     onSelect?.();
   };
@@ -123,7 +131,7 @@ export function ContentBlock<T extends BaseContentBlock>({
       onDelete(block);
     } else if ((event.key === 'c' || event.key === 'C')) {
       event.preventDefault();
-      handleCopyClick(event as any);
+      handleCopyClick(event);
     } else if ((event.key === 'p' || event.key === 'P') && onPlay && showPlayButton) {
       event.preventDefault();
       onPlay(block);
@@ -149,19 +157,11 @@ export function ContentBlock<T extends BaseContentBlock>({
     onPlay?.(block);
   };
 
-  const handleCopyClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+  const handleCopyClick = async (event: React.SyntheticEvent) => {
     event.stopPropagation();
 
     try {
-      // Initialize turndown service
-      const turndownService = new TurndownService({
-        headingStyle: 'atx',
-        bulletListMarker: '-',
-        codeBlockStyle: 'fenced',
-        fence: '```'
-      });
-
-      // Convert HTML content to markdown
+      // Convert HTML content to markdown using memoized turndown service
       const markdownContent = turndownService.turndown(block.content);
 
       // Add title and metadata
