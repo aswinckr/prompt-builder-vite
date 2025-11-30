@@ -834,11 +834,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         const result = await ProjectService.updateProject(folderId, type as 'prompt' | 'dataset', { name: newName });
 
         if (result.data) {
-          dispatch({
-            type: type === 'prompts' ? 'UPDATE_PROMPT_PROJECT' : 'UPDATE_DATASET_PROJECT',
-            payload: { id: folderId, projectData: { name: newName } }
-          });
-          // Wait for database confirmation, then refresh all data
+          // Refresh all data to ensure consistency after the operation
           await refreshAllData();
         } else {
           throw new Error(result.error || 'Failed to rename folder');

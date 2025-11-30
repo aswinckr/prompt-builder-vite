@@ -1,6 +1,6 @@
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import '@testing-library/jest-dom';
-import { ConfirmationModal } from '../components/ConfirmationModal';
+import { DeleteFolderModal } from '../components/DeleteFolderModal';
 
 // Mock the Project interface
 const mockProject = {
@@ -21,19 +21,17 @@ describe('Delete Folder Modal Tests', () => {
     jest.clearAllMocks();
   });
 
-  describe('Confirmation Modal for User Folder Deletion', () => {
+  describe('DeleteFolderModal for User Folder Deletion', () => {
     it('should show delete confirmation modal for user folders', () => {
       render(
-        <ConfirmationModal
+        <DeleteFolderModal
           isOpen={true}
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
-          title="Delete Prompt Folder"
-          message={`Are you sure you want to delete "${mockProject.name}"? This action cannot be undone and all content in this folder will be permanently deleted.`}
-          confirmText="Delete Folder"
-          cancelText="Cancel"
-          type="delete"
+          folder={mockProject}
+          type="prompts"
           isLoading={false}
+          contentCount={0}
         />
       );
 
@@ -46,16 +44,14 @@ describe('Delete Folder Modal Tests', () => {
 
     it('should call onConfirm when delete button is clicked', async () => {
       render(
-        <ConfirmationModal
+        <DeleteFolderModal
           isOpen={true}
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
-          title="Delete Dataset Folder"
-          message={`Are you sure you want to delete "${mockProject.name}"? This action cannot be undone.`}
-          confirmText="Delete Folder"
-          cancelText="Cancel"
-          type="delete"
+          folder={mockProject}
+          type="datasets"
           isLoading={false}
+          contentCount={0}
         />
       );
 
@@ -67,16 +63,14 @@ describe('Delete Folder Modal Tests', () => {
 
     it('should show loading state during delete operation', () => {
       render(
-        <ConfirmationModal
+        <DeleteFolderModal
           isOpen={true}
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
-          title="Delete Prompt Folder"
-          message="Are you sure you want to delete this folder?"
-          confirmText="Delete Folder"
-          cancelText="Cancel"
-          type="delete"
+          folder={mockProject}
+          type="prompts"
           isLoading={true}
+          contentCount={0}
         />
       );
 
@@ -96,16 +90,14 @@ describe('Delete Folder Modal Tests', () => {
 
     it('should show different message for system folders when delete is attempted', () => {
       render(
-        <ConfirmationModal
+        <DeleteFolderModal
           isOpen={true}
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
-          title="Cannot Delete System Folder"
-          message={`"${systemProject.name}" is a system folder and cannot be deleted. System folders are required for proper application functionality.`}
-          confirmText="OK"
-          cancelText=""
-          type="warning"
+          folder={systemProject}
+          type="prompts"
           isLoading={false}
+          contentCount={0}
         />
       );
 
@@ -117,15 +109,14 @@ describe('Delete Folder Modal Tests', () => {
 
     it('should use warning styling for system folder protection', () => {
       render(
-        <ConfirmationModal
+        <DeleteFolderModal
           isOpen={true}
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
-          title="Protected System Folder"
-          message="This folder cannot be deleted."
-          confirmText="OK"
-          type="warning"
+          folder={systemProject}
+          type="datasets"
           isLoading={false}
+          contentCount={0}
         />
       );
 
@@ -140,16 +131,14 @@ describe('Delete Folder Modal Tests', () => {
   describe('Cancel and Close Behavior', () => {
     it('should call onClose when cancel button is clicked', () => {
       render(
-        <ConfirmationModal
+        <DeleteFolderModal
           isOpen={true}
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
-          title="Delete Folder"
-          message="Are you sure?"
-          confirmText="Delete"
-          cancelText="Cancel"
-          type="delete"
+          folder={mockProject}
+          type="prompts"
           isLoading={false}
+          contentCount={0}
         />
       );
 
@@ -162,16 +151,14 @@ describe('Delete Folder Modal Tests', () => {
 
     it('should handle keyboard shortcuts - Enter to confirm, Escape to cancel', () => {
       render(
-        <ConfirmationModal
+        <DeleteFolderModal
           isOpen={true}
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
-          title="Delete Folder"
-          message="Are you sure?"
-          confirmText="Delete"
-          cancelText="Cancel"
-          type="delete"
+          folder={mockProject}
+          type="datasets"
           isLoading={false}
+          contentCount={0}
         />
       );
 
@@ -190,35 +177,31 @@ describe('Delete Folder Modal Tests', () => {
   describe('Content Warnings and Messages', () => {
     it('should show warning about nested content deletion', () => {
       render(
-        <ConfirmationModal
+        <DeleteFolderModal
           isOpen={true}
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
-          title="Delete Folder with Content"
-          message={`Delete "${mockProject.name}"? This folder contains 5 items that will be permanently deleted. This action cannot be undone.`}
-          confirmText="Delete Folder and Contents"
-          cancelText="Cancel"
-          type="delete"
+          folder={mockProject}
+          type="prompts"
           isLoading={false}
+          contentCount={5}
         />
       );
 
-      expect(screen.getByText(/contains 5 items that will be permanently deleted/)).toBeInTheDocument();
+      expect(screen.getByText(/contains 5 prompts that will be permanently deleted/)).toBeInTheDocument();
       expect(screen.getByRole('button', { name: /delete folder and contents/i })).toBeInTheDocument();
     });
 
     it('should show appropriate message for empty folders', () => {
       render(
-        <ConfirmationModal
+        <DeleteFolderModal
           isOpen={true}
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
-          title="Delete Empty Folder"
-          message={`Delete "${mockProject.name}"? This folder is empty. This action cannot be undone.`}
-          confirmText="Delete Folder"
-          cancelText="Cancel"
-          type="delete"
+          folder={mockProject}
+          type="datasets"
           isLoading={false}
+          contentCount={0}
         />
       );
 

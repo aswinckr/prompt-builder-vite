@@ -37,6 +37,7 @@ interface OperationError {
   type: 'network' | 'permission' | 'concurrent' | 'validation' | 'unknown';
   retryable?: boolean;
   action?: string;
+  retry?: () => Promise<void>;
 }
 
 export function ContextLibrary() {
@@ -147,9 +148,9 @@ export function ContextLibrary() {
     };
   };
 
-  const handleOperationError = (error: unknown) => {
+  const handleOperationError = (error: unknown, retry?: () => Promise<void>) => {
     const categorizedError = categorizeError(error);
-    setOperationError(categorizedError);
+    setOperationError({ ...categorizedError, retry });
 
     // Log error for debugging
     console.error('Folder operation error:', {
@@ -165,12 +166,18 @@ export function ContextLibrary() {
   };
 
   const retryOperation = async () => {
-    if (!operationError?.retryable) return;
+    if (!operationError?.retryable || !operationError.retry) return;
 
     setIsRetrying(true);
-    clearOperationError();
-    // The retry logic would be implemented by the specific operation handlers
-    // This is a placeholder for the retry mechanism
+    try {
+      await operationError.retry();
+      clearOperationError(); // Clear error on success
+    } catch (error) {
+      // Handle subsequent retry failures
+      handleOperationError(error, operationError.retry);
+    } finally {
+      setIsRetrying(false);
+    }
   };
 
   // Combine all projects for sidebar with type information (system projects first) - memoized for performance
@@ -285,11 +292,15 @@ export function ContextLibrary() {
 
   // Handle folder rename submission with enhanced error handling
   const handleRenameFolderSubmit = async (data: { name: string; folderId: string; type: 'prompts' | 'datasets' }) => {
+    const renameOperation = async () => {
+      await renameProject(data.folderId, data.type, data.name);
+    };
+
     try {
       clearOperationError();
-      await renameProject(data.folderId, data.type, data.name);
+      await renameOperation();
     } catch (error) {
-      handleOperationError(error);
+      handleOperationError(error, renameOperation);
       // Re-throw to let the modal handle the error display
       throw error;
     }
@@ -305,19 +316,24 @@ export function ContextLibrary() {
   const handleDeleteFolderConfirm = async () => {
     if (!deleteModal.folder) return;
 
+    const folderId = deleteModal.folder.id;
+    const deleteOperation = async () => {
+      await deleteProject(folderId, deleteModal.type);
+      closeDeleteModal();
+
+      // If the deleted folder was selected, clear the selection
+      if (selectedProject === folderId) {
+        setSelectedProject('');
+      }
+    };
+
     try {
       clearOperationError();
       setDeleteModalLoading(true);
 
-      await deleteProject(deleteModal.folder.id, deleteModal.type);
-      closeDeleteModal();
-
-      // If the deleted folder was selected, clear the selection
-      if (selectedProject === deleteModal.folder.id) {
-        setSelectedProject('');
-      }
+      await deleteOperation();
     } catch (error) {
-      handleOperationError(error);
+      handleOperationError(error, deleteOperation);
       setDeleteModalLoading(false);
       // Keep modal open for user to see error
     }
@@ -331,22 +347,30 @@ export function ContextLibrary() {
 
   // Handle prompt updates with database and error handling
   const handlePromptUpdate = async (updatedPrompt: any) => {
+    const updateOperation = async () => {
+      await updateSavedPrompt(updatedPrompt.id, updatedPrompt);
+    };
+
     try {
       clearOperationError();
-      await updateSavedPrompt(updatedPrompt.id, updatedPrompt);
+      await updateOperation();
     } catch (error) {
-      handleOperationError(error);
+      handleOperationError(error, updateOperation);
       // Error could be shown in a toast notification
     }
   };
 
   // Handle prompt deletion with database and error handling
   const handlePromptDelete = async (promptId: string) => {
+    const deleteOperation = async () => {
+      await deleteSavedPrompt(promptId);
+    };
+
     try {
       clearOperationError();
-      await deleteSavedPrompt(promptId);
+      await deleteOperation();
     } catch (error) {
-      handleOperationError(error);
+      handleOperationError(error, deleteOperation);
       // Error could be shown in a toast notification
     }
   };

@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { MoreHorizontal, Edit, Trash2 } from 'lucide-react';
 import { Project } from '../services/projectService';
 import {
@@ -28,7 +28,21 @@ export function FolderActionMenu({
   onDelete,
 }: FolderActionMenuProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [announcement, setAnnouncement] = useState('');
   const triggerRef = useRef<HTMLButtonElement>(null);
+  const liveRegionRef = useRef<HTMLDivElement>(null);
+
+  // Update announcement when it changes
+  useEffect(() => {
+    if (liveRegionRef.current && announcement) {
+      liveRegionRef.current.textContent = announcement;
+      // Clear the announcement after it's been read
+      const timeout = setTimeout(() => {
+        setAnnouncement('');
+      }, 1000);
+      return () => clearTimeout(timeout);
+    }
+  }, [announcement]);
 
   // Don't render anything for system folders
   if (folder.is_system) {
@@ -52,22 +66,11 @@ export function FolderActionMenu({
   const handleOpenChange = (open: boolean) => {
     setIsOpen(open);
     // Announce to screen readers when menu opens/closes
-    const announcement = open
+    const newAnnouncement = open
       ? `Folder actions menu opened for ${folder.name}. Use up and down arrow keys to navigate.`
       : 'Folder actions menu closed.';
 
-    // Use a polite screen reader announcement
-    const announcementElement = document.createElement('div');
-    announcementElement.setAttribute('aria-live', 'polite');
-    announcementElement.setAttribute('aria-atomic', 'true');
-    announcementElement.className = 'sr-only';
-    announcementElement.textContent = announcement;
-    document.body.appendChild(announcementElement);
-
-    // Clean up the announcement after it's read
-    setTimeout(() => {
-      document.body.removeChild(announcementElement);
-    }, 1000);
+    setAnnouncement(newAnnouncement);
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -85,6 +88,7 @@ export function FolderActionMenu({
     <>
       {/* Invisible live region for screen reader announcements */}
       <div
+        ref={liveRegionRef}
         aria-live="polite"
         aria-atomic="true"
         className="sr-only"
