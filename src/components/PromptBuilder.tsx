@@ -42,7 +42,9 @@ export function PromptBuilder() {
     // Combine custom text and block contents
     const allTexts = [];
     if (promptBuilder.customText.trim()) {
-      allTexts.push(promptBuilder.customText.trim());
+      // Convert HTML custom text to markdown for consistent formatting
+      const customTextMarkdown = htmlToMarkdown(promptBuilder.customText.trim());
+      allTexts.push(customTextMarkdown);
     }
     allTexts.push(...blockTexts);
 

@@ -40,7 +40,7 @@ export function ChatMessage({ message }: ChatMessageProps) {
             rehypePlugins={[rehypeHighlight]}
             components={{
               // Custom styling for code blocks
-              code({ node, className, children, ...props }: any) {
+              code({ node, className, children, ...props }: React.ComponentPropsWithoutRef<'code'> & { node?: unknown }) {
                 const match = /language-(\w+)/.exec(className || '');
                 const isInline = !className || !match;
                 return !isInline ? (

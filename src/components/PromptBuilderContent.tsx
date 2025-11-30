@@ -1,5 +1,5 @@
 import React from 'react';
-import { CustomTextInput } from './CustomTextInput';
+import { PromptTipTapInput } from './PromptTipTapInput';
 import { PromptBuilderBlockList } from './PromptBuilderBlockList';
 
 interface PromptBuilderContentProps {
@@ -27,7 +27,7 @@ export function PromptBuilderContent({ onRunPrompt }: PromptBuilderContentProps)
 
         {/* Centered Main Input Area */}
         <div className="relative">
-          <CustomTextInput onRunPrompt={onRunPrompt} />
+          <PromptTipTapInput onRunPrompt={onRunPrompt} showToolbar={false} />
         </div>
 
         {/* Context Blocks - Displayed below input as cards */}

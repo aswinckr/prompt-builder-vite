@@ -117,3 +117,42 @@
   float: left;
   height: 0;
 }
+
+/* Custom styles for Prompt TipTap Input */
+.prompt-tiptap-editor .ProseMirror {
+  padding: 16px !important;
+  min-height: 128px !important;
+  max-height: 384px !important;
+  overflow-y: auto !important;
+  border: none !important;
+  background: transparent !important;
+  color: #e5e5e5;
+  line-height: 1.6;
+  font-size: 16px; /* Prevents zoom on iOS */
+  outline: none;
+}
+
+.prompt-tiptap-editor .ProseMirror:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+.prompt-tiptap-editor .ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  color: #6b7280;
+  pointer-events: none;
+  float: left;
+  height: 0;
+}
+
+.prompt-tiptap-editor .ProseMirror p {
+  margin-bottom: 16px;
+}
+
+.prompt-tiptap-editor .ProseMirror p:last-child {
+  margin-bottom: 0;
+}
+
+.prompt-tiptap-editor .prose {
+  max-width: none !important;
+}

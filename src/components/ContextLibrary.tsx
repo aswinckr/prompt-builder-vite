@@ -184,13 +184,16 @@ export function ContextLibrary() {
   const handlePromptLoad = (promptId: string) => {
     const prompt = savedPrompts?.find(p => p.id === promptId);
     if (prompt) {
-      // Convert HTML content to plain text if needed
+      // Preserve HTML content for TipTap editor
       const rawContent = prompt.content || '';
-      const textContent = isHtmlContent(rawContent) ? htmlToText(rawContent) : rawContent;
 
-      // Clear existing content and load the prompt content
+      // Ensure content is in HTML format for TipTap
+      const htmlContent = isHtmlContent(rawContent) ? rawContent :
+        rawContent.split('\n').map(line => `<p>${line || '<br>'}</p>`).join('');
+
+      // Clear existing content and load the prompt content as HTML
       clearPromptBuilder();
-      setCustomText(textContent);
+      setCustomText(htmlContent);
 
       // Add a small delay to ensure state is updated before navigation
       Promise.resolve().then(() => {

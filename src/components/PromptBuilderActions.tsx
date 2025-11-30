@@ -41,22 +41,19 @@ export function PromptBuilderActions() {
 
     // Add custom text if provided
     if (promptBuilder.customText.trim()) {
-      assembledText += promptBuilder.customText.trim() + "\n\n";
+      // Convert HTML custom text to markdown for consistent formatting
+      const customTextMarkdown = htmlToMarkdown(promptBuilder.customText.trim());
+      assembledText += customTextMarkdown + "\n\n";
     }
 
     // Add context blocks
     selectedBlocks.forEach((block, index) => {
       if (index > 0) assembledText += "\n\n";
 
-      // For temporary text blocks, only add content without headers
-      // For permanent knowledge blocks, add content with headers
-      if (block.isTemporary) {
-        // Convert HTML content to markdown for temporary blocks
-        const markdown = htmlToMarkdown(block.content);
-        assembledText += markdown;
-      } else {
-        assembledText += `### ${block.title}\n\n${block.content}`;
-      }
+      // Process blocks with markdown conversion for ALL blocks
+      // Convert ALL block content from HTML to markdown for consistent formatting
+      const markdownContent = htmlToMarkdown(block.content);
+      assembledText += `### ${block.title}\n\n${markdownContent}`;
     });
 
     return assembledText.trim();
