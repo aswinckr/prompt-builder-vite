@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 
 // Utility function to strip HTML tags and get plain text for preview while preserving structure
 const stripHtmlForPreview = (html: string): string => {
-  if (!html) return '';
+  if (typeof document === 'undefined' || !html) return '';
 
   // Create a temporary div element to parse HTML
   const tempDiv = document.createElement('div');
@@ -17,7 +17,9 @@ const stripHtmlForPreview = (html: string): string => {
   const walker = document.createTreeWalker(
     tempDiv,
     NodeFilter.SHOW_ELEMENT | NodeFilter.SHOW_TEXT,
-    null
+    {
+      acceptNode: (node: Node) => NodeFilter.FILTER_ACCEPT
+    }
   );
 
   let currentParagraph = '';
@@ -46,7 +48,9 @@ const stripHtmlForPreview = (html: string): string => {
       }
     }
 
-    node = walker.nextNode();
+    const nextNode = walker.nextNode();
+    if (!nextNode) break;
+    node = nextNode;
   }
 
   // Process any remaining content
@@ -62,9 +66,9 @@ export interface BaseContentBlock {
   title: string;
   content: string;
   tags: string[];
-  created_at: string;
-  updated_at: string;
-  project_id: string;
+  created_at: Date | string;
+  updated_at: Date | string;
+  project_id?: string | null;
 }
 
 // Context block specific interface
@@ -106,15 +110,15 @@ export function ContentBlock<T extends BaseContentBlock>({
   };
 
   const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === 'e' || event.key === 'E') {
+    if ((event.key === 'e' || event.key === 'E') && onEdit) {
       event.preventDefault();
-      onEdit?.(block);
-    } else if (event.key === 'd' || event.key === 'D') {
+      onEdit(block);
+    } else if ((event.key === 'd' || event.key === 'D') && onDelete) {
       event.preventDefault();
-      onDelete?.(block);
-    } else if (event.key === 'p' || event.key === 'P') {
+      onDelete(block);
+    } else if ((event.key === 'p' || event.key === 'P') && onPlay && showPlayButton) {
       event.preventDefault();
-      onPlay?.(block);
+      onPlay(block);
     } else if (event.key === 'Enter' || event.key === ' ') {
       event.preventDefault();
       onSelect?.();

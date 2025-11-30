@@ -29,7 +29,7 @@ export const PromptBlock = React.memo(function PromptBlock({
   const promptBlock: PromptBlockType = {
     id: prompt.id,
     title: prompt.title,
-    content: prompt.description, // SavedPrompt uses 'description' field for content
+    content: prompt.description || prompt.content || '', // SavedPrompt uses 'description' field for content, fallback to content
     tags: prompt.tags || [],
     created_at: prompt.created_at,
     updated_at: prompt.updated_at,
