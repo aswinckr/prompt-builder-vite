@@ -28,7 +28,7 @@ describe('RenameFolderModal', () => {
         onClose={mockOnClose}
         onRename={mockOnRename}
         folder={mockProject}
-        type="prompts"
+        type="prompt"
         loading={false}
       />
     );
@@ -45,7 +45,7 @@ describe('RenameFolderModal', () => {
         onClose={mockOnClose}
         onRename={mockOnRename}
         folder={mockProject}
-        type="prompts"
+        type="prompt"
         loading={false}
       />
     );
@@ -60,7 +60,7 @@ describe('RenameFolderModal', () => {
         onClose={mockOnClose}
         onRename={mockOnRename}
         folder={mockProject}
-        type="prompts"
+        type="prompt"
         loading={false}
       />
     );
@@ -81,7 +81,7 @@ describe('RenameFolderModal', () => {
         onClose={mockOnClose}
         onRename={mockOnRename}
         folder={mockProject}
-        type="prompts"
+        type="prompt"
         loading={false}
       />
     );
@@ -103,7 +103,7 @@ describe('RenameFolderModal', () => {
         onClose={mockOnClose}
         onRename={mockOnRename}
         folder={mockProject}
-        type="prompts"
+        type="prompt"
         loading={false}
       />
     );
@@ -116,7 +116,7 @@ describe('RenameFolderModal', () => {
       expect(mockOnRename).toHaveBeenCalledWith({
         name: 'Updated Folder Name',
         folderId: '1',
-        type: 'prompts'
+        type: 'prompt'
       });
     });
   });
@@ -128,7 +128,7 @@ describe('RenameFolderModal', () => {
         onClose={mockOnClose}
         onRename={mockOnRename}
         folder={mockProject}
-        type="prompts"
+        type="prompt"
         loading={false}
       />
     );
@@ -146,7 +146,7 @@ describe('RenameFolderModal', () => {
         onClose={mockOnClose}
         onRename={mockOnRename}
         folder={mockProject}
-        type="prompts"
+        type="prompt"
         loading={false}
       />
     );
@@ -164,7 +164,7 @@ describe('RenameFolderModal', () => {
         onClose={mockOnClose}
         onRename={mockOnRename}
         folder={mockProject}
-        type="prompts"
+        type="prompt"
         loading={true}
       />
     );
@@ -181,7 +181,7 @@ describe('RenameFolderModal', () => {
         onClose={mockOnClose}
         onRename={mockOnRename}
         folder={mockProject}
-        type="prompts"
+        type="prompt"
         loading={false}
       />
     );
@@ -196,7 +196,7 @@ describe('RenameFolderModal', () => {
         onClose={mockOnClose}
         onRename={mockOnRename}
         folder={mockProject}
-        type="prompts"
+        type="prompt"
         loading={false}
       />
     );

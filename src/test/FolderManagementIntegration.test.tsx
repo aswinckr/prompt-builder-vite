@@ -54,7 +54,7 @@ describe('Folder Management Integration Tests', () => {
       render(
         <FolderActionMenu
           folder={mockUserPromptProject}
-          type="prompts"
+          type="prompt"
           onRename={mockOnRename}
           onDelete={mockOnDelete}
         />
@@ -76,7 +76,7 @@ describe('Folder Management Integration Tests', () => {
       await userEvent.click(renameItem);
 
       // Verify rename callback is called
-      expect(mockOnRename).toHaveBeenCalledWith(mockUserPromptProject, 'prompts');
+      expect(mockOnRename).toHaveBeenCalledWith(mockUserPromptProject, 'prompt');
     });
 
     it('should handle rename modal functionality end-to-end', async () => {
@@ -88,7 +88,7 @@ describe('Folder Management Integration Tests', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserPromptProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -110,7 +110,7 @@ describe('Folder Management Integration Tests', () => {
         expect(mockRenameSubmit).toHaveBeenCalledWith({
           name: 'Updated Prompts',
           folderId: mockUserPromptProject.id,
-          type: 'prompts'
+          type: 'prompt'
         });
       });
     });
@@ -125,7 +125,7 @@ describe('Folder Management Integration Tests', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserPromptProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -139,7 +139,7 @@ describe('Folder Management Integration Tests', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserDatasetProject}
-          type="datasets"
+          type="dataset"
           loading={false}
         />
       );
@@ -154,7 +154,7 @@ describe('Folder Management Integration Tests', () => {
       render(
         <FolderActionMenu
           folder={mockUserDatasetProject}
-          type="datasets"
+          type="dataset"
           onRename={mockOnRename}
           onDelete={mockOnDelete}
         />
@@ -174,7 +174,7 @@ describe('Folder Management Integration Tests', () => {
       await userEvent.click(deleteItem);
 
       // Verify delete callback is called
-      expect(mockOnDelete).toHaveBeenCalledWith(mockUserDatasetProject, 'datasets');
+      expect(mockOnDelete).toHaveBeenCalledWith(mockUserDatasetProject, 'dataset');
     });
 
     it('should show appropriate delete confirmation for user folders', async () => {
@@ -184,7 +184,7 @@ describe('Folder Management Integration Tests', () => {
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
           folder={mockUserPromptProject}
-          type="prompts"
+          type="prompt"
           isLoading={false}
           contentCount={5}
         />
@@ -207,7 +207,7 @@ describe('Folder Management Integration Tests', () => {
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
           folder={mockUserDatasetProject}
-          type="datasets"
+          type="dataset"
           isLoading={false}
           contentCount={0}
         />
@@ -224,7 +224,7 @@ describe('Folder Management Integration Tests', () => {
           onClose={mockOnClose}
           onConfirm={mockOnConfirm}
           folder={mockSystemProject}
-          type="prompts"
+          type="prompt"
           isLoading={false}
         />
       );
@@ -250,7 +250,7 @@ describe('Folder Management Integration Tests', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserPromptProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -262,7 +262,7 @@ describe('Folder Management Integration Tests', () => {
         expect(mockRenameSubmit).toHaveBeenCalledWith({
           name: mockUserPromptProject.name,
           folderId: mockUserPromptProject.id,
-          type: 'prompts'
+          type: 'prompt'
         });
       });
     });
@@ -276,7 +276,7 @@ describe('Folder Management Integration Tests', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserPromptProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -306,7 +306,7 @@ describe('Folder Management Integration Tests', () => {
       const { rerender } = render(
         <FolderActionMenu
           folder={mockUserPromptProject}
-          type="prompts"
+          type="prompt"
           onRename={mockOnRename}
           onDelete={mockOnDelete}
         />
@@ -319,7 +319,7 @@ describe('Folder Management Integration Tests', () => {
       rerender(
         <FolderActionMenu
           folder={mockUserDatasetProject}
-          type="datasets"
+          type="dataset"
           onRename={mockOnRename}
           onDelete={mockOnDelete}
         />
@@ -340,7 +340,7 @@ describe('Folder Management Integration Tests', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserPromptProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -361,7 +361,7 @@ describe('Folder Management Integration Tests', () => {
         expect(mockRenameSubmit).toHaveBeenCalledWith({
           name: 'Keyboard Test Name',
           folderId: mockUserPromptProject.id,
-          type: 'prompts'
+          type: 'prompt'
         });
       });
     });
@@ -375,7 +375,7 @@ describe('Folder Management Integration Tests', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserPromptProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -394,7 +394,7 @@ describe('Folder Management Integration Tests', () => {
       render(
         <FolderActionMenu
           folder={mockUserPromptProject}
-          type="prompts"
+          type="prompt"
           onRename={mockOnRename}
           onDelete={mockOnDelete}
         />
@@ -423,7 +423,7 @@ describe('Folder Management Integration Tests', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserPromptProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -456,7 +456,7 @@ describe('Folder Management Integration Tests', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserPromptProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
@@ -487,7 +487,7 @@ describe('Folder Management Integration Tests', () => {
           onClose={mockOnClose}
           onRename={mockRenameSubmit}
           folder={mockUserPromptProject}
-          type="prompts"
+          type="prompt"
           loading={false}
         />
       );
