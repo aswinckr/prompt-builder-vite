@@ -32,21 +32,19 @@ export function PromptBuilder() {
         (block): block is NonNullable<typeof block> => block !== undefined
       );
 
-    // Process blocks with markdown conversion for temporary blocks
+    // Process blocks with markdown conversion for ALL blocks
     const blockTexts = blocks.map((block) => {
-      // For temporary text blocks, convert HTML to markdown
-      // For permanent knowledge blocks, add headers and keep original content
-      if (block.isTemporary) {
-        return htmlToMarkdown(block.content);
-      } else {
-        return `### ${block.title}\n\n${block.content}`;
-      }
+      // Convert ALL block content from HTML to markdown for consistent formatting
+      const markdownContent = htmlToMarkdown(block.content);
+      return `### ${block.title}\n\n${markdownContent}`;
     });
 
     // Combine custom text and block contents
     const allTexts = [];
     if (promptBuilder.customText.trim()) {
-      allTexts.push(promptBuilder.customText.trim());
+      // Convert HTML custom text to markdown for consistent formatting
+      const customTextMarkdown = htmlToMarkdown(promptBuilder.customText.trim());
+      allTexts.push(customTextMarkdown);
     }
     allTexts.push(...blockTexts);
 

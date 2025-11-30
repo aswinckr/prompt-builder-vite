@@ -219,7 +219,7 @@ export function EditPromptModal({
         isOpen={isOpen}
         onClose={handleClose}
         title="Edit Prompt"
-        size="lg"
+        size="2xl"
         mobileBehavior="fullscreen"
         closeOnOverlayClick={!hasChanges}
         closeOnEscape={!hasChanges}
