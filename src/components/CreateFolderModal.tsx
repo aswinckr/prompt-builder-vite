@@ -8,7 +8,7 @@ interface CreateFolderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCreateFolder: (folderData: { name: string; icon: string }) => Promise<void>;
-  folderType: "prompts" | "datasets";
+  folderType: "prompt" | "dataset";
   loading?: boolean;
 }
 
@@ -91,7 +91,7 @@ export function CreateFolderModal({
 
   const getModalTitle = () => {
     return `Create New ${
-      folderType === "prompts" ? "Prompt" : "Dataset"
+      folderType === "prompt" ? "Prompt" : "Dataset"
     } Folder`;
   };
 
@@ -121,7 +121,7 @@ export function CreateFolderModal({
             value={folderName}
             onChange={handleNameChange}
             placeholder={`My ${
-              folderType === "prompts" ? "Prompt" : "Dataset"
+              folderType === "prompt" ? "Prompt" : "Dataset"
             } Folder`}
             maxLength={50}
             disabled={loading}

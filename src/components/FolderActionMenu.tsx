@@ -11,9 +11,9 @@ import {
 
 interface FolderActionMenuProps {
   folder: Project;
-  type: 'prompts' | 'datasets';
-  onRename: (folder: Project, type: 'prompts' | 'datasets') => void;
-  onDelete: (folder: Project, type: 'prompts' | 'datasets') => void;
+  type: 'prompt' | 'dataset';
+  onRename: (folder: Project, type: 'prompt' | 'dataset') => void;
+  onDelete: (folder: Project, type: 'prompt' | 'dataset') => void;
 }
 
 /**

@@ -7,9 +7,9 @@ import { TIMEOUTS } from "../utils/constants";
 interface RenameFolderModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onRename: (data: { name: string; folderId: string; type: "prompts" | "datasets" }) => Promise<void>;
+  onRename: (data: { name: string; folderId: string; type: "prompt" | "dataset" }) => Promise<void>;
   folder: Project;
-  type: "prompts" | "datasets";
+  type: "prompt" | "dataset";
   loading?: boolean;
 }
 
@@ -112,7 +112,7 @@ export function RenameFolderModal({
   };
 
   const getModalTitle = () => {
-    return `Rename ${type === "prompts" ? "Prompt" : "Dataset"} Folder`;
+    return `Rename ${type === "prompt" ? "Prompt" : "Dataset"} Folder`;
   };
 
   return (

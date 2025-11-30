@@ -48,7 +48,7 @@ interface LibraryState {
   // Folder modal state
   folderModal: {
     isOpen: boolean;
-    defaultType: 'prompts' | 'datasets';
+    defaultType: 'prompt' | 'dataset';
     loading: boolean;
   };
   // Rename modal state
@@ -106,7 +106,7 @@ type LibraryAction =
   | { type: 'UPDATE_DATASET_PROJECT'; payload: { id: string; projectData: Partial<Project> } }
   | { type: 'DELETE_DATASET_PROJECT'; payload: string }
   // Folder modal actions
-  | { type: 'OPEN_FOLDER_MODAL'; payload: 'prompts' | 'datasets' }
+  | { type: 'OPEN_FOLDER_MODAL'; payload: 'prompt' | 'dataset' }
   | { type: 'CLOSE_FOLDER_MODAL' }
   | { type: 'SET_FOLDER_MODAL_LOADING'; payload: boolean }
   // Rename modal actions
@@ -157,19 +157,19 @@ const initialState: LibraryState = {
   conversationFilters: {},
   folderModal: {
     isOpen: false,
-    defaultType: 'prompts',
+    defaultType: 'prompt',
     loading: false
   },
   renameModal: {
     isOpen: false,
     folder: null,
-    type: 'prompts',
+    type: 'prompt',
     loading: false
   },
   deleteModal: {
     isOpen: false,
     folder: null,
-    type: 'prompts',
+    type: 'prompt',
     loading: false
   }
 };
@@ -888,13 +888,13 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
         // Get the current folder type from the modal state
         const currentType = state.folderModal.defaultType;
 
-        const result = currentType === 'prompts'
+        const result = currentType === 'prompt'
           ? await ProjectService.createProject({ name: folderData.name, icon: folderData.icon, type: 'prompt' })
           : await ProjectService.createProject({ name: folderData.name, icon: folderData.icon, type: 'dataset' });
 
         if (result.data) {
           dispatch({
-            type: currentType === 'prompts' ? 'CREATE_PROMPT_PROJECT' : 'CREATE_DATASET_PROJECT',
+            type: currentType === 'prompt' ? 'CREATE_PROMPT_PROJECT' : 'CREATE_DATASET_PROJECT',
             payload: result.data
           });
           // Wait for database confirmation, then refresh all data
