@@ -20,6 +20,7 @@ import { ConfirmationModal } from "./ConfirmationModal";
 import { useToast } from "../contexts/ToastContext";
 import { formatDistanceToNow } from "date-fns";
 import { ChatMessage } from "./ChatMessage";
+import { markdownToText } from "../utils/markdownUtils";
 
 export function ConversationDetail() {
   const { conversationId } = useParams<{ conversationId: string }>();
@@ -215,7 +216,7 @@ export function ConversationDetail() {
             <div className="min-w-0 flex-1">
               <div className="flex items-center gap-3">
                 <h1 className="truncate text-2xl font-bold text-white">
-                  {conversation.title}
+                  {markdownToText(conversation.title)}
                 </h1>
                 {conversation.is_favorite && (
                   <Star className="h-5 w-5 flex-shrink-0 fill-yellow-400 text-yellow-400" />

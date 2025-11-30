@@ -103,6 +103,7 @@ export function CreateFolderModal({
       size="md"
       closeOnOverlayClick={!loading}
       closeOnEscape={!loading}
+      aria-labelledby="create-folder-modal-title"
     >
       <form onSubmit={handleSubmit} className="space-y-6 p-6">
         {/* Folder Name */}

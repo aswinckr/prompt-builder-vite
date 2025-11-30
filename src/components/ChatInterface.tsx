@@ -18,6 +18,7 @@ import {
   MessageSquare,
 } from "lucide-react";
 import { generateUUID } from "../utils/chat";
+import { markdownToText } from "../utils/markdownUtils";
 import { streamText } from "ai";
 import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { useLibraryActions } from "../contexts/LibraryContext";
@@ -93,9 +94,10 @@ export function ChatInterface({
   // Create conversation when first message is about to be sent
   const createNewConversation = async () => {
     try {
-      const title = formattedPrompt.length > 50
-        ? `${formattedPrompt.substring(0, 50)}...`
-        : formattedPrompt;
+      const plainTextPrompt = markdownToText(formattedPrompt);
+      const title = plainTextPrompt.length > 50
+        ? `${plainTextPrompt.substring(0, 50)}...`
+        : plainTextPrompt;
 
       const result = await createConversation({
         title,

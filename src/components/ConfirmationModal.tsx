@@ -106,6 +106,7 @@ export const ConfirmationModal = React.memo(function ConfirmationModal({
       mobileBehavior="modal"
       closeOnEscape={!isLoading}
       closeOnOverlayClick={!isLoading}
+      aria-labelledby="confirmation-modal-title"
     >
       <div
         className="p-6"

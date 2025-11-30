@@ -123,6 +123,7 @@ export function RenameFolderModal({
       size="md"
       closeOnOverlayClick={!loading}
       closeOnEscape={!loading}
+      aria-labelledby="rename-folder-modal-title"
     >
       <form onSubmit={handleSubmit} className="space-y-6 p-6" onKeyDown={handleKeyDown}>
         {/* Folder Name */}

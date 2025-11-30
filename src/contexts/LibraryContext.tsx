@@ -55,14 +55,14 @@ interface LibraryState {
   renameModal: {
     isOpen: boolean;
     folder: Project | null;
-    type: 'prompts' | 'datasets';
+    type: 'prompt' | 'dataset';
     loading: boolean;
   };
   // Delete confirmation state
   deleteModal: {
     isOpen: boolean;
     folder: Project | null;
-    type: 'prompts' | 'datasets';
+    type: 'prompt' | 'dataset';
     loading: boolean;
   };
 }
@@ -110,11 +110,11 @@ type LibraryAction =
   | { type: 'CLOSE_FOLDER_MODAL' }
   | { type: 'SET_FOLDER_MODAL_LOADING'; payload: boolean }
   // Rename modal actions
-  | { type: 'OPEN_RENAME_MODAL'; payload: { folder: Project; type: 'prompts' | 'datasets' } }
+  | { type: 'OPEN_RENAME_MODAL'; payload: { folder: Project; type: 'prompt' | 'dataset' } }
   | { type: 'CLOSE_RENAME_MODAL' }
   | { type: 'SET_RENAME_MODAL_LOADING'; payload: boolean }
   // Delete modal actions
-  | { type: 'OPEN_DELETE_MODAL'; payload: { folder: Project; type: 'prompts' | 'datasets' } }
+  | { type: 'OPEN_DELETE_MODAL'; payload: { folder: Project; type: 'prompt' | 'dataset' } }
   | { type: 'CLOSE_DELETE_MODAL' }
   | { type: 'SET_DELETE_MODAL_LOADING'; payload: boolean }
   // Chat actions
@@ -827,7 +827,7 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     },
 
     // Rename project action
-    renameProject: async (folderId: string, type: 'prompts' | 'datasets', newName: string) => {
+    renameProject: async (folderId: string, type: 'prompt' | 'dataset', newName: string) => {
       try {
         dispatch({ type: 'SET_RENAME_MODAL_LOADING', payload: true });
 
@@ -866,17 +866,17 @@ export function LibraryProvider({ children }: { children: ReactNode }) {
     },
 
     // Folder modal actions
-    openFolderModal: (type: 'prompts' | 'datasets') => dispatch({ type: 'OPEN_FOLDER_MODAL', payload: type }),
+    openFolderModal: (type: 'prompt' | 'dataset') => dispatch({ type: 'OPEN_FOLDER_MODAL', payload: type }),
     closeFolderModal: () => dispatch({ type: 'CLOSE_FOLDER_MODAL' }),
     setFolderModalLoading: (loading: boolean) => dispatch({ type: 'SET_FOLDER_MODAL_LOADING', payload: loading }),
 
     // Rename modal actions
-    openRenameModal: (folder: Project, type: 'prompts' | 'datasets') => dispatch({ type: 'OPEN_RENAME_MODAL', payload: { folder, type } }),
+    openRenameModal: (folder: Project, type: 'prompt' | 'dataset') => dispatch({ type: 'OPEN_RENAME_MODAL', payload: { folder, type } }),
     closeRenameModal: () => dispatch({ type: 'CLOSE_RENAME_MODAL' }),
     setRenameModalLoading: (loading: boolean) => dispatch({ type: 'SET_RENAME_MODAL_LOADING', payload: loading }),
 
     // Delete modal actions
-    openDeleteModal: (folder: Project, type: 'prompts' | 'datasets') => dispatch({ type: 'OPEN_DELETE_MODAL', payload: { folder, type } }),
+    openDeleteModal: (folder: Project, type: 'prompt' | 'dataset') => dispatch({ type: 'OPEN_DELETE_MODAL', payload: { folder, type } }),
     closeDeleteModal: () => dispatch({ type: 'CLOSE_DELETE_MODAL' }),
     setDeleteModalLoading: (loading: boolean) => dispatch({ type: 'SET_DELETE_MODAL_LOADING', payload: loading }),
 

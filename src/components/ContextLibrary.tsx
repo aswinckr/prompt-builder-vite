@@ -600,6 +600,7 @@ export function ContextLibrary() {
         isOpen={isCreateContextModalOpen}
         onClose={handleCloseCreateContextModal}
         selectedProjectId={isPromptProject ? null : selectedProject}
+        aria-labelledby="create-context-modal-title"
       />
 
       {/* Create Prompt Modal */}
@@ -607,6 +608,7 @@ export function ContextLibrary() {
         isOpen={isCreatePromptModalOpen}
         onClose={handleCloseCreatePromptModal}
         selectedProjectId={isPromptProject ? selectedProject : null}
+        aria-labelledby="create-prompt-modal-title"
       />
 
       {/* Create Folder Modal */}

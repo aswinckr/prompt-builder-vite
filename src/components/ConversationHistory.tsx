@@ -8,6 +8,7 @@ import { ConversationFilters } from './ConversationFilters';
 import { ConversationActions } from './ConversationActions';
 import { ConversationStats } from './ConversationStats';
 import { formatDistanceToNow } from 'date-fns';
+import { markdownToText } from '../utils/markdownUtils';
 
 export function ConversationHistory() {
   const navigate = useNavigate();
@@ -156,7 +157,7 @@ export function ConversationHistory() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-3 mb-2">
                         <h3 className="text-lg font-semibold text-foreground truncate group-hover:text-primary transition-colors">
-                          {conversation.title}
+                          {markdownToText(conversation.title)}
                         </h3>
                         {conversation.is_favorite && (
                           <Star className="w-4 h-4 text-yellow-400 fill-yellow-400 flex-shrink-0" />

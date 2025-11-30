@@ -146,6 +146,40 @@ export function EditContextModal({
     }
   };
 
+  // Action buttons content for sticky footer
+  const footerContent = (
+    <div className="flex items-center justify-between gap-3 p-6" onKeyDown={handleKeyDown}>
+      <p className="text-xs text-neutral-500">
+        Press ⌘+Enter to save
+      </p>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleClose}
+          disabled={isSubmitting}
+          className="px-4 py-2 text-sm font-medium text-neutral-300 bg-neutral-700 hover:bg-neutral-600 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Cancel
+        </button>
+        <button
+          onClick={handleSave}
+          disabled={isSubmitting || !title.trim() || !content.html.trim() || !hasChanges}
+          className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-neutral-600 disabled:to-neutral-700 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+        >
+          {isSubmitting ? (
+            <>
+              <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+              Updating...
+            </>
+          ) : (
+            <>
+              Update Knowledge
+            </>
+          )}
+        </button>
+      </div>
+    </div>
+  );
+
   return (
     <Modal
       isOpen={isOpen}
@@ -154,8 +188,10 @@ export function EditContextModal({
       size="2xl"
       mobileBehavior="fullscreen"
       aria-labelledby="edit-context-modal-title"
+      stickyFooter={true}
+      footerContent={footerContent}
     >
-      <div className="p-6" onKeyDown={handleKeyDown}>
+      <div className="p-6">
         {/* Error Display */}
         {error && (
           <div className="mb-4 rounded-lg bg-red-500/10 border border-red-500/20 p-3">
@@ -202,38 +238,6 @@ export function EditContextModal({
             <p className="mt-1 text-xs text-neutral-500">
               Rich text editor supports formatting, lists, code blocks, and more
             </p>
-          </div>
-        </div>
-
-        {/* Action Buttons */}
-        <div className="flex items-center justify-between gap-3 mt-6 pt-6 border-t border-neutral-700">
-          <p className="text-xs text-neutral-500">
-            Press ⌘+Enter to save
-          </p>
-          <div className="flex items-center gap-3">
-            <button
-              onClick={handleClose}
-              disabled={isSubmitting}
-              className="px-4 py-2 text-sm font-medium text-neutral-300 bg-neutral-700 hover:bg-neutral-600 rounded-lg transition-colors focus:outline-none focus:ring-2 focus:ring-neutral-500 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Cancel
-            </button>
-            <button
-              onClick={handleSave}
-              disabled={isSubmitting || !title.trim() || !content.html.trim() || !hasChanges}
-              className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-neutral-600 disabled:to-neutral-700 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
-            >
-              {isSubmitting ? (
-                <>
-                  <div className="w-4 h-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                  Updating...
-                </>
-              ) : (
-                <>
-                  Update Knowledge
-                </>
-              )}
-            </button>
           </div>
         </div>
       </div>
