@@ -39,7 +39,7 @@ export function CreateContextModal({
 
   // Check if there are unsaved changes
   const hasUnsavedChanges = () => {
-    return title.trim() !== '' || content.text.trim() !== '';
+    return title.trim() !== '' || content.html.trim() !== '';
   };
 
   // Handle close attempt with unsaved changes check
@@ -59,7 +59,7 @@ export function CreateContextModal({
       return;
     }
 
-    if (!content.text.trim()) {
+    if (!content.html.trim()) {
       setError('Please enter some content');
       return;
     }
@@ -70,7 +70,7 @@ export function CreateContextModal({
     try {
       await createContextBlock({
         title: title.trim(),
-        content: content.text, // Use plain text instead of HTML
+        content: content.html, // Store HTML to preserve formatting
         tags: [], // Empty tags for now - could be added later
         project_id: selectedProjectId || null, // Use the selected project ID
       });
@@ -164,7 +164,7 @@ export function CreateContextModal({
             </button>
             <button
               onClick={handleSave}
-              disabled={isSubmitting || !title.trim() || !content.text.trim()}
+              disabled={isSubmitting || !title.trim() || !content.html.trim()}
               className="px-4 py-2 text-sm font-medium text-white bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 disabled:from-neutral-600 disabled:to-neutral-700 rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
             >
               {isSubmitting ? (
