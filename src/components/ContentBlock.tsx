@@ -1,8 +1,10 @@
-import React from 'react';
-import { Edit, Trash2, Play } from 'lucide-react';
+import React, { useState } from 'react';
+import { Edit, Trash2, Play, Copy } from 'lucide-react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import TurndownService from 'turndown';
+import { useToast } from '../contexts/ToastContext';
 
 // Utility function to strip HTML tags and get plain text for preview while preserving structure
 const stripHtmlForPreview = (html: string): string => {
@@ -105,6 +107,9 @@ export function ContentBlock<T extends BaseContentBlock>({
   onKeyDown,
   showPlayButton = false,
 }: ContentBlockProps<T>) {
+  const [isHovered, setIsHovered] = useState(false);
+  const { showToast } = useToast();
+
   const handleClick = () => {
     onSelect?.();
   };
@@ -116,6 +121,9 @@ export function ContentBlock<T extends BaseContentBlock>({
     } else if ((event.key === 'd' || event.key === 'D') && onDelete) {
       event.preventDefault();
       onDelete(block);
+    } else if ((event.key === 'c' || event.key === 'C')) {
+      event.preventDefault();
+      handleCopyClick(event as any);
     } else if ((event.key === 'p' || event.key === 'P') && onPlay && showPlayButton) {
       event.preventDefault();
       onPlay(block);
@@ -141,6 +149,36 @@ export function ContentBlock<T extends BaseContentBlock>({
     onPlay?.(block);
   };
 
+  const handleCopyClick = async (event: React.MouseEvent<HTMLButtonElement>) => {
+    event.stopPropagation();
+
+    try {
+      // Initialize turndown service
+      const turndownService = new TurndownService({
+        headingStyle: 'atx',
+        bulletListMarker: '-',
+        codeBlockStyle: 'fenced',
+        fence: '```'
+      });
+
+      // Convert HTML content to markdown
+      const markdownContent = turndownService.turndown(block.content);
+
+      // Add title and metadata
+      const fullMarkdown = `# ${block.title}\n\n${markdownContent}`;
+
+      // Copy to clipboard
+      await navigator.clipboard.writeText(fullMarkdown);
+
+      // Show success toast
+      showToast(`Copied "${block.title}" to clipboard`, 'success');
+    } catch (error) {
+      console.error('Failed to copy content:', error);
+      // Show error toast
+      showToast('Failed to copy content to clipboard', 'error');
+    }
+  };
+
   return (
     <Card
       data-block-id={block.id}
@@ -155,12 +193,25 @@ export function ContentBlock<T extends BaseContentBlock>({
       aria-label={`Content block: ${block.title}`}
       onClick={handleClick}
       onKeyDown={handleKeyDown}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
     >
       <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-3">
         <h3 className="font-medium line-clamp-2 leading-tight flex-1">
           {block.title}
         </h3>
-        <div className="flex items-center gap-1 flex-shrink-0 ml-2">
+        <div className={`flex items-center gap-1 flex-shrink-0 ml-2 transition-opacity duration-200 ${
+          isHovered || isSelected ? 'opacity-100' : 'opacity-0'
+        }`}>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleCopyClick}
+            className="h-6 w-6 p-0 text-neutral-400 hover:text-blue-400 hover:bg-blue-500/10"
+            aria-label={`Copy ${block.title}`}
+          >
+            <Copy size={12} />
+          </Button>
           {onPlay && showPlayButton && (
             <Button
               variant="ghost"
@@ -202,7 +253,7 @@ export function ContentBlock<T extends BaseContentBlock>({
         </div>
       </CardHeader>
 
-      <CardContent className="flex flex-col flex-1">
+      <CardContent className="flex flex-col flex-1 relative">
         {/* Content Preview - takes up remaining space */}
         <div className="flex-1 mb-4">
           <p className="text-sm line-clamp-3 leading-relaxed whitespace-pre-line">
@@ -210,33 +261,44 @@ export function ContentBlock<T extends BaseContentBlock>({
           </p>
         </div>
 
-        {/* Tags - at bottom */}
-        <div className="flex flex-wrap gap-1 flex-shrink-0 mb-2">
-          {block.tags.slice(0, 3).map((tag) => (
-            <Badge
-              key={tag}
-              variant="secondary"
-              className="text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30"
-            >
-              {tag}
-            </Badge>
-          ))}
-          {block.tags.length > 3 && (
-            <Badge
-              variant="outline"
-              className="text-xs border-purple-500/30 text-purple-300"
-            >
-              +{block.tags.length - 3}
-            </Badge>
-          )}
+        {/* Bottom section with tags and hint text */}
+        <div className="flex flex-col gap-2">
+          {/* Tags - above hint text */}
+          <div className="flex flex-wrap gap-1 flex-shrink-0">
+            {block.tags.slice(0, 3).map((tag) => (
+              <Badge
+                key={tag}
+                variant="secondary"
+                className="text-xs bg-purple-500/20 text-purple-300 border border-purple-500/30 hover:bg-purple-500/30"
+              >
+                {tag}
+              </Badge>
+            ))}
+            {block.tags.length > 3 && (
+              <Badge
+                variant="outline"
+                className="text-xs border-purple-500/30 text-purple-300"
+              >
+                +{block.tags.length - 3}
+              </Badge>
+            )}
+          </div>
         </div>
 
-        {/* Help text for keyboard shortcuts */}
-        <div className="text-xs text-muted-foreground opacity-0 hover:opacity-100 transition-opacity">
-          Press <kbd className="px-1 py-0.5 bg-muted rounded text-xs">E</kbd> to edit,
-          <kbd className="px-1 py-0.5 bg-muted rounded text-xs ml-1">D</kbd> to delete
+        {/* Help text for keyboard shortcuts - positioned at bottom left */}
+        <div className={`absolute bottom-2 left-2 text-xs text-neutral-500 transition-opacity duration-200 ${
+            isHovered ? 'opacity-100' : 'opacity-0'
+          }`}>
+          <kbd className="px-1 py-0.5 bg-neutral-700/50 rounded text-xs">E</kbd> edit
+          <span className="mx-1">·</span>
+          <kbd className="px-1 py-0.5 bg-neutral-700/50 rounded text-xs">D</kbd> delete
+          <span className="mx-1">·</span>
+          <kbd className="px-1 py-0.5 bg-neutral-700/50 rounded text-xs">C</kbd> copy
           {onPlay && showPlayButton && (
-            <>, <kbd className="px-1 py-0.5 bg-muted rounded text-xs ml-1">P</kbd> to play</>
+            <>
+              <span className="mx-1">·</span>
+              <kbd className="px-1 py-0.5 bg-neutral-700/50 rounded text-xs">P</kbd> play
+            </>
           )}
         </div>
       </CardContent>

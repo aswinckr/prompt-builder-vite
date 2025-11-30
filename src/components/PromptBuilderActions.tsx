@@ -2,6 +2,7 @@ import React, { useState, useMemo, useEffect } from "react";
 import { Copy, Download, Save, Trash2 } from "lucide-react";
 import { useLibraryState, useLibraryActions } from "../contexts/LibraryContext";
 import { useAuthState } from "../contexts/AuthContext";
+import { useToast } from "../contexts/ToastContext";
 import { CreatePromptModal } from "./CreatePromptModal";
 import { ProfileModal } from "./ProfileModal";
 import { htmlToMarkdown } from "../utils/markdownUtils";
@@ -16,6 +17,7 @@ export function PromptBuilderActions() {
     movePromptToFolder,
   } = useLibraryActions();
   const { isAuthenticated } = useAuthState();
+  const { showToast } = useToast();
   const [copyStatus, setCopyStatus] = useState<"idle" | "copied" | "error">(
     "idle"
   );
@@ -76,10 +78,16 @@ export function PromptBuilderActions() {
       await navigator.clipboard.writeText(prompt);
       setCopyStatus("copied");
 
+      // Show success toast message
+      showToast("Prompt copied to clipboard!", "success");
+
       // Reset status after delay
       setTimeout(() => setCopyStatus("idle"), TIMEOUTS.COPY_STATUS_RESET);
     } catch (error) {
       setCopyStatus("error");
+
+      // Show error toast message
+      showToast("Failed to copy prompt to clipboard", "error");
 
       // Reset status after delay
       setTimeout(() => setCopyStatus("idle"), TIMEOUTS.COPY_STATUS_RESET);
