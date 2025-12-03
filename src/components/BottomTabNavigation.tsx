@@ -8,10 +8,15 @@ import { MotionHighlight } from "./ui/shadcn-io/motion-highlight";
 export function BottomTabNavigation() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { contextSelection } = useLibraryState();
+  const { contextSelection, chat } = useLibraryState();
 
   // Hide tabs when multiple blocks are selected
   if (contextSelection.selectedBlockIds.length > 0) {
+    return null;
+  }
+
+  // Hide tabs when chat interface is open
+  if (chat.isChatPanelOpen) {
     return null;
   }
 
@@ -23,7 +28,7 @@ export function BottomTabNavigation() {
   const defaultValue = isBuilderActive ? ROUTES.PROMPT : ROUTES.KNOWLEDGE;
 
   return (
-    <div className="fixed bottom-4 left-1/2 z-40 -translate-x-1/2 transform md:bottom-6">
+    <div className="fixed bottom-4 left-0 right-0 z-40 flex justify-center md:bottom-6">
       <div className="flex max-w-[90vw] items-center rounded-full border border-primary/20 bg-muted/30 p-1 shadow-glow-sm backdrop-blur-xl md:max-w-none">
         <MotionHighlight
           defaultValue={defaultValue}

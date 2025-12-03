@@ -566,7 +566,7 @@ export function ChatInterface({
     <>
       {/* Overlay backdrop */}
       <div
-        className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
+        className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm transition-opacity duration-300"
         onClick={handleClose}
         aria-hidden="true"
       />
@@ -575,7 +575,7 @@ export function ChatInterface({
       <div
         ref={dialogRef}
         tabIndex={-1}
-        className={`fixed right-0 top-0 z-50 flex h-full w-full transform flex-col bg-neutral-900 text-neutral-100 shadow-2xl transition-transform duration-300 ease-in-out outline-none ${
+        className={`fixed right-0 top-0 z-[9999] flex h-full w-full transform flex-col bg-neutral-900 text-neutral-100 shadow-2xl transition-transform duration-300 ease-in-out outline-none ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
         role="dialog"
