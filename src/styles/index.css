@@ -408,4 +408,15 @@
     outline: none !important;
     box-shadow: none !important;
   }
+
+  /* Z-index utility classes */
+  .z-modal {
+    z-index: var(--z-modal);
+  }
+  .z-overlay-content {
+    z-index: var(--z-overlay-content);
+  }
+  .z-fixed {
+    z-index: var(--z-fixed);
+  }
 }

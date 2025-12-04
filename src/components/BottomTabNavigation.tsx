@@ -28,7 +28,7 @@ export function BottomTabNavigation() {
   const defaultValue = isBuilderActive ? ROUTES.PROMPT : ROUTES.KNOWLEDGE;
 
   return (
-    <div className="fixed bottom-4 left-0 right-0 z-40 flex justify-center md:bottom-6">
+    <div className="fixed bottom-4 left-0 right-0 z-fixed flex justify-center md:bottom-6">
       <div className="flex max-w-[90vw] items-center rounded-full border border-primary/20 bg-muted/30 p-1 shadow-glow-sm backdrop-blur-xl md:max-w-none">
         <MotionHighlight
           defaultValue={defaultValue}
